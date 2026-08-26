@@ -1,0 +1,16 @@
+# Frontend and server dependencies/build output
+node_modules/
+server/node_modules/
+dist/
+bin/
+
+# Java build output and runtime logs
+**/target/
+*.log
+
+# Local configuration and OS files
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db

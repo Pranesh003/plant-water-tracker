@@ -1,0 +1,24 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: plant-care-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/plant_care?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+
+weather:
+  # Set OPENWEATHER_API_KEY in the service environment. The legacy
+  # WEATHER_API_KEY name is accepted during migration.
+  api-key: ${OPENWEATHER_API_KEY:${WEATHER_API_KEY:}}
