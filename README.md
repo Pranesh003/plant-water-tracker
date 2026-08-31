@@ -732,4 +732,4 @@ npm start
 
 Distributed under the **MIT License**. See `LICENSE` for more information.
 
-Developed with ❤️ by **[Pranesh](https://github.com/Pranesh003)**.
+Developed with ❤️ by **MY TEAM**.
