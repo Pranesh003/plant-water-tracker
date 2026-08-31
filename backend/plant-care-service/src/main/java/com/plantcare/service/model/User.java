@@ -1,29 +1,16 @@
 package com.plantcare.service.model;
 
-import jakarta.persistence.*;
-
-@Entity
-@Table(name = "users")
 public class User {
 
-    @Id
-    @Column(length = 36)
     private String id;
-
-    @Column(nullable = false, length = 100)
     private String name;
-
-    @Column(nullable = false, unique = true, length = 100)
     private String email;
-
-    @Column(nullable = false, length = 20)
     private String role;
-
-    @Column(name = "created_date", nullable = false, length = 10)
     private String createdDate;
-
-    @Column(nullable = false, length = 20)
     private String status;
+
+    private String resetToken;
+    private Long resetTokenExpiry;
 
     public User() {}
 
@@ -53,4 +40,10 @@ public class User {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getResetToken() { return resetToken; }
+    public void setResetToken(String resetToken) { this.resetToken = resetToken; }
+
+    public Long getResetTokenExpiry() { return resetTokenExpiry; }
+    public void setResetTokenExpiry(Long resetTokenExpiry) { this.resetTokenExpiry = resetTokenExpiry; }
 }

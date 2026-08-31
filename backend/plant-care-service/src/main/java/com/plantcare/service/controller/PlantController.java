@@ -5,16 +5,17 @@ import com.plantcare.service.model.History;
 import com.plantcare.service.model.Note;
 import com.plantcare.service.model.Plant;
 import com.plantcare.service.model.User;
-import com.plantcare.service.repository.HistoryRepository;
-import com.plantcare.service.repository.NoteRepository;
-import com.plantcare.service.repository.PlantRepository;
-import com.plantcare.service.repository.UserRepository;
+import com.plantcare.service.firestore.FirestoreHistoryRepository;
+import com.plantcare.service.firestore.FirestoreNoteRepository;
+import com.plantcare.service.firestore.FirestorePlantRepository;
+import com.plantcare.service.firestore.FirestoreUserRepository;
+import com.plantcare.service.service.CloudStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -27,16 +28,19 @@ import java.util.*;
 public class PlantController {
 
     @Autowired
-    private PlantRepository plantRepository;
+    private FirestorePlantRepository plantRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    private FirestoreUserRepository userRepository;
 
     @Autowired
-    private HistoryRepository historyRepository;
+    private FirestoreHistoryRepository historyRepository;
 
     @Autowired
-    private NoteRepository noteRepository;
+    private FirestoreNoteRepository noteRepository;
+
+    @Autowired
+    private CloudStorageService cloudStorageService;
 
     private User getCurrentUser() {
         String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -58,7 +62,6 @@ public class PlantController {
 
     @GetMapping("/all")
     public ResponseEntity<?> getAllPlants() {
-        // Return all plants (for admin dashboard / summary)
         return ResponseEntity.ok(plantRepository.findAll());
     }
 
@@ -76,10 +79,34 @@ public class PlantController {
         return ResponseEntity.ok(plant);
     }
 
-    @PostMapping
-    public ResponseEntity<?> createPlant(@RequestBody PlantRequest plantRequest) {
+    @PostMapping(consumes = "application/json")
+    public ResponseEntity<?> createPlantJson(@RequestBody PlantRequest plantRequest) {
+        return processCreatePlant(plantRequest, null);
+    }
+
+    @PostMapping(consumes = "multipart/form-data")
+    public ResponseEntity<?> createPlantMultipart(
+            @RequestPart("plant") PlantRequest plantRequest,
+            @RequestPart(value = "image", required = false) MultipartFile image
+    ) {
+        return processCreatePlant(plantRequest, image);
+    }
+
+    private ResponseEntity<?> processCreatePlant(PlantRequest plantRequest, MultipartFile image) {
         User user = getCurrentUser();
-        
+        if (plantRequest == null) {
+            return ResponseEntity.badRequest().body("Plant data is required.");
+        }
+
+        String uploadedPhotoUrl = plantRequest.getPhotoUrl() != null ? plantRequest.getPhotoUrl() : "";
+        if (image != null && !image.isEmpty()) {
+            try {
+                uploadedPhotoUrl = cloudStorageService.uploadImage(image, user.getId());
+            } catch (Exception e) {
+                return ResponseEntity.badRequest().body("Image upload failed: " + e.getMessage());
+            }
+        }
+
         Plant plant = new Plant();
         plant.setId(UUID.randomUUID().toString());
         plant.setUserId(user.getId());
@@ -92,26 +119,25 @@ public class PlantController {
         plant.setLastWatered(plantRequest.getLastWatered() != null && !plantRequest.getLastWatered().isBlank()
                 ? plantRequest.getLastWatered() : null);
         plant.setSunlight(plantRequest.getSunlight());
-        plant.setPhotoUrl(plantRequest.getPhotoUrl() != null ? plantRequest.getPhotoUrl() : "");
+        plant.setPhotoUrl(uploadedPhotoUrl);
         plant.setRecommendedWaterMl(plantRequest.getRecommendedWaterMl() != null ? plantRequest.getRecommendedWaterMl() : "");
         plant.setHumidity(plantRequest.getHumidity() != null ? plantRequest.getHumidity() : "");
         plant.setCreatedAt(LocalDate.now().toString());
         plant.setIcon(plantRequest.getIcon() != null ? plantRequest.getIcon() : "🌱");
-        
+
         if (plantRequest.getNotes() != null && !plantRequest.getNotes().trim().isEmpty()) {
             Note note = new Note();
             note.setId(UUID.randomUUID().toString());
-            note.setPlant(plant);
+            note.setPlantId(plant.getId());
             note.setText(plantRequest.getNotes().trim());
             note.setDate(LocalDate.now().toString());
             note.setTime(getFormattedTime());
             plant.setNotes(new ArrayList<>(List.of(note)));
         }
-        
+
         plantRepository.save(plant);
 
-        // If there was a note, record history
-        if (!plant.getNotes().isEmpty()) {
+        if (plant.getNotes() != null && !plant.getNotes().isEmpty()) {
             Note note = plant.getNotes().get(0);
             History history = new History(
                 UUID.randomUUID().toString(),
@@ -129,8 +155,21 @@ public class PlantController {
         return ResponseEntity.ok(plant);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updatePlant(@PathVariable String id, @RequestBody PlantRequest plantRequest) {
+    @PutMapping(value = "/{id}", consumes = "application/json")
+    public ResponseEntity<?> updatePlantJson(@PathVariable String id, @RequestBody PlantRequest plantRequest) {
+        return processUpdatePlant(id, plantRequest, null);
+    }
+
+    @PutMapping(value = "/{id}", consumes = "multipart/form-data")
+    public ResponseEntity<?> updatePlantMultipart(
+            @PathVariable String id,
+            @RequestPart("plant") PlantRequest plantRequest,
+            @RequestPart(value = "image", required = false) MultipartFile image
+    ) {
+        return processUpdatePlant(id, plantRequest, image);
+    }
+
+    private ResponseEntity<?> processUpdatePlant(String id, PlantRequest plantRequest, MultipartFile image) {
         User user = getCurrentUser();
         Optional<Plant> optionalPlant = plantRepository.findById(id);
         if (optionalPlant.isEmpty()) {
@@ -139,6 +178,21 @@ public class PlantController {
         Plant plant = optionalPlant.get();
         if (!"admin".equalsIgnoreCase(user.getRole()) && !plant.getUserId().equals(user.getId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+        }
+
+        if (plantRequest == null) {
+            return ResponseEntity.badRequest().body("Plant data is required.");
+        }
+
+        if (image != null && !image.isEmpty()) {
+            try {
+                String uploadedPhotoUrl = cloudStorageService.uploadImage(image, user.getId());
+                plant.setPhotoUrl(uploadedPhotoUrl);
+            } catch (Exception e) {
+                return ResponseEntity.badRequest().body("Image upload failed: " + e.getMessage());
+            }
+        } else if (plantRequest.getPhotoUrl() != null) {
+            plant.setPhotoUrl(plantRequest.getPhotoUrl());
         }
 
         if (plantRequest.getName() != null) plant.setName(plantRequest.getName().trim());
@@ -153,7 +207,6 @@ public class PlantController {
         }
         if (plantRequest.getLastWatered() != null) plant.setLastWatered(plantRequest.getLastWatered().isBlank() ? null : plantRequest.getLastWatered());
         if (plantRequest.getSunlight() != null) plant.setSunlight(plantRequest.getSunlight());
-        if (plantRequest.getPhotoUrl() != null) plant.setPhotoUrl(plantRequest.getPhotoUrl());
         if (plantRequest.getRecommendedWaterMl() != null) plant.setRecommendedWaterMl(plantRequest.getRecommendedWaterMl());
         if (plantRequest.getHumidity() != null) plant.setHumidity(plantRequest.getHumidity());
         if (plantRequest.getIcon() != null) plant.setIcon(plantRequest.getIcon());
@@ -163,7 +216,6 @@ public class PlantController {
     }
 
     @DeleteMapping("/{id}")
-    @Transactional
     public ResponseEntity<?> deletePlant(@PathVariable String id) {
         User user = getCurrentUser();
         Optional<Plant> optionalPlant = plantRepository.findById(id);
@@ -176,7 +228,7 @@ public class PlantController {
         }
 
         historyRepository.deleteByPlantId(id);
-        plantRepository.delete(plant);
+        plantRepository.deleteById(id);
         return ResponseEntity.ok(true);
     }
 
@@ -246,7 +298,7 @@ public class PlantController {
 
         Note note = new Note();
         note.setId(UUID.randomUUID().toString());
-        note.setPlant(plant);
+        note.setPlantId(plant.getId());
         note.setText(text.trim());
         note.setDate(LocalDate.now().toString());
         note.setTime(getFormattedTime());

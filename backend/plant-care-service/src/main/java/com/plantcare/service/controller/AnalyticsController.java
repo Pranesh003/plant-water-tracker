@@ -3,9 +3,9 @@ package com.plantcare.service.controller;
 import com.plantcare.service.model.History;
 import com.plantcare.service.model.Plant;
 import com.plantcare.service.model.User;
-import com.plantcare.service.repository.HistoryRepository;
-import com.plantcare.service.repository.PlantRepository;
-import com.plantcare.service.repository.UserRepository;
+import com.plantcare.service.firestore.FirestoreHistoryRepository;
+import com.plantcare.service.firestore.FirestorePlantRepository;
+import com.plantcare.service.firestore.FirestoreUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,13 +23,13 @@ import java.util.stream.Collectors;
 public class AnalyticsController {
 
     @Autowired
-    private PlantRepository plantRepository;
+    private FirestorePlantRepository plantRepository;
 
     @Autowired
-    private HistoryRepository historyRepository;
+    private FirestoreHistoryRepository historyRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    private FirestoreUserRepository userRepository;
 
     private User getCurrentUser() {
         String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();

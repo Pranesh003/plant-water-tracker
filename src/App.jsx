@@ -18,9 +18,16 @@ import EditPlant from "./pages/EditPlant.jsx";
 import History from "./pages/History.jsx";
 import MyPlants from "./pages/MyPlants.jsx";
 import PlantDetails from "./pages/PlantDetails.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
 import SignIn from "./pages/SignIn.jsx";
 import SignUp from "./pages/SignUp.jsx";
+import AuthLoadingScreen from "./pages/AuthLoadingScreen.jsx";
 import Tutorial from "./pages/Tutorial.jsx";
+import Settings from "./pages/Settings.jsx";
+import Reminders from "./pages/Reminders.jsx";
+import ChangePassword from "./pages/ChangePassword.jsx";
+import { applyTheme } from "./utils/themeUtils.js";
+import { readStorage } from "./utils/storageUtils.js";
 
 const PlantCareContext = createContext(null);
 export const usePlantCare = () => useContext(PlantCareContext);
@@ -60,25 +67,31 @@ function AdminShell({ children }) {
 export default function App() {
   const [plants, setPlants] = useState([]);
   const [history, setHistory] = useState([]);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => readStorage(api.keys.user, null));
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState("");
   const [error, setError] = useState("");
 
   const refresh = async () => {
     try {
-      const [plantData, historyData, userData] = await Promise.all([api.getPlants(), api.getHistory(), api.getUser()]);
-      setPlants(plantData);
-      setHistory(historyData);
-      setUser(userData);
+      setError("");
+      const [plantData, historyData, userData] = await Promise.all([
+        api.getPlants().catch(() => readStorage(api.keys.plants, [])),
+        api.getHistory().catch(() => readStorage(api.keys.history, [])),
+        api.getUser().catch(() => readStorage(api.keys.user, null))
+      ]);
+      setPlants(plantData || []);
+      setHistory(historyData || []);
+      if (userData) setUser(userData);
     } catch {
-      setError("Something went wrong. Please try again.");
+      // Suppress error banner when fallback cached data is available
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    applyTheme();
     if (api.isLoggedIn()) {
       refresh();
     } else {
@@ -135,6 +148,8 @@ export default function App() {
         <Route path="/" element={<Navigate to={api.isLoggedIn() ? (api.getRole() === "admin" ? "/admin" : "/dashboard") : "/signin"} replace />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/auth-loading" element={<AuthLoadingScreen />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/tutorial" element={<ProtectedRoute><Tutorial /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><AppShell><Dashboard /></AppShell></ProtectedRoute>} />
         <Route path="/my-plants" element={<ProtectedRoute><AppShell><MyPlants /></AppShell></ProtectedRoute>} />
@@ -143,6 +158,9 @@ export default function App() {
         <Route path="/analytics" element={<ProtectedRoute><AppShell><Analytics /></AppShell></ProtectedRoute>} />
         <Route path="/add-plant" element={<ProtectedRoute><AppShell><AddPlant /></AppShell></ProtectedRoute>} />
         <Route path="/edit-plant/:id" element={<ProtectedRoute><AppShell><EditPlant /></AppShell></ProtectedRoute>} />
+        <Route path="/reminders" element={<ProtectedRoute><AppShell><Reminders /></AppShell></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><AppShell><Settings /></AppShell></ProtectedRoute>} />
+        <Route path="/change-password" element={<ProtectedRoute><AppShell><ChangePassword /></AppShell></ProtectedRoute>} />
         <Route path="/admin" element={<AdminRoute><AdminShell><AdminDashboard /></AdminShell></AdminRoute>} />
         <Route path="/admin/users" element={<AdminRoute><AdminShell><AdminUsers /></AdminShell></AdminRoute>} />
         <Route path="/admin/users/:id" element={<AdminRoute><AdminShell><AdminUserDetails /></AdminShell></AdminRoute>} />

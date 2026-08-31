@@ -20,7 +20,13 @@ export default function History() {
   }, [plantId, type, range]);
   return (
     <>
-      <section className="page-title"><p className="eyebrow">Care timeline</p><h1>Plant Care History</h1></section>
+      <section className="page-title">
+        <p className="eyebrow">CARE TIMELINE</p>
+        <h1 style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <span>Plant Care History</span>
+          <img src="/history_icon.png" alt="History Icon" style={{ width: 34, height: 34, objectFit: "contain" }} />
+        </h1>
+      </section>
       <section className="toolbar"><select value={plantId} onChange={(e) => setPlantId(e.target.value)}><option>All Plants</option>{plants.map((plant) => <option value={plant.id} key={plant.id}>{plant.name}</option>)}</select><select value={type} onChange={(e) => setType(e.target.value)}>{["All Activities", "Watering", "Notes", "Streak"].map((item) => <option key={item}>{item}</option>)}</select><select value={range} onChange={(e) => setRange(e.target.value)}><option value="All">All dates</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select></section>
       {filtered.length ? (
         <>

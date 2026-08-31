@@ -1,34 +1,14 @@
 package com.plantcare.service.model;
 
-import jakarta.persistence.*;
-
-@Entity
-@Table(name = "history")
 public class History {
 
-    @Id
-    @Column(length = 36)
     private String id;
-
-    @Column(name = "plant_id", nullable = false, length = 36)
     private String plantId;
-
-    @Column(name = "plant_name", nullable = false, length = 100)
     private String plantName;
-
-    @Column(nullable = false, length = 20)
-    private String type; // 'watering' or 'note'
-
-    @Column(nullable = false, length = 10)
+    private String type;
     private String date;
-
-    @Column(nullable = false, length = 20)
     private String time;
-
-    @Column(nullable = true)
     private Integer streak;
-
-    @Column(nullable = true, columnDefinition = "TEXT")
     private String text;
 
     public History() {}

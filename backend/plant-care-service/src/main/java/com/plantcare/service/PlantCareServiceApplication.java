@@ -1,7 +1,7 @@
 package com.plantcare.service;
 
+import com.plantcare.service.firestore.FirestoreUserRepository;
 import com.plantcare.service.model.User;
-import com.plantcare.service.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -17,7 +17,7 @@ public class PlantCareServiceApplication {
 
     /** Creates the demo administrator once, without overwriting an existing account. */
     @Bean
-    CommandLineRunner seedSampleAdmin(UserRepository userRepository) {
+    CommandLineRunner seedSampleAdmin(FirestoreUserRepository userRepository) {
         return args -> userRepository.findByEmail("admin@plants.local")
                 .orElseGet(() -> userRepository.save(new User(
                         "admin001",

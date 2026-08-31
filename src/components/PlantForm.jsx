@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Camera, Save, Sparkles, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Camera, Save, Sparkles, Trash2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../services/api.js";
 import { usePlantCare } from "../App.jsx";
@@ -16,6 +16,7 @@ initialForm.lastWatered = "";
 
 export default function PlantForm({ plant, mode = "add" }) {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
   const { refresh, notify } = usePlantCare();
   const [query, setQuery] = useState("");
   const [speciesSuggestions, setSpeciesSuggestions] = useState([]);
@@ -64,7 +65,7 @@ export default function PlantForm({ plant, mode = "add" }) {
   const update = (field, value) => setForm((current) => ({ ...current, [field]: value }));
 
   const selectPlant = (suggestion) => {
-    setQuery(suggestion.name);
+    setQuery("");
     setSpeciesSuggestions([]);
     setForm((current) => ({ ...current, name: suggestion.name, species: suggestion.species, frequency: suggestion.frequency || current.frequency, sunlight: suggestion.sunlight || current.sunlight, icon: suggestion.icon || current.icon }));
   };
@@ -81,6 +82,16 @@ export default function PlantForm({ plant, mode = "add" }) {
     const previewUrl = URL.createObjectURL(file);
     setImagePreview(previewUrl);
     setSelectedImage(file);
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setImagePreview("");
+    setAiRecommendation(null);
+    setForm((current) => ({ ...current, photoUrl: "" }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const analyzeImage = () => {
@@ -115,15 +126,13 @@ export default function PlantForm({ plant, mode = "add" }) {
     setIsSaving(true);
     setError("");
     try {
-      const photoUrl = selectedImage ? await uploadPlantPhoto(selectedImage) : form.photoUrl;
-      const payload = { ...form, photoUrl };
-      if (mode === "edit") await api.updatePlant(plant.id, payload);
-      else await api.createPlant(payload);
+      if (mode === "edit") await api.updatePlant(plant.id, form, selectedImage);
+      else await api.createPlant(form, selectedImage);
       await refresh();
       notify(mode === "edit" ? "Plant updated successfully." : "Plant saved to My Plants.");
       navigate("/my-plants");
-    } catch {
-      setError("Unable to save plant photo. Please try again.");
+    } catch (err) {
+      setError(err.message || "Unable to save plant. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -142,11 +151,17 @@ export default function PlantForm({ plant, mode = "add" }) {
           <div className="field-grid">
             <label className="upload-box" style={{ display: "grid", gap: 8 }}>
               <span><Camera size={18} /> Upload Plant Photo</span>
-              <input type="file" accept=".jpg,.jpeg,.png,.webp" onChange={handleImageSelection} />
+              <input ref={fileInputRef} type="file" accept=".jpg,.jpeg,.png,.webp" onChange={handleImageSelection} />
             </label>
           </div>
           {imagePreview && <img src={imagePreview} alt="Plant preview" style={{ width: "100%", maxHeight: 220, objectFit: "cover", borderRadius: 12, marginTop: 12 }} />}
-          {imagePreview && <button type="button" className="primary-btn" onClick={analyzeImage} style={{ marginTop: 12 }} disabled={isAnalyzing}><Sparkles size={16} /> {isAnalyzing ? "Identifying..." : "Identify Plant"}</button>}
+          {imagePreview && (
+            <div style={{ display: "flex", gap: 12, marginTop: 12, flexWrap: "wrap" }}>
+              <button type="button" className="ghost-btn" onClick={handleRemoveImage} style={{ color: "#d9534f", border: "1px solid #d9534f" }}>
+                <Trash2 size={16} /> Remove Photo
+              </button>
+            </div>
+          )}
         </section>
 
         {aiRecommendation && (

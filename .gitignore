@@ -8,9 +8,13 @@ bin/
 **/target/
 *.log
 
-# Local configuration and OS files
-.env
-.env.*
-!.env.example
-.DS_Store
-Thumbs.db
+# Credentials, cache, and archives
+.firebase/
+*.json
+!package.json
+!package-lock.json
+!firebase.json
+!server/package.json
+!server/package-lock.json
+backend/plant-care-service.zip
+

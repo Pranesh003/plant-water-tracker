@@ -6,6 +6,7 @@ import Pagination from "../components/Pagination.jsx";
 import PlantStatusBadge from "../components/PlantStatusBadge.jsx";
 import SummaryCard from "../components/SummaryCard.jsx";
 import { api } from "../services/api.js";
+import { getPlantIconUrl } from "../utils/plantIconUtils.js";
 import { calculateNextWateringDate, calculateWateringStatus, formatDate } from "../utils/wateringUtils.js";
 
 const PAGE_SIZE = 6;
@@ -60,7 +61,7 @@ export default function AdminUserDetails() {
       <section className="admin-table wide user-plant-list">
         {paginatedPlants.map((plant) => (
           <article key={plant.id}>
-            <div><small>Plant Name</small><strong>{plant.icon} {plant.name}</strong></div>
+            <div><small>Plant Name</small><strong style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><img src={getPlantIconUrl(plant)} alt="" style={{ width: 22, height: 22, objectFit: "contain" }} /> {plant.name}</strong></div>
             <div><small>Species</small><span>{plant.species}</span></div>
             <div><small>Room</small><span>{plant.room || plant.location}</span></div>
             <div><small>Watering Frequency</small><span>Every {plant.frequency} days</span></div>

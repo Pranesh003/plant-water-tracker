@@ -8,6 +8,7 @@ import PlantStatusBadge from "../components/PlantStatusBadge.jsx";
 import SummaryCard from "../components/SummaryCard.jsx";
 import { usePlantCare } from "../App.jsx";
 import { calculateWateringConsistency } from "../utils/analyticsUtils.js";
+import { getPlantIconUrl } from "../utils/plantIconUtils.js";
 import { calculateNextWateringDate, calculateWateringStatus, formatDate } from "../utils/wateringUtils.js";
 
 export default function PlantDetails() {
@@ -25,7 +26,7 @@ export default function PlantDetails() {
   return (
     <>
       <button className="ghost-btn back-link" type="button" onClick={() => navigate(-1)}><ArrowLeft size={16} /> Back</button>
-      <section className="detail-hero"><div className="detail-icon">{plant.icon}</div><div><PlantStatusBadge status={status} /><h1>{plant.name}</h1><p>{plant.species} · {plant.location}</p></div><Link className="primary-btn" to={`/edit-plant/${plant.id}`}><Edit size={16} /> Edit</Link><button className="ghost-btn danger" onClick={removePlant}><Trash2 size={16} /> Delete</button></section>
+      <section className="detail-hero"><div className="detail-icon" style={{ display: "grid", placeItems: "center" }}>{plant.photoUrl ? <img src={plant.photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 18 }} /> : <img src={getPlantIconUrl(plant)} alt="" style={{ width: 44, height: 44, objectFit: "contain" }} />}</div><div><PlantStatusBadge status={status} /><h1>{plant.name}</h1><p>{plant.species} · {plant.location}</p></div><Link className="primary-btn" to={`/edit-plant/${plant.id}`}><Edit size={16} /> Edit</Link><button className="ghost-btn danger" onClick={removePlant}><Trash2 size={16} /> Delete</button></section>
       <section className="summary-grid"><SummaryCard icon={Flame} label="Current Streak" value={`${plant.currentStreak} days`} /><SummaryCard icon={Flame} label="Best Streak" value={`${plant.bestStreak} days`} tone="accent" /><SummaryCard icon={Droplets} label="Total Waterings" value={plantHistory.filter((item) => item.type === "watering").length} /><SummaryCard icon={CalendarDays} label="Consistency" value={`${calculateWateringConsistency(plant, history)}%`} tone="yellow" /></section>
       <div className="tabs">{["Overview", "History", "Notes"].map((item) => <button key={item} className={tab === item ? "selected" : ""} onClick={() => setTab(item)}>{item}</button>)}</div>
       {tab === "Overview" && <section className="panel info-grid"><p><Droplets size={17} /> Every {plant.frequency} days</p><p><CalendarDays size={17} /> Last watered {formatDate(plant.lastWatered)}</p><p><CalendarDays size={17} /> Next watering {formatDate(calculateNextWateringDate(plant.lastWatered, plant.frequency))}</p><p><MapPin size={17} /> {plant.location}</p><p>{plant.sunlight}</p><PlantStatusBadge status={status} /></section>}

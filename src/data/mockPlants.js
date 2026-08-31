@@ -5,11 +5,26 @@ export const plantSuggestions = [
   { name: "Peace Lily", species: "Spathiphyllum wallisii", frequency: 5, sunlight: "Indirect Sunlight", icon: "🪴" },
   { name: "Spider Plant", species: "Chlorophytum comosum", frequency: 6, sunlight: "Indirect Sunlight", icon: "🌾" },
   { name: "Rose", species: "Rosa rubiginosa", frequency: 3, sunlight: "Direct Sunlight", icon: "🌹" },
-  { name: "Tulsi", species: "Ocimum tenuiflorum", frequency: 2, sunlight: "Direct Sunlight", icon: "🌿" },
+  { name: "Tulsi (Holy Basil)", species: "Ocimum tenuiflorum", frequency: 2, sunlight: "Direct Sunlight", icon: "🌿" },
   { name: "Areca Palm", species: "Dypsis lutescens", frequency: 6, sunlight: "Indirect Sunlight", icon: "🌴" },
   { name: "Jade Plant", species: "Crassula ovata", frequency: 15, sunlight: "Direct Sunlight", icon: "🪴" },
   { name: "Rubber Plant", species: "Ficus elastica", frequency: 8, sunlight: "Indirect Sunlight", icon: "🌳" },
-  { name: "Jasmine", species: "Jasminum sambac", frequency: 4, sunlight: "Direct Sunlight", icon: "🌼" }
+  { name: "Jasmine", species: "Jasminum sambac", frequency: 4, sunlight: "Direct Sunlight", icon: "🌼" },
+  { name: "Monstera (Swiss Cheese)", species: "Monstera deliciosa", frequency: 7, sunlight: "Indirect Sunlight", icon: "🌿" },
+  { name: "ZZ Plant", species: "Zamioculcas zamiifolia", frequency: 14, sunlight: "Low Light", icon: "🌱" },
+  { name: "Hibiscus", species: "Hibiscus rosa-sinensis", frequency: 3, sunlight: "Direct Sunlight", icon: "🌺" },
+  { name: "Neem", species: "Azadirachta indica", frequency: 4, sunlight: "Direct Sunlight", icon: "🌳" },
+  { name: "Curry Leaf Plant", species: "Murraya koenigii", frequency: 3, sunlight: "Direct Sunlight", icon: "🌿" },
+  { name: "Boston Fern", species: "Nephrolepis exaltata", frequency: 4, sunlight: "Indirect Sunlight", icon: "🌿" },
+  { name: "Lavender", species: "Lavandula angustifolia", frequency: 7, sunlight: "Direct Sunlight", icon: "🪻" },
+  { name: "Orchid", species: "Phalaenopsis", frequency: 7, sunlight: "Indirect Sunlight", icon: "🌸" },
+  { name: "Cactus (Golden Barrel)", species: "Echinocactus grusonii", frequency: 21, sunlight: "Direct Sunlight", icon: "🌵" },
+  { name: "Fiddle Leaf Fig", species: "Ficus lyrata", frequency: 7, sunlight: "Indirect Sunlight", icon: "🪴" },
+  { name: "Calathea (Prayer Plant)", species: "Goeppertia orbifolia", frequency: 5, sunlight: "Indirect Sunlight", icon: "🌿" },
+  { name: "Marigold", species: "Tagetes erecta", frequency: 3, sunlight: "Direct Sunlight", icon: "🌼" },
+  { name: "Bamboo Palm", species: "Chamaedorea seifrizii", frequency: 6, sunlight: "Indirect Sunlight", icon: "🌴" },
+  { name: "Lucky Bamboo", species: "Dracaena sanderiana", frequency: 7, sunlight: "Indirect Sunlight", icon: "🎋" },
+  { name: "Bougainvillea", species: "Bougainvillea spectabilis", frequency: 5, sunlight: "Direct Sunlight", icon: "🌺" }
 ];
 
 const daysAgo = (days) => {

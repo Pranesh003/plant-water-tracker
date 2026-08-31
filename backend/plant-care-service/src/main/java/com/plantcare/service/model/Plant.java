@@ -1,69 +1,28 @@
 package com.plantcare.service.model;
 
-import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity
-@Table(name = "plants")
 public class Plant {
 
-    @Id
-    @Column(length = 36)
     private String id;
-
-    @Column(name = "user_id", nullable = false, length = 36)
     private String userId;
-
-    @Column(nullable = false, length = 100)
     private String name;
-
-    @Column(nullable = false, length = 100)
     private String species;
-
-    @Column(nullable = false, length = 50)
     private String location;
-
-    @Column(nullable = false, length = 50)
     private String room;
-
-    @Column(nullable = false)
     private Integer frequency;
-
-    @Column(name = "watering_frequency", nullable = false)
     private Integer wateringFrequency;
-
-    @Column(name = "last_watered", length = 10)
     private String lastWatered;
-
-    @Column(nullable = false, length = 30)
     private String sunlight;
-
-    // Uploaded photos are stored as base64 data URLs.  A VARCHAR(500) truncates
-    // every normal image, so use MySQL LONGTEXT instead.
-    @Lob
-    @Column(name = "photo_url", columnDefinition = "LONGTEXT")
     private String photoUrl;
-
-    @Column(name = "recommended_water_ml", length = 30)
     private String recommendedWaterMl;
-
-    @Column(length = 30)
     private String humidity;
-
-    @Column(name = "current_streak", nullable = false)
     private Integer currentStreak = 0;
-
-    @Column(name = "best_streak", nullable = false)
     private Integer bestStreak = 0;
-
-    @Column(name = "created_at", nullable = false, length = 10)
     private String createdAt;
-
-    @Column(length = 10)
     private String icon = "🌱";
 
-    @OneToMany(mappedBy = "plant", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<Note> notes = new ArrayList<>();
 
     public Plant() {}

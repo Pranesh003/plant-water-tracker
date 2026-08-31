@@ -1,24 +1,129 @@
-import { ChevronDown, LayoutDashboard, Leaf, LogOut, Settings, Sprout, UserCircle, Users } from "lucide-react";
+import { ChevronDown, LayoutDashboard, Leaf, LogOut, Menu, Settings as SettingsIcon, Sprout, User, Users, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { api } from "../services/api.js";
 
+const adminNavItems = [
+  { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/admin/users", label: "Users", icon: Users },
+  { to: "/admin/plants", label: "Plants", icon: Leaf },
+  { to: "/admin/settings", label: "Settings", icon: SettingsIcon }
+];
+
 export default function AdminSidebar() {
   const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const closeMobile = () => setMobileOpen(false);
+
+  return (
+    <>
+      {/* Mobile Top Header Bar (< 768px) */}
+      <header className="mobile-header-bar admin-mobile-header" aria-label="Admin Mobile Navigation Bar">
+        <button
+          className="mobile-menu-toggle-btn"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label={mobileOpen ? "Close menu" : "Open menu"}
+        >
+          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
+
+        <div className="mobile-brand-title" onClick={() => { navigate("/admin"); closeMobile(); }}>
+          <img
+            src="/app_logo.png"
+            alt="Plant Care Logo"
+            style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover" }}
+          />
+          <span style={{ fontWeight: 850, fontSize: "1.05rem", color: "#1b4332" }}>Admin Panel</span>
+        </div>
+
+        <button
+          className="mobile-header-user-btn"
+          onClick={() => { navigate("/admin/settings"); closeMobile(); }}
+          aria-label="Settings"
+        >
+          <SettingsIcon size={20} />
+        </button>
+      </header>
+
+      {/* Backdrop overlay for mobile drawer */}
+      {mobileOpen && (
+        <div
+          className="mobile-drawer-backdrop"
+          onClick={closeMobile}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Main Sidebar Navigation Drawer */}
+      <aside className={`sidebar-container admin-sidebar-container ${mobileOpen ? "mobile-open" : ""}`} aria-label="Admin Sidebar Navigation">
+        <div className="sidebar-brand" onClick={() => { navigate("/admin"); closeMobile(); }}>
+          <img
+            src="/app_logo.png"
+            alt="Plant Care Logo"
+            className="brand-logo-img"
+            style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", boxShadow: "0 4px 14px rgba(31,77,46,0.15)", border: "2px solid #ffffff" }}
+          />
+          <div className="brand-title-wrap">
+            <h2>Admin</h2>
+            <p style={{ color: "#52b788", fontWeight: 700, fontSize: "0.72rem", margin: "2px 0 0 0" }}>Every Drop Helps You Grow</p>
+          </div>
+        </div>
+
+        <nav className="sidebar-nav">
+          {adminNavItems.map(({ to, label, icon: Icon }) => (
+            <NavLink
+              key={label}
+              to={to}
+              end={to === "/admin"}
+              onClick={closeMobile}
+              className={({ isActive }) => (isActive ? "sidebar-link active" : "sidebar-link")}
+            >
+              <Icon size={19} />
+              <span>{label}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        <div className="sidebar-footer-art">
+          <img src="/sidebar_plant.jpg" alt="Potted plant" className="sidebar-plant-img" onError={(e) => { e.target.style.display = 'none'; }} />
+        </div>
+      </aside>
+
+      {/* Fixed Bottom Navigation Bar (< 768px) */}
+      <nav className="mobile-bottom-nav" aria-label="Admin Mobile Quick Nav">
+        {adminNavItems.map(({ to, label, icon: Icon }) => (
+          <NavLink
+            key={label}
+            to={to}
+            end={to === "/admin"}
+            className={({ isActive }) => (isActive ? "bottom-nav-item active" : "bottom-nav-item")}
+          >
+            <Icon size={20} />
+            <span>{label}</span>
+          </NavLink>
+        ))}
+      </nav>
+    </>
+  );
+}
+
+export function AdminHeader({ title = "Admin Dashboard", eyebrow = "SYSTEM OVERVIEW" }) {
+  const navigate = useNavigate();
   const [admin, setAdmin] = useState(null);
-  const [open, setOpen] = useState(false);
-  const menuRef = useRef(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     api.getUser().then(setAdmin);
   }, []);
 
   useEffect(() => {
-    const closeMenu = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) setOpen(false);
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) setShowDropdown(false);
     };
-    document.addEventListener("mousedown", closeMenu);
-    return () => document.removeEventListener("mousedown", closeMenu);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const logout = async () => {
@@ -26,44 +131,62 @@ export default function AdminSidebar() {
     navigate("/signin");
   };
 
-  const adminName = admin?.name || "Admin";
+  const adminName = admin?.name || "Sample Administrator";
+  const initial = adminName[0].toUpperCase();
 
   return (
-    <>
-      <header className="topbar admin-topbar">
-        <strong className="brand"><span className="brand-mark"><Sprout size={22} /></span><span>Admin</span></strong>
-        <nav className="desktop-nav" aria-label="Admin navigation">
-          <NavLink to="/admin"><LayoutDashboard size={18} /> Dashboard</NavLink>
-          <NavLink to="/admin/users"><Users size={18} /> Users</NavLink>
-          <NavLink to="/admin/plants"><Leaf size={18} /> Plants</NavLink>
-        </nav>
-        <div className="admin-actions">
-          <button className="icon-btn admin-settings-btn" type="button" onClick={() => navigate("/admin/settings")} aria-label="Open settings">
-            <Settings size={18} />
+    <header className="dashboard-top-header admin-top-header">
+      <div className="header-greeting-wrap">
+        <span className="eyebrow-tag">{eyebrow}</span>
+        <h1>{title} 🌿</h1>
+      </div>
+
+      <div className="header-actions-right" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        {/* Settings Icon Button */}
+        <button
+          className="admin-circle-icon-btn"
+          type="button"
+          onClick={() => navigate("/admin/settings")}
+          title="Settings"
+          aria-label="Settings"
+        >
+          <SettingsIcon size={18} />
+        </button>
+
+        {/* Profile Avatar Pill Dropdown */}
+        <div className="user-profile-menu-wrap" ref={dropdownRef}>
+          <button className="user-profile-pill-btn" onClick={() => setShowDropdown(!showDropdown)}>
+            <span className="user-avatar-circle" style={{ background: "#1f4d2e" }}>{initial}</span>
+            <span className="user-name-text">{adminName}</span>
+            <ChevronDown size={14} />
           </button>
-          <div className="profile-menu" ref={menuRef}>
-            <button className="profile-menu-trigger" type="button" onClick={() => setOpen((value) => !value)} aria-label="Open admin profile" aria-haspopup="menu" aria-expanded={open}>
-              <span className="avatar" aria-hidden="true">{adminName[0]}</span>
-              <span className="profile-name">{adminName}</span>
-              <ChevronDown size={16} />
-            </button>
-            {open && (
-              <div className="profile-dropdown" role="menu">
-                <button type="button" role="menuitem" onClick={() => { setOpen(false); navigate("/admin/profile"); }}><UserCircle size={16} /> Profile</button>
-                <button type="button" role="menuitem" onClick={() => { setOpen(false); navigate("/admin/settings"); }}><Settings size={16} /> Settings</button>
-                <button type="button" role="menuitem" onClick={logout}><LogOut size={16} /> Logout</button>
-              </div>
-            )}
-          </div>
-          <button className="ghost-btn logout-btn" type="button" onClick={logout} aria-label="Logout"><LogOut size={18} /> Logout</button>
+
+          {showDropdown && (
+            <div className="user-dropdown-card">
+              <button className="dropdown-item" onClick={() => { setShowDropdown(false); navigate("/admin/settings"); }}>
+                <SettingsIcon size={15} /> Admin Settings
+              </button>
+              <button className="dropdown-item" onClick={() => { setShowDropdown(false); navigate("/dashboard"); }}>
+                <User size={15} /> User Dashboard
+              </button>
+              <button className="dropdown-item danger" onClick={logout}>
+                <LogOut size={15} /> Logout
+              </button>
+            </div>
+          )}
         </div>
-      </header>
-      <nav className="mobile-nav admin-mobile-nav" aria-label="Admin mobile navigation">
-        <NavLink to="/admin"><LayoutDashboard size={18} /><span>Dashboard</span></NavLink>
-        <NavLink to="/admin/users"><Users size={18} /><span>Users</span></NavLink>
-        <NavLink to="/admin/plants"><Leaf size={18} /><span>Plants</span></NavLink>
-        <NavLink to="/admin/settings"><Settings size={18} /><span>Settings</span></NavLink>
-      </nav>
-    </>
+
+        {/* Logout Exit Icon Button */}
+        <button
+          className="admin-square-icon-btn"
+          type="button"
+          onClick={logout}
+          title="Logout"
+          aria-label="Logout"
+        >
+          <LogOut size={18} />
+        </button>
+      </div>
+    </header>
   );
 }

@@ -1,7 +1,7 @@
 package com.plantcare.service.controller;
 
+import com.plantcare.service.firestore.FirestoreUserRepository;
 import com.plantcare.service.model.User;
-import com.plantcare.service.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +16,7 @@ import java.util.Optional;
 public class UserController {
 
     @Autowired
-    private UserRepository userRepository;
+    private FirestoreUserRepository userRepository;
 
     @GetMapping
     public ResponseEntity<?> getAllUsers() {

@@ -1,35 +1,18 @@
 package com.plantcare.service.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
-
-@Entity
-@Table(name = "notes")
 public class Note {
 
-    @Id
-    @Column(length = 36)
     private String id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "plant_id", nullable = false)
-    @JsonIgnore
-    private Plant plant;
-
-    @Column(nullable = false, columnDefinition = "TEXT")
+    private String plantId;
     private String text;
-
-    @Column(nullable = false, length = 10)
     private String date;
-
-    @Column(nullable = false, length = 20)
     private String time;
 
     public Note() {}
 
-    public Note(String id, Plant plant, String text, String date, String time) {
+    public Note(String id, String plantId, String text, String date, String time) {
         this.id = id;
-        this.plant = plant;
+        this.plantId = plantId;
         this.text = text;
         this.date = date;
         this.time = time;
@@ -38,8 +21,8 @@ public class Note {
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
-    public Plant getPlant() { return plant; }
-    public void setPlant(Plant plant) { this.plant = plant; }
+    public String getPlantId() { return plantId; }
+    public void setPlantId(String plantId) { this.plantId = plantId; }
 
     public String getText() { return text; }
     public void setText(String text) { this.text = text; }

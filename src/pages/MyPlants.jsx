@@ -1,13 +1,12 @@
-import { Plus } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { usePlantCare } from "../App.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import LocationFilter from "../components/LocationFilter.jsx";
 import Pagination from "../components/Pagination.jsx";
 import PlantCard from "../components/PlantCard.jsx";
-import PlantSearch from "../components/PlantSearch.jsx";
 import StatusFilter from "../components/StatusFilter.jsx";
-import { usePlantCare } from "../App.jsx";
 import { filterPlants } from "../utils/analyticsUtils.js";
 
 const PAGE_SIZE = 6;
@@ -71,40 +70,76 @@ export default function MyPlants() {
   };
 
   return (
-    <>
-      <section className="page-hero">
-        <div><p className="eyebrow">My Plants</p><h1>My Plants</h1><p>Keep track of your plants and their watering needs.</p></div>
-        <Link className="primary-btn" to="/add-plant"><Plus size={18} /> Add Plant</Link>
-      </section>
-      <section className="plant-filter-tabs" aria-label="My plants quick filters">
+    <div className="my-plants-page-container">
+      {/* Header */}
+      <header className="dashboard-top-header">
+        <div>
+          <span className="eyebrow-tag">MY PLANTS</span>
+          <h1 style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span>My Plants</span>
+            <img src="/my_plants_icon.png" alt="My Plants Icon" style={{ width: 34, height: 34, objectFit: "contain" }} />
+          </h1>
+          <p>Keep track of your plants and their watering needs.</p>
+        </div>
+        <Link className="add-plant-btn-top" to="/add-plant"><Plus size={16} /> Add Plant</Link>
+      </header>
+
+      {/* Quick Filter Pills */}
+      <section className="plant-filter-tabs-pills">
         {quickFilters.map((filter) => (
-          <button key={filter.key} type="button" className={activeFilter === filter.key ? "selected" : ""} onClick={() => applyQuickFilter(filter.key)}>
+          <button
+            key={filter.key}
+            type="button"
+            className={activeFilter === filter.key ? "tab-pill active" : "tab-pill"}
+            onClick={() => applyQuickFilter(filter.key)}
+          >
             {filter.label}
           </button>
         ))}
       </section>
-      <section className="toolbar">
-        <PlantSearch compact value={query} onChange={setQuery} onSelect={(plant) => setQuery(plant.name)} />
-        <StatusFilter value={status} onChange={changeStatus} />
+
+      {/* Floating Search & Filter Toolbar */}
+      <section className="dashboard-floating-toolbar" style={{ marginTop: 16 }}>
+        <div className="floating-search-wrap">
+          <Search size={18} className="search-icon" />
+          <input
+            type="text"
+            placeholder="Search for a plant..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
+        <StatusFilter value={status} onChange={changeStatus} allLabel="All" />
         <LocationFilter value={location} onChange={setLocation} />
       </section>
+
+      {/* Plant Grid / Empty State */}
       {filtered.length ? (
         <>
-          <section className="plant-grid">{paginated.map((plant) => <PlantCard key={plant.id} plant={plant} onDelete={setPendingDelete} />)}</section>
+          <section className="my-plants-grid">
+            {paginated.map((plant) => <PlantCard key={plant.id} plant={plant} onDelete={setPendingDelete} />)}
+          </section>
           <Pagination page={page} totalItems={filtered.length} pageSize={PAGE_SIZE} onPageChange={setPage} />
         </>
       ) : (
-        <EmptyState title="No plants found." message={emptyMessage[activeFilter]} action="Add Plant" to="/add-plant" />
+        <div className="my-plants-empty-card">
+          <EmptyState title="No plants found." message={emptyMessage[activeFilter]} action="Add Plant" to="/add-plant" />
+        </div>
       )}
+
+      {/* Delete Confirmation Modal */}
       {pendingDelete && (
         <div className="modal-backdrop" role="dialog" aria-modal="true">
           <section className="confirm-modal">
             <h2>Delete {pendingDelete.name}?</h2>
             <p>This action cannot be undone.</p>
-            <div className="form-actions"><button className="ghost-btn" onClick={() => setPendingDelete(null)}>Cancel</button><button className="primary-btn danger-solid" onClick={confirmDelete}>Delete</button></div>
+            <div className="form-actions">
+              <button className="ghost-btn" onClick={() => setPendingDelete(null)}>Cancel</button>
+              <button className="primary-btn danger-solid" onClick={confirmDelete}>Delete</button>
+            </div>
           </section>
         </div>
       )}
-    </>
+    </div>
   );
 }
