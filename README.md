@@ -127,37 +127,37 @@ The project follows a decoupled **Client-Server Microservices Architecture** wit
 
 ```mermaid
 graph TB
-    subgraph Client Layer (Frontend SPA)
-        A[React 18 + Vite Web App] -->|HTTP / REST API| B[API Gateway Service / CORS Filter]
-        A -->|Direct SDK Sync| C[Firebase Auth Console]
-        A -->|PDFKit Engine| D[PDF Audit Report Generator]
+    subgraph Client ["Client Layer (Frontend SPA)"]
+        A["React 18 + Vite Web App"] -->|HTTP / REST API| B["API Gateway Service / CORS Filter"]
+        A -->|Direct SDK Sync| C["Firebase Auth Console"]
+        A -->|PDFKit Engine| D["PDF Audit Report Generator"]
     end
 
-    subgraph API Gateway & Microservices (Backend Layer)
-        B -->|JWT Verification| E[Spring Boot Plant Care Microservice]
-        E --> F[Auth Controller]
-        E --> G[Plant Controller]
-        E --> H[History & Notes Controller]
-        E --> I[Species Search Controller]
-        E --> J[Weather Controller]
-        E --> K[Analytics & Admin Controller]
+    subgraph Backend ["API Gateway & Microservices (Backend Layer)"]
+        B -->|JWT Verification| E["Spring Boot Plant Care Microservice"]
+        E --> F["Auth Controller"]
+        E --> G["Plant Controller"]
+        E --> H["History & Notes Controller"]
+        E --> I["Species Search Controller"]
+        E --> J["Weather Controller"]
+        E --> K["Analytics & Admin Controller"]
     end
 
-    subgraph External Cloud Services & APIs
-        I -->|REST Query| L[Trefle Botanical API]
-        J -->|REST Query| M[OpenWeatherMap API]
-        J -->|Keyless Fallback| N[Open-Meteo Weather API]
-        J -->|Reverse Geocoding| O[OpenStreetMap Nominatim API]
-        G -->|Image Upload| P[Google Cloud Storage Bucket]
+    subgraph External ["External Cloud Services & APIs"]
+        I -->|REST Query| L["Trefle Botanical API"]
+        J -->|REST Query| M["OpenWeatherMap API"]
+        J -->|Keyless Fallback| N["Open-Meteo Weather API"]
+        J -->|Reverse Geocoding| O["OpenStreetMap Nominatim API"]
+        G -->|Image Upload| P["Google Cloud Storage Bucket"]
         F -->|ID Token Sync| C
     end
 
-    subgraph Persistence Layer (Database)
-        E -->|Firestore SDK / gRPC| Q[(Google Cloud Firestore NoSQL)]
-        Q --> Q1[(users Collection)]
-        Q --> Q2[(plants Collection)]
-        Q --> Q3[(history Collection)]
-        Q --> Q4[(notes Collection)]
+    subgraph Storage ["Persistence Layer (Database)"]
+        E -->|Firestore SDK / gRPC| Q[("Google Cloud Firestore NoSQL")]
+        Q --> Q1[("users Collection")]
+        Q --> Q2[("plants Collection")]
+        Q --> Q3[("history Collection")]
+        Q --> Q4[("notes Collection")]
     end
 ```
 
@@ -169,27 +169,27 @@ graph TB
 
 ```mermaid
 flowchart TD
-    Start([User Opens App]) --> CheckToken{JWT Token in LocalStorage?}
+    Start(["User Opens App"]) --> CheckToken{"JWT Token in LocalStorage?"}
     
-    CheckToken -- Yes --> VerifyMe[/GET /api/auth/me/]
-    VerifyMe --> MeResponse{Valid Token?}
-    MeResponse -- Yes --> LoadApp[Load User Dashboard & Sync State]
-    MeResponse -- No --> ClearStorage[Clear Token & Local Storage] --> RedirectAuth[Redirect to Sign-In Page]
+    CheckToken -- "Yes" --> VerifyMe["GET /api/auth/me"]
+    VerifyMe --> MeResponse{"Valid Token?"}
+    MeResponse -- "Yes" --> LoadApp["Load User Dashboard & Sync State"]
+    MeResponse -- "No" --> ClearStorage["Clear Token & Local Storage"] --> RedirectAuth["Redirect to Sign-In Page"]
     
-    CheckToken -- No --> RedirectAuth
+    CheckToken -- "No" --> RedirectAuth
     
-    RedirectAuth --> FormChoice{User Action}
-    FormChoice -- Sign Up --> SubmitSignUp[Submit Sign-Up Form]
-    SubmitSignUp --> POSTSignUp[/POST /api/auth/signup/]
-    POSTSignUp --> CreateSuccess{Success?}
-    CreateSuccess -- Yes --> IssueToken[Receive JWT Token + User Object] --> SaveSession[Save Token & Sync Firebase] --> LoadApp
-    CreateSuccess -- No --> ShowAuthError[Display Error Message]
+    RedirectAuth --> FormChoice{"User Action"}
+    FormChoice -- "Sign Up" --> SubmitSignUp["Submit Sign-Up Form"]
+    SubmitSignUp --> POSTSignUp["POST /api/auth/signup"]
+    POSTSignUp --> CreateSuccess{"Success?"}
+    CreateSuccess -- "Yes" --> IssueToken["Receive JWT Token + User Object"] --> SaveSession["Save Token & Sync Firebase"] --> LoadApp
+    CreateSuccess -- "No" --> ShowAuthError["Display Error Message"]
     
-    FormChoice -- Sign In --> SubmitSignIn[Submit Sign-In Form]
-    SubmitSignIn --> POSTSignIn[/POST /api/auth/signin/]
-    POSTSignIn --> SigninSuccess{Success?}
-    SigninSuccess -- Yes --> IssueToken
-    SigninSuccess -- No --> ShowAuthError
+    FormChoice -- "Sign In" --> SubmitSignIn["Submit Sign-In Form"]
+    SubmitSignIn --> POSTSignIn["POST /api/auth/signin"]
+    POSTSignIn --> SigninSuccess{"Success?"}
+    SigninSuccess -- "Yes" --> IssueToken
+    SigninSuccess -- "No" --> ShowAuthError
 ```
 
 ---
@@ -198,28 +198,28 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A([User Clicks Add Plant]) --> B[Open Plant Form Modal]
-    B --> C[Fill Plant Details: Name, Species, Frequency, Location, Volume]
-    C --> D{Upload Plant Image?}
+    A(["User Clicks Add Plant"]) --> B["Open Plant Form Modal"]
+    B --> C["Fill Plant Details: Name, Species, Frequency, Location, Volume"]
+    C --> D{"Upload Plant Image?"}
     
-    D -- Yes --> E[Select File from Device]
-    E --> F[Submit Form as Multipart / FormData]
-    F --> G[/POST /api/plants - Multipart/]
-    G --> H[Spring Boot Controller Intercepts Request]
-    H --> I[CloudStorageService Uploads File to GCP Bucket]
-    I --> J[GCP Storage Returns Public Blob URL]
-    J --> K[Attach Image URL to Plant Model]
+    D -- "Yes" --> E["Select File from Device"]
+    E --> F["Submit Form as Multipart / FormData"]
+    F --> G["POST /api/plants (Multipart)"]
+    G --> H["Spring Boot Controller Intercepts Request"]
+    H --> I["CloudStorageService Uploads File to GCP Bucket"]
+    I --> J["GCP Storage Returns Public Blob URL"]
+    J --> K["Attach Image URL to Plant Model"]
     
-    D -- No --> L[Submit Form as Application / JSON]
-    L --> M[/POST /api/plants - JSON/]
-    M --> N[Assign Default Category Plant Icon]
+    D -- "No" --> L["Submit Form as Application / JSON"]
+    L --> M["POST /api/plants (JSON)"]
+    M --> N["Assign Default Category Plant Icon"]
     
-    K --> O[Compute Next Watering Date]
+    K --> O["Compute Next Watering Date"]
     N --> O
-    O --> P[FirestorePlantRepository Saves Document in 'plants' Collection]
-    P --> Q[Create Initial 'Created' History Log in 'history' Collection]
-    Q --> R[Return Saved Plant Entity 201 Created]
-    R --> S[Update UI Roster & Trigger Success Toast]
+    O --> P["FirestorePlantRepository Saves Document in 'plants' Collection"]
+    P --> Q["Create Initial 'Created' History Log in 'history' Collection"]
+    Q --> R["Return Saved Plant Entity 201 Created"]
+    R --> S["Update UI Roster & Trigger Success Toast"]
 ```
 
 ---
@@ -228,28 +228,28 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A([User Clicks Water Now Button]) --> B[/POST /api/plants/{id}/water/]
-    B --> C[Retrieve Plant Document from Firestore]
-    C --> D[Record Current Timestamp & Today Date]
+    A(["User Clicks Water Now Button"]) --> B["POST /api/plants/{id}/water"]
+    B --> C["Retrieve Plant Document from Firestore"]
+    C --> D["Record Current Timestamp & Today Date"]
     
-    D --> E[Calculate Next Water Date: Current Date + Frequency Days]
-    E --> F[Check Last Watered Date vs Previous Expected Date]
+    D --> E["Calculate Next Water Date: Current Date + Frequency Days"]
+    E --> F["Check Last Watered Date vs Previous Expected Date"]
     
-    F --> StreakCheck{Watered On Time or Within 1 Day Buffer?}
-    StreakCheck -- Yes --> IncrementStreak[Current Streak = Current Streak + 1]
-    StreakCheck -- No --> ResetStreak[Current Streak = 1]
+    F --> StreakCheck{"Watered On Time or Within 1 Day Buffer?"}
+    StreakCheck -- "Yes" --> IncrementStreak["Current Streak = Current Streak + 1"]
+    StreakCheck -- "No" --> ResetStreak["Current Streak = 1"]
     
-    IncrementStreak --> UpdateLongest{Current Streak > Longest Streak?}
-    UpdateLongest -- Yes --> SetNewLongest[Longest Streak = Current Streak]
-    UpdateLongest -- No --> KeepLongest[Keep Longest Streak Unchanged]
+    IncrementStreak --> UpdateLongest{"Current Streak > Longest Streak?"}
+    UpdateLongest -- "Yes" --> SetNewLongest["Longest Streak = Current Streak"]
+    UpdateLongest -- "No" --> KeepLongest["Keep Longest Streak Unchanged"]
     ResetStreak --> KeepLongest
     
-    SetNewLongest --> SavePlant[Update Plant Entity in Firestore]
+    SetNewLongest --> SavePlant["Update Plant Entity in Firestore"]
     KeepLongest --> SavePlant
     
-    SavePlant --> CreateHistory[Add New Record to 'history' Collection: Action='Watered']
-    CreateHistory --> ReturnResponse[Return Updated Plant & History Array]
-    ReturnResponse --> UpdateUI[Update Dashboard Metrics, Streaks & Timelines]
+    SavePlant --> CreateHistory["Add New Record to 'history' Collection: Action='Watered'"]
+    CreateHistory --> ReturnResponse["Return Updated Plant & History Array"]
+    ReturnResponse --> UpdateUI["Update Dashboard Metrics, Streaks & Timelines"]
 ```
 
 ---
@@ -258,24 +258,24 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A([User Types in Species Search Box]) --> B{Query Length >= 2 chars?}
-    B -- No --> C[Wait for User Input]
-    B -- Yes --> D[Debounce Input 300ms]
-    D --> E[/GET /api/species/search?q={query}/]
+    A(["User Types in Species Search Box"]) --> B{"Query Length >= 2 chars?"}
+    B -- "No" --> C["Wait for User Input"]
+    B -- "Yes" --> D["Debounce Input 300ms"]
+    D --> E["GET /api/species/search?q={query}"]
     
-    E --> F{Is TREFLE_API_TOKEN Configured?}
-    F -- Yes --> G[Call Trefle External REST API: /api/v1/plants/search]
-    G --> H{Trefle HTTP 200 OK?}
-    H -- Yes --> I[Map Botanical Payload: Common Name, Scientific Name, Family, Image]
-    H -- No --> J[Fallback to Built-in Java Species Catalog]
+    E --> F{"Is TREFLE_API_TOKEN Configured?"}
+    F -- "Yes" --> G["Call Trefle External REST API: /api/v1/plants/search"]
+    G --> H{"Trefle HTTP 200 OK?"}
+    H -- "Yes" --> I["Map Botanical Payload: Common Name, Scientific Name, Family, Image"]
+    H -- "No" --> J["Fallback to Built-in Java Species Catalog"]
     
-    F -- No --> J
-    J --> K[Filter Local Built-in Species List by Query String]
+    F -- "No" --> J
+    J --> K["Filter Local Built-in Species List by Query String"]
     
-    I --> L[Combine & Return Top Results to Frontend]
+    I --> L["Combine & Return Top Results to Frontend"]
     K --> L
-    L --> M[Display Autocomplete Suggestions Dropdown]
-    M --> N[User Selects Species -> Auto-fill Form Fields]
+    L --> M["Display Autocomplete Suggestions Dropdown"]
+    M --> N["User Selects Species -> Auto-fill Form Fields"]
 ```
 
 ---
@@ -284,31 +284,31 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A([User Views Weather Card / Plant Recommendation]) --> B{Has User Lat/Lon Coordinates?}
+    A(["User Views Weather Card / Plant Recommendation"]) --> B{"Has User Lat/Lon Coordinates?"}
     
-    B -- Yes --> C[Use Latitude & Longitude]
-    B -- No --> D{Is City Name Provided?}
-    D -- Yes --> E[Geocode City to Lat/Lon via Open-Meteo / Nominatim]
-    D -- No --> F[Default to Chennai / Auto IP Geolocation]
+    B -- "Yes" --> C["Use Latitude & Longitude"]
+    B -- "No" --> D{"Is City Name Provided?"}
+    D -- "Yes" --> E["Geocode City to Lat/Lon via Open-Meteo / Nominatim"]
+    D -- "No" --> F["Default to Chennai / Auto IP Geolocation"]
     
-    C --> G{Is OPENWEATHER_API_KEY Configured?}
+    C --> G{"Is OPENWEATHER_API_KEY Configured?"}
     E --> G
     F --> G
     
-    G -- Yes --> H[Query OpenWeatherMap API: Current & Forecast Weather]
-    G -- No --> I[Query Open-Meteo Keyless API]
+    G -- "Yes" --> H["Query OpenWeatherMap API: Current & Forecast Weather"]
+    G -- "No" --> I["Query Open-Meteo Keyless API"]
     
-    H --> J[Extract Temperature, Relative Humidity, Wind Speed, Weather Condition Code]
+    H --> J["Extract Temperature, Relative Humidity, Wind Speed, Weather Condition Code"]
     I --> J
     
-    J --> K[Calculate Weather Multiplier Index]
-    K --> L{Temp > 32°C OR Humidity < 30%?}
-    L -- Yes --> M[Hot & Dry: Increase Water Volume by 20-30%, Shorten Interval by 1 Day]
-    L -- No --> N{Temp < 18°C OR Humidity > 80%?}
-    N -- Yes --> O[Cool & Humid: Decrease Water Volume by 15-20%, Extend Interval by 1 Day]
-    N -- No --> P[Optimal Environment: Standard Care Schedule]
+    J --> K["Calculate Weather Multiplier Index"]
+    K --> L{"Temp > 32°C OR Humidity < 30%?"}
+    L -- "Yes" --> M["Hot & Dry: Increase Water Volume by 20-30%, Shorten Interval by 1 Day"]
+    L -- "No" --> N{"Temp < 18°C OR Humidity > 80%?"}
+    N -- "Yes" --> O["Cool & Humid: Decrease Water Volume by 15-20%, Extend Interval by 1 Day"]
+    N -- "No" --> P["Optimal Environment: Standard Care Schedule"]
     
-    M --> Q[Display Hydration Advice Badge on Weather Card]
+    M --> Q["Display Hydration Advice Badge on Weather Card"]
     O --> Q
     P --> Q
 ```
@@ -319,24 +319,24 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A([User Authenticates]) --> B[Extract User Object & Role Field]
-    B --> C{Role Check}
+    A(["User Authenticates"]) --> B["Extract User Object & Role Field"]
+    B --> C{"Role Check"}
     
-    C -- ROLE_USER --> D[Render User Layout & Sidebar Navigation]
-    D --> E[Access User Pages: Dashboard, My Plants, Analytics, History, Reminders, Settings]
-    D --> F[Restricted: Accessing /admin/* redirects to 403 Forbidden]
+    C -- "ROLE_USER" --> D["Render User Layout & Sidebar Navigation"]
+    D --> E["Access User Pages: Dashboard, My Plants, Analytics, History, Reminders, Settings"]
+    D --> F["Restricted: Accessing /admin/* redirects to 403 Forbidden"]
     
-    C -- ROLE_ADMIN --> G[Render Admin Dashboard Layout & Admin Sidebar]
-    G --> H[Access Supervisory Pages: Admin Overview, User Directory, Global Plants, Admin Settings]
-    H --> I[Execute Admin Actions: Toggle User Roles, Activate/Deactivate Accounts, Delete User Plants]
+    C -- "ROLE_ADMIN" --> G["Render Admin Dashboard Layout & Admin Sidebar"]
+    G --> H["Access Supervisory Pages: Admin Overview, User Directory, Global Plants, Admin Settings"]
+    H --> I["Execute Admin Actions: Toggle User Roles, Activate/Deactivate Accounts, Delete User Plants"]
     
-    I --> J[/PUT /api/users/{id}/role/]
-    I --> K[/DELETE /api/plants/{id}/]
-    J --> L[Verify Admin Claims in Spring Security Context]
+    I --> J["PUT /api/users/{id}/role"]
+    I --> K["DELETE /api/plants/{id}"]
+    J --> L["Verify Admin Claims in Spring Security Context"]
     K --> L
-    L --> M{Authorized?}
-    M -- Yes --> N[Commit Change to Firestore & Audit Log]
-    M -- No --> O[Return 403 Access Denied]
+    L --> M{"Authorized?"}
+    M -- "Yes" --> N["Commit Change to Firestore & Audit Log"]
+    M -- "No" --> O["Return 403 Access Denied"]
 ```
 
 ---
@@ -345,19 +345,19 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A([User Clicks 'Export Care Report PDF']) --> B[Gather Active User State & Selected Date Range]
-    B --> C[Fetch User Profile, All User Plants, History Logs, and Notes]
-    C --> D[Initialize Client-Side PDFKit Engine]
+    A(["User Clicks 'Export Care Report PDF'"]) --> B["Gather Active User State & Selected Date Range"]
+    B --> C["Fetch User Profile, All User Plants, History Logs, and Notes"]
+    C --> D["Initialize Client-Side PDFKit Engine"]
     
-    D --> E[Generate Document Metadata & Title Banner]
-    E --> F[Render Executive Summary Box: Total Plants, Overdue Plants, Longest Streak]
-    F --> G[Render Plant Inventory Table: Name, Species, Location, Frequency, Next Water Date]
-    G --> H[Render Recent Watering & Care Activity Audit Log Table]
-    H --> I[Render Plant Care Notes & Observations Section]
-    I --> J[Apply Custom Page Numbering, Footers & Plant Care Branded Styling]
+    D --> E["Generate Document Metadata & Title Banner"]
+    E --> F["Render Executive Summary Box: Total Plants, Overdue Plants, Longest Streak"]
+    F --> G["Render Plant Inventory Table: Name, Species, Location, Frequency, Next Water Date"]
+    G --> H["Render Recent Watering & Care Activity Audit Log Table"]
+    H --> I["Render Plant Care Notes & Observations Section"]
+    I --> J["Apply Custom Page Numbering, Footers & Plant Care Branded Styling"]
     
-    J --> K[Compile PDF Document to Binary Blob Buffer]
-    K --> L[Trigger Browser Automatic File Download: 'PlantCare_Report_{Date}.pdf']
+    J --> K["Compile PDF Document to Binary Blob Buffer"]
+    K --> L["Trigger Browser Automatic File Download: PlantCare_Report_{Date}.pdf"]
 ```
 
 ---
