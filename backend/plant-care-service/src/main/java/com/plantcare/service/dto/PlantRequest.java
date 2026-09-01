@@ -12,6 +12,7 @@ public class PlantRequest {
     private String humidity;
     private String icon;
     private String notes;
+    private String locationCity;
 
     public PlantRequest() {}
 
@@ -23,6 +24,9 @@ public class PlantRequest {
 
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }
+
+    public String getLocationCity() { return locationCity; }
+    public void setLocationCity(String locationCity) { this.locationCity = locationCity; }
 
     public Integer getFrequency() { return frequency; }
     public void setFrequency(Integer frequency) { this.frequency = frequency; }

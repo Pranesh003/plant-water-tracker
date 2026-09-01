@@ -158,8 +158,19 @@ export const api = {
   getPlants: async () => {
     try {
       const plants = await fetchApi('/api/plants');
-      if (Array.isArray(plants)) writeStorage(KEYS.plants, plants);
-      return plants;
+      const cached = readStorage(KEYS.plants, []);
+      const cachedMap = new Map((cached || []).map((p) => [p.id, p]));
+
+      const merged = (plants || []).map((plant) => {
+        const cachedItem = cachedMap.get(plant.id);
+        return {
+          ...plant,
+          locationCity: plant.locationCity || cachedItem?.locationCity || ""
+        };
+      });
+
+      writeStorage(KEYS.plants, merged);
+      return merged;
     } catch (err) {
       const cached = readStorage(KEYS.plants, []);
       if (cached && cached.length > 0) return cached;
@@ -168,35 +179,45 @@ export const api = {
   },
   getAllPlants: () => fetchApi('/api/plants/all'),
   getPlant: (id) => fetchApi(`/api/plants/${id}`),
-  createPlant: (data, imageFile) => {
+  createPlant: async (data, imageFile) => {
+    let result;
     if (imageFile) {
       const formData = new FormData();
       formData.append("plant", new Blob([JSON.stringify(data)], { type: "application/json" }));
       formData.append("image", imageFile);
-      return fetchApi('/api/plants', {
+      result = await fetchApi('/api/plants', {
         method: 'POST',
         body: formData
       });
+    } else {
+      result = await fetchApi('/api/plants', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
     }
-    return fetchApi('/api/plants', {
-      method: 'POST',
-      body: JSON.stringify(data)
-    });
+    const current = readStorage(KEYS.plants, []);
+    writeStorage(KEYS.plants, [...current.filter(p => p.id !== result.id), result]);
+    return result;
   },
-  updatePlant: (id, data, imageFile) => {
+  updatePlant: async (id, data, imageFile) => {
+    let result;
     if (imageFile) {
       const formData = new FormData();
       formData.append("plant", new Blob([JSON.stringify(data)], { type: "application/json" }));
       formData.append("image", imageFile);
-      return fetchApi(`/api/plants/${id}`, {
+      result = await fetchApi(`/api/plants/${id}`, {
         method: 'PUT',
         body: formData
       });
+    } else {
+      result = await fetchApi(`/api/plants/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data)
+      });
     }
-    return fetchApi(`/api/plants/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data)
-    });
+    const current = readStorage(KEYS.plants, []);
+    writeStorage(KEYS.plants, current.map(p => p.id === id ? { ...p, ...result } : p));
+    return result;
   },
   deletePlant: (id) => fetchApi(`/api/plants/${id}`, {
     method: 'DELETE'
@@ -219,18 +240,88 @@ export const api = {
       return [];
     }
   },
-  getWeather: ({ city, lat, lon, baseWaterMl, outdoor }) => {
-    const query = new URLSearchParams({ baseWaterMl: String(baseWaterMl), outdoor: String(outdoor) });
-    if (lat != null && lon != null) {
-      query.set("lat", String(lat));
-      query.set("lon", String(lon));
+  getWeather: async ({ city, lat, lon, baseWaterMl = 400, outdoor = false }) => {
+    let cleanCity = city ? String(city).trim() : "";
+    if (cleanCity.includes(",")) {
+      const parts = cleanCity.split(",").map(s => s.trim()).filter(Boolean);
+      cleanCity = parts[parts.length - 1] || parts[0];
     }
-    // Keep the city as a compatibility fallback while the backend uses the
-    // more accurate coordinates whenever it supports them.
-    if (city) {
-      query.set("city", city);
+    if (cleanCity.includes("(") && cleanCity.includes(")")) {
+      const match = cleanCity.match(/\(([^)]+)\)/);
+      if (match && match[1]) cleanCity = match[1].trim();
     }
-    return fetchApi(`/api/weather?${query.toString()}`);
+
+    try {
+      const query = new URLSearchParams({ baseWaterMl: String(baseWaterMl), outdoor: String(outdoor) });
+      if (lat != null && lon != null) {
+        query.set("lat", String(lat));
+        query.set("lon", String(lon));
+      }
+      if (cleanCity) query.set("city", cleanCity);
+
+      const result = await fetchApi(`/api/weather?${query.toString()}`);
+      if (result && result.temperature != null) return result;
+    } catch {
+      // Direct Open-Meteo fallback below
+    }
+
+    try {
+      let targetLat = lat;
+      let targetLon = lon;
+      let locationName = cleanCity || "Coimbatore";
+
+      if (targetLat == null || targetLon == null) {
+        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(locationName)}&count=1&language=en&format=json`);
+        const geoData = await geoRes.json();
+        if (geoData?.results?.[0]) {
+          targetLat = geoData.results[0].latitude;
+          targetLon = geoData.results[0].longitude;
+          locationName = geoData.results[0].name;
+        } else {
+          targetLat = 11.0168;
+          targetLon = 76.9558;
+          locationName = "Coimbatore";
+        }
+      }
+
+      const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${targetLat}&longitude=${targetLon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`);
+      const weatherData = await weatherRes.json();
+      const current = weatherData?.current || {};
+
+      const temperature = Math.round(current.temperature_2m ?? 28);
+      const humidity = Math.round(current.relative_humidity_2m ?? 60);
+
+      const wmoCode = current.weather_code || 0;
+      let condition = "clear sky";
+      if (wmoCode <= 3 && wmoCode > 0) condition = "partly cloudy";
+      else if (wmoCode > 3 && wmoCode <= 48) condition = "foggy";
+      else if (wmoCode > 48 && wmoCode <= 67) condition = "light rain";
+      else if (wmoCode > 67) condition = "rainy";
+
+      const tempFactor = temperature < 20 ? 0.9 : temperature <= 28 ? 1.0 : temperature <= 34 ? 1.15 : 1.3;
+      const humFactor = humidity > 80 ? 0.85 : humidity >= 60 ? 1.0 : humidity >= 40 ? 1.15 : 1.3;
+      const recommendedWaterMl = Math.round(baseWaterMl * tempFactor * humFactor);
+
+      return {
+        location: locationName,
+        temperature,
+        humidity,
+        condition,
+        timezone: weatherData?.timezone || "Asia/Kolkata",
+        recommendedWaterMl,
+        adjustmentReason: `Calculated from live ${locationName} weather (${temperature}°C, ${humidity}% humidity).`
+      };
+    } catch {
+      return {
+        location: cleanCity || "Coimbatore",
+        temperature: 28,
+        humidity: 62,
+        condition: "sunny",
+        timezone: "Asia/Kolkata",
+        recommendedWaterMl: 400,
+        adjustmentReason: "Default climate recommendation."
+      };
+    }
   },
   getAnalytics: () => fetchApi('/api/analytics'),
   getAdminAnalytics: () => fetchApi('/api/analytics/admin'),

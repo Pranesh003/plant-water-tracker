@@ -32,7 +32,36 @@ export default function PlantForm({ plant, mode = "add" }) {
 
   useEffect(() => {
     if (plant) {
-      setForm({ ...initialForm, ...plant, notes: "" });
+      const roomNames = ["living room", "bedroom", "kitchen", "balcony", "office", "garden", "other"];
+      let rawLoc = plant.location || "";
+      let parsedCity = plant.locationCity || "";
+      let parsedRoom = "Living Room";
+
+      if (rawLoc.includes(",")) {
+        const parts = rawLoc.split(",").map(s => s.trim()).filter(Boolean);
+        const first = parts[0];
+        const last = parts[parts.length - 1];
+        if (roomNames.includes(first.toLowerCase())) {
+          parsedRoom = first;
+          parsedCity = parsedCity || last;
+        } else {
+          parsedCity = parsedCity || last || first;
+        }
+      } else if (rawLoc) {
+        if (roomNames.includes(rawLoc.toLowerCase())) {
+          parsedRoom = rawLoc;
+        } else {
+          parsedCity = parsedCity || rawLoc;
+        }
+      }
+
+      setForm({
+        ...initialForm,
+        ...plant,
+        location: parsedRoom,
+        locationCity: parsedCity,
+        notes: ""
+      });
       setImagePreview(plant.photoUrl || "");
       setSelectedImage(null);
     }
@@ -78,20 +107,14 @@ export default function PlantForm({ plant, mode = "add" }) {
       setError(validation.error);
       return;
     }
-    setError("");
-    const previewUrl = URL.createObjectURL(file);
-    setImagePreview(previewUrl);
     setSelectedImage(file);
+    setImagePreview(URL.createObjectURL(file));
   };
 
   const handleRemoveImage = () => {
     setSelectedImage(null);
     setImagePreview("");
-    setAiRecommendation(null);
     setForm((current) => ({ ...current, photoUrl: "" }));
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
   };
 
   const analyzeImage = () => {
@@ -125,9 +148,21 @@ export default function PlantForm({ plant, mode = "add" }) {
     if (Number(form.frequency) < 1) return setError("Watering frequency must be at least 1 day.");
     setIsSaving(true);
     setError("");
+
+    const cleanCity = (form.locationCity || "").trim();
+    const cleanRoom = (form.location || "Living Room").trim();
+
+    const finalLocation = cleanCity ? `${cleanRoom}, ${cleanCity}` : cleanRoom;
+
+    const payload = {
+      ...form,
+      location: finalLocation,
+      locationCity: cleanCity
+    };
+
     try {
-      if (mode === "edit") await api.updatePlant(plant.id, form, selectedImage);
-      else await api.createPlant(form, selectedImage);
+      if (mode === "edit") await api.updatePlant(plant.id, payload, selectedImage);
+      else await api.createPlant(payload, selectedImage);
       await refresh();
       notify(mode === "edit" ? "Plant updated successfully." : "Plant saved to My Plants.");
       navigate("/my-plants");

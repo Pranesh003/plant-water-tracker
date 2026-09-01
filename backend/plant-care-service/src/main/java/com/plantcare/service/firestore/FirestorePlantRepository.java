@@ -192,6 +192,7 @@ public class FirestorePlantRepository {
         plant.setName(document.getString("name"));
         plant.setSpecies(document.getString("species"));
         plant.setLocation(document.getString("location"));
+        plant.setLocationCity(document.getString("locationCity"));
         plant.setRoom(document.getString("room"));
 
         Long frequency = document.getLong("frequency");

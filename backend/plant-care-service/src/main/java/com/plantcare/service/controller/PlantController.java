@@ -113,6 +113,7 @@ public class PlantController {
         plant.setName(plantRequest.getName().trim());
         plant.setSpecies(plantRequest.getSpecies().trim());
         plant.setLocation(plantRequest.getLocation());
+        plant.setLocationCity(plantRequest.getLocationCity());
         plant.setRoom(plantRequest.getLocation());
         plant.setFrequency(plantRequest.getFrequency());
         plant.setWateringFrequency(plantRequest.getFrequency());
@@ -200,6 +201,9 @@ public class PlantController {
         if (plantRequest.getLocation() != null) {
             plant.setLocation(plantRequest.getLocation());
             plant.setRoom(plantRequest.getLocation());
+        }
+        if (plantRequest.getLocationCity() != null) {
+            plant.setLocationCity(plantRequest.getLocationCity());
         }
         if (plantRequest.getFrequency() != null) {
             plant.setFrequency(plantRequest.getFrequency());

@@ -1,3 +1,5 @@
+import { getPlantLocalDate } from "./timezoneUtils.js";
+
 export const todayISO = () => {
   try {
     const today = new Date();
@@ -6,6 +8,35 @@ export const todayISO = () => {
   } catch {
     return new Date().toISOString().slice(0, 10);
   }
+};
+
+export const getSpeciesBaseWaterMl = (plant) => {
+  if (!plant) return 450;
+  if (plant.recommendedWaterMl && !Number.isNaN(Number(plant.recommendedWaterMl)) && Number(plant.recommendedWaterMl) > 50) {
+    return Number(plant.recommendedWaterMl);
+  }
+
+  const query = `${plant.species || ""} ${plant.name || ""}`.toLowerCase();
+
+  if (query.includes("cactus") || query.includes("succulent") || query.includes("snake") || query.includes("aloe") || query.includes("sansevieria") || query.includes("jade")) {
+    return 220;
+  }
+  if (query.includes("monstera") || query.includes("fiddle") || query.includes("palm") || query.includes("rubber") || query.includes("bird of paradise")) {
+    return 650;
+  }
+  if (query.includes("rose") || query.includes("hibiscus") || query.includes("jasmine") || query.includes("orchid") || query.includes("lily")) {
+    return 520;
+  }
+  if (query.includes("peace lily") || query.includes("pothos") || query.includes("philodendron") || query.includes("money plant")) {
+    return 420;
+  }
+  if (query.includes("fern") || query.includes("calathea") || query.includes("maranta")) {
+    return 480;
+  }
+  if (query.includes("bonsai") || query.includes("bamboo")) {
+    return 350;
+  }
+  return 450;
 };
 
 export const parseSafeDate = (dateString) => {
@@ -27,9 +58,10 @@ export const formatTimeAgo = (dateString) => {
   return `${diffDays} ${diffDays === 1 ? "day" : "days"} ago`;
 };
 
-export const isWateredToday = (lastWatered) => {
+export const isWateredToday = (lastWatered, plantLocationCity, serverTimezone) => {
   if (!lastWatered) return false;
-  return String(lastWatered).slice(0, 10) === todayISO();
+  const plantToday = getPlantLocalDate(plantLocationCity, serverTimezone);
+  return String(lastWatered).slice(0, 10) === plantToday || String(lastWatered).slice(0, 10) === todayISO();
 };
 
 export const addDays = (dateString, days) => {
@@ -60,21 +92,22 @@ export const calculateReminderDate = (plant) => {
   return addDays(nextWateringDate, -1);
 };
 
-export const calculateWateringStatus = (lastWatered, frequency) => {
+export const calculateWateringStatus = (lastWatered, frequency, plantLocationCity, serverTimezone) => {
   if (!lastWatered || !parseSafeDate(lastWatered)) return "Water Soon";
-  if (isWateredToday(lastWatered)) return "Safe";
+  if (isWateredToday(lastWatered, plantLocationCity, serverTimezone)) return "Safe";
   const freq = Number(frequency || 7);
-  const daysElapsed = daysBetween(lastWatered);
+  const plantToday = getPlantLocalDate(plantLocationCity, serverTimezone);
+  const daysElapsed = daysBetween(lastWatered, plantToday);
   const remaining = freq - daysElapsed;
   if (remaining < 0) return "Overdue";
   if (remaining <= 1) return "Water Soon";
   return "Safe";
 };
 
-export const isPlantWaterable = (lastWatered, frequency) => {
+export const isPlantWaterable = (lastWatered, frequency, plantLocationCity, serverTimezone) => {
   if (!lastWatered || !parseSafeDate(lastWatered)) return true;
-  if (isWateredToday(lastWatered)) return false;
-  const status = calculateWateringStatus(lastWatered, frequency);
+  if (isWateredToday(lastWatered, plantLocationCity, serverTimezone)) return false;
+  const status = calculateWateringStatus(lastWatered, frequency, plantLocationCity, serverTimezone);
   return status === "Water Soon" || status === "Overdue";
 };
 

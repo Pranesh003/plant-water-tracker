@@ -86,7 +86,8 @@ export default function PlantCard({ plant, preview = false, onDelete, weather })
   const [isWatering, setIsWatering] = useState(false);
   const [watered, setWatered] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
-  const status = calculateWateringStatus(plant.lastWatered, plant.frequency);
+  const targetCity = plant.locationCity || plant.location;
+  const status = calculateWateringStatus(plant.lastWatered, plant.frequency, targetCity);
   const hasWateringHistory = history.some((item) => item.plantId === plant.id && item.type === "watering");
   const wateredToday = history.some((item) => item.plantId === plant.id && item.type === "watering" && item.date === todayISO());
   const nextWateringDate = calculateNextWateringDate(plant.lastWatered, plant.frequency);

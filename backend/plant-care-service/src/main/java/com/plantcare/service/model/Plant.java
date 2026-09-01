@@ -42,6 +42,9 @@ public class Plant {
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }
 
+    public String getLocationCity() { return locationCity; }
+    public void setLocationCity(String locationCity) { this.locationCity = locationCity; }
+
     public String getRoom() { return room; }
     public void setRoom(String room) { this.room = room; }
 

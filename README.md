@@ -81,9 +81,18 @@ Plant care requires consistency, precise moisture management, and awareness of e
   - File upload support for plant photos stored securely in **Google Cloud Storage** buckets.
 
 - **Smart Hydration & Streak Engine**:
+  - Timezone-aware date and streak calculations using `timezoneUtils.js` to evaluate plant local time across global cities (e.g., Coimbatore, London, NYC, Tokyo).
   - Auto-calculates `nextWateringDate` based on `lastWateredDate` + `wateringFrequency`.
   - Calculates care streaks (`currentStreak` and `longestStreak`) based on watering logs.
   - Visual status badges: `Overdue` (red), `Due Today` (amber), `Healthy` (green).
+
+- **Botanical Water Requirement Engine**:
+  - Species-aware hydration volume calculator (`getSpeciesBaseWaterMl`) providing tailored base water defaults for Succulents (220ml), Monsteras & Palms (650ml), Flowering Plants (520ml), Peace Lilies (420ml), Ferns (480ml), and Bonsai (350ml).
+  - Custom `locationCity` and `recommendedWaterMl` overrides per plant entity.
+
+- **Resilient Weather Intelligence & Client Fallback**:
+  - Integrated OpenWeather API with a direct client-side Open-Meteo geocoding and forecasting fallback engine.
+  - Automatic city string cleaning (parsing room locations vs city names) to guarantee uninterrupted weather advisory rendering.
 
 - **Care History & Logging**:
   - Detailed historical timeline of every watering event, fertilization, pruning, and repotting.
@@ -490,7 +499,8 @@ plant_watering/
         ├── plantIconUtils.js         # Category icon resolver
         ├── storageUtils.js           # LocalStorage wrapper
         ├── themeUtils.js             # Dark/Light theme switcher
-        └── wateringUtils.js          # Next water calculation & streak logic
+        ├── timezoneUtils.js          # Timezone resolution & local plant clock calculations
+        └── wateringUtils.js          # Next water calculation, base volume & streak logic
 ```
 
 ---
@@ -525,7 +535,9 @@ plant_watering/
   "lastWateredDate": "2026-08-25",
   "nextWateringDate": "2026-09-01",
   "waterVolumeMl": 500,
+  "recommendedWaterMl": 650,
   "location": "Living Room Window",
+  "locationCity": "Coimbatore",
   "sunlight": "Indirect Sunlight",
   "imageUrl": "https://storage.googleapis.com/plant-care-bucket/monstera.jpg",
   "notes": "Loves daily misting",
