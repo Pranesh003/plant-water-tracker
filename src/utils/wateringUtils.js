@@ -62,7 +62,10 @@ export const calculateReminderDate = (plant) => {
 
 export const calculateWateringStatus = (lastWatered, frequency) => {
   if (!lastWatered || !parseSafeDate(lastWatered)) return "Water Soon";
-  const remaining = Number(frequency || 7) - daysBetween(lastWatered);
+  if (isWateredToday(lastWatered)) return "Safe";
+  const freq = Number(frequency || 7);
+  const daysElapsed = daysBetween(lastWatered);
+  const remaining = freq - daysElapsed;
   if (remaining < 0) return "Overdue";
   if (remaining <= 1) return "Water Soon";
   return "Safe";
@@ -70,6 +73,7 @@ export const calculateWateringStatus = (lastWatered, frequency) => {
 
 export const isPlantWaterable = (lastWatered, frequency) => {
   if (!lastWatered || !parseSafeDate(lastWatered)) return true;
+  if (isWateredToday(lastWatered)) return false;
   const status = calculateWateringStatus(lastWatered, frequency);
   return status === "Water Soon" || status === "Overdue";
 };

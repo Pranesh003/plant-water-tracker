@@ -9,7 +9,7 @@ import { todayISO } from "../utils/wateringUtils.js";
 import PlantCard from "./PlantCard.jsx";
 import PlantSearch from "./PlantSearch.jsx";
 
-const initialForm = { name: "", species: "", location: "Living Room", frequency: 7, lastWatered: todayISO(), sunlight: "Indirect Sunlight", notes: "", icon: "🌱", photoUrl: "", recommendedWaterMl: "", humidity: "" };
+const initialForm = { name: "", species: "", location: "Living Room", locationCity: "Coimbatore", frequency: 7, lastWatered: "", sunlight: "Indirect Sunlight", notes: "", icon: "🌱", photoUrl: "", recommendedWaterMl: "", humidity: "" };
 
 // A new plant has not been watered until the user records a watering event.
 initialForm.lastWatered = "";
@@ -185,7 +185,26 @@ export default function PlantForm({ plant, mode = "add" }) {
         )}
 
         <section><h2>Basic Information</h2><div className="field-grid"><label>Plant Name / Nickname<input value={form.name} onChange={(e) => update("name", e.target.value)} /></label><label>Species<input value={form.species} onChange={(e) => update("species", e.target.value)} /></label></div></section>
-        <section><h2>Location</h2><label>Plant location<select value={form.location} onChange={(e) => update("location", e.target.value)}>{["Living Room", "Bedroom", "Kitchen", "Balcony", "Office", "Garden", "Other"].map((item) => <option key={item}>{item}</option>)}</select></label></section>
+        <section>
+          <h2>Location & Weather Region</h2>
+          <div className="field-grid">
+            <label>
+              Room / Spot
+              <select value={form.location} onChange={(e) => update("location", e.target.value)}>
+                {["Living Room", "Bedroom", "Kitchen", "Balcony", "Office", "Garden", "Other"].map((item) => <option key={item}>{item}</option>)}
+              </select>
+            </label>
+            <label>
+              City / Country (for Plant's Local Weather)
+              <input
+                type="text"
+                value={form.locationCity || ""}
+                onChange={(e) => update("locationCity", e.target.value)}
+                placeholder="e.g. London, Tokyo, Coimbatore, New York..."
+              />
+            </label>
+          </div>
+        </section>
         <section><h2>Watering</h2><div className="field-grid"><label>Watering frequency in days<input type="number" min="1" value={form.frequency} onChange={(e) => update("frequency", e.target.value)} /></label><label>Last watered date<input type="date" value={form.lastWatered} onChange={(e) => update("lastWatered", e.target.value)} /></label></div></section>
         <section><h2>Sunlight</h2><div className="segmented" role="group" aria-label="Sunlight requirement">{["Direct Sunlight", "Indirect Sunlight", "Low Light"].map((item) => <button type="button" key={item} className={form.sunlight === item ? "selected" : ""} onClick={() => update("sunlight", item)}>{item}</button>)}</div></section>
         <section><h2>Notes</h2><label>Initial observations<textarea rows="5" value={form.notes} placeholder="New leaf appeared, soil looked dry..." onChange={(e) => update("notes", e.target.value)} /></label></section>
