@@ -135,7 +135,6 @@ export default function PlantDetails() {
                   💧 {plantWeather?.recommendedWaterMl || baseWaterMl} mL
                 </p>
                 <p style={{ fontSize: "0.88rem", color: "#2d6a4f", margin: 0, fontWeight: 600 }}>
-                  {plantWeather?.adjustmentReason || `Calculated based on local climate and clock in ${targetCity}.`}
                 </p>
               </div>
             </div>

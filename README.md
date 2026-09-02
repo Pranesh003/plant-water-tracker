@@ -58,16 +58,30 @@
 Plant care requires consistency, precise moisture management, and awareness of environmental conditions. Over-watering or under-watering is the leading cause of houseplant mortality. **Plant Care Tracker** bridges the gap between manual care and automated intelligence by offering:
 
 1. **Precision Hydration Schedules**: Calculates next watering deadlines based on species moisture requirements, pot sizing, and ambient environment.
-2. **Environmental Adaptation**: Connects with live weather providers (OpenWeather API and Open-Meteo) to dynamically compute temperature, humidity, and rainfall factors that adjust recommended watering volumes.
-3. **Gamified Care Streaks**: Encourages timely maintenance with automated streak counters, achievement badges, and history logs.
-4. **Botanical Knowledge Integration**: Integrates the Trefle API for auto-completing species details, family names, and growth attributes.
-5. **Enterprise Multi-Tenancy**: Built with Spring Boot 3 microservice architecture, Google Cloud Firestore NoSQL storage, and Google Cloud Storage for media assets, supporting regular users and system administrators.
+2. **AI Plant Health Doctor & Diagnostic Engine**: Multimodal image analysis powered by **Google Vertex AI / Gemini 1.5 Flash Vision** to diagnose diseases, chlorosis, pests, and nutrient deficiencies.
+3. **Environmental Adaptation**: Connects with live weather providers (OpenWeather API and Open-Meteo) to dynamically compute temperature, humidity, and rainfall factors that adjust recommended watering volumes.
+4. **Enterprise Cloud BigQuery Analytics**: Real-time streaming pipeline into **Google Cloud BigQuery** for running SQL data warehouse analytics, overdue risk distributions, and regional care insights.
+5. **GCP Cloud Scheduler & Notification Engine**: Automated daily cron scheduling and real-time in-app notification center for pending and overdue plant care reminders.
+6. **Botanical Knowledge Integration**: Integrates the Trefle API and AI vision for auto-completing species details, family names, and growth attributes.
+7. **Enterprise Multi-Tenancy**: Built with Spring Boot 3 microservice architecture, Google Cloud Firestore NoSQL storage, Google Cloud Storage, and Secret Manager.
 
 ---
 
 ## ✨ Core Platform Features
 
 ### 👤 End-User Functionality
+
+- **🤖 AI Plant Doctor & Leaf Diagnostic Scanner (Google Vertex AI / Gemini Vision)**:
+  - Upload or snap leaf photos to instantly diagnose diseases, pest infestations, root rot, or nutrient burn.
+  - Generates disease severity ratings (`Healthy`, `Mild Concern`, `Action Required`) and actionable step-by-step treatment instructions.
+  - Automatically logs AI health audit results directly into the plant's Care History and Notes.
+
+- **📸 Snap-to-Identify AI Plant Species Generator**:
+  - Automatically recognizes unknown plant species from images and pre-fills form fields (Common Name, Scientific Species, Category, Watering Frequency in days, and Water Volume in ml).
+
+- **🔔 GCP Cloud Scheduler & Real-Time Notification Center**:
+  - Automated background scheduler checking daily care deadlines every morning.
+  - Interactive top navigation Notification Center with real-time badges, unread indicators, sound effects, and schedule sync.
 
 - **Interactive Dashboard**:
   - Live summary metrics (Total Plants, Watered Today, Pending Reminders, Active Streak).
@@ -78,7 +92,7 @@ Plant care requires consistency, precise moisture management, and awareness of e
 - **Plant Collection Management**:
   - Create, view, update, and delete individual plant profiles.
   - Custom fields: Name, Scientific Species, Category (Indoor, Outdoor, Succulent, Herb, Flowering, Fern, Fiddle Leaf, etc.), Watering Frequency (days), Water Volume (ml), Location, Sunlight Requirements, and Acquisition Date.
-  - File upload support for plant photos stored securely in **Google Cloud Storage** buckets.
+  - Automated image optimization & WebP compression before uploading to **Google Cloud Storage** buckets.
 
 - **Smart Hydration & Streak Engine**:
   - Timezone-aware date and streak calculations using `timezoneUtils.js` to evaluate plant local time across global cities (e.g., Coimbatore, London, NYC, Tokyo).
@@ -119,14 +133,15 @@ Plant care requires consistency, precise moisture management, and awareness of e
 
 ### 🛡️ Administrative Supervisory Functionality
 
-- **Executive Admin Dashboard**:
+- **Executive Admin Dashboard & BigQuery Analytics**:
   - Platform-wide statistics: Total Registered Users, Total Active Plants, Overall Platform Streak, System Health Indicators.
+  - Streaming pipeline into **Google Cloud BigQuery** for running SQL data warehouse analytics on platform overdue trends and species distributions.
 - **User Directory & Management**:
   - View all user profiles, toggle user roles (`ROLE_USER` vs. `ROLE_ADMIN`), activate/deactivate user access, and inspect individual user plant collections.
 - **Global Plant Supervision**:
   - View all plants registered across the platform with user ownership details.
-- **System Configuration**:
-  - Admin settings for configuring platform maintenance modes, global default notification intervals, and logging thresholds.
+- **System Configuration & Secret Manager**:
+  - Admin settings for configuring platform maintenance modes, global default notification intervals, and Secret Manager status for sensitive API keys (`TREFLE_API_TOKEN`, `OPENWEATHER_API_KEY`, `GEMINI_API_KEY`).
 
 ---
 
@@ -140,6 +155,8 @@ graph TB
         A["React 18 + Vite Web App"] -->|HTTP / REST API| B["API Gateway Service / CORS Filter"]
         A -->|Direct SDK Sync| C["Firebase Auth Console"]
         A -->|PDFKit Engine| D["PDF Audit Report Generator"]
+        A -->|Real-time Badges| N1["Notification Center Widget"]
+        A -->|AI Photo Scan| A1["AiPlantDoctorCard Component"]
     end
 
     subgraph Backend ["API Gateway & Microservices (Backend Layer)"]
@@ -150,23 +167,32 @@ graph TB
         E --> I["Species Search Controller"]
         E --> J["Weather Controller"]
         E --> K["Analytics & Admin Controller"]
+        E --> V1["Vertex AI Diagnostic Controller"]
+        E --> B1["BigQuery Analytics Controller"]
+        E --> N2["Notification Scheduler & Controller"]
+        E --> O1["Image Optimizer Controller"]
+        E --> S1["Secret Manager Config Controller"]
     end
 
     subgraph External ["External Cloud Services & APIs"]
+        V1 -->|Multimodal Vision API| AI["Google Vertex AI / Gemini 1.5 Flash"]
         I -->|REST Query| L["Trefle Botanical API"]
         J -->|REST Query| M["OpenWeatherMap API"]
         J -->|Keyless Fallback| N["Open-Meteo Weather API"]
         J -->|Reverse Geocoding| O["OpenStreetMap Nominatim API"]
-        G -->|Image Upload| P["Google Cloud Storage Bucket"]
+        O1 -->|WebP Compression| P["Google Cloud Storage Bucket"]
+        S1 -->|Secret Fetch| SM["Google Cloud Secret Manager"]
         F -->|ID Token Sync| C
     end
 
-    subgraph Storage ["Persistence Layer (Database)"]
+    subgraph Storage ["Persistence Layer & Data Warehouse"]
         E -->|Firestore SDK / gRPC| Q[("Google Cloud Firestore NoSQL")]
+        B1 -->|Streaming Analytics| BQ[("Google Cloud BigQuery Warehouse")]
         Q --> Q1[("users Collection")]
         Q --> Q2[("plants Collection")]
         Q --> Q3[("history Collection")]
         Q --> Q4[("notes Collection")]
+        BQ --> BQ1[("plant_care_dataset.plants")]
     end
 ```
 
@@ -592,10 +618,17 @@ plant_watering/
 | `PUT` | `/api/plants/{id}` | ✅ | User/Admin | Update existing plant details |
 | `DELETE`| `/api/plants/{id}` | ✅ | User/Admin | Delete plant entity and associated logs |
 | `POST` | `/api/plants/{id}/water` | ✅ | User/Admin | Quick-water plant & calculate streak |
+| `POST` | `/api/vertex-ai/diagnose-health` | ✅ | User/Admin | Analyze leaf photo with Google Gemini Vision AI to diagnose plant disease |
+| `POST` | `/api/vertex-ai/identify-species` | ✅ | User/Admin | AI photo recognition to identify species and auto-fill care parameters |
+| `GET` | `/api/notifications` | ✅ | User/Admin | Fetch in-app notifications and scheduled care reminders |
+| `POST` | `/api/notifications/trigger-daily-check` | ✅ | Admin | Trigger GCP Cloud Scheduler daily watering check cron job |
+| `POST` | `/api/image-optimizer/compress` | ✅ | User/Admin | Compress and convert uploaded plant image to lightweight WebP format |
 | `GET` | `/api/history` | ✅ | User/Admin | Retrieve care history logs |
 | `GET` | `/api/species/search` | ✅ | User/Admin | Search botanical species via Trefle API |
 | `GET` | `/api/weather` | ✅ | User/Admin | Fetch real-time weather & hydration advisory |
 | `GET` | `/api/analytics/dashboard` | ✅ | User/Admin | Retrieve dashboard analytics metrics |
+| `GET` | `/api/analytics/bigquery` | ✅ | Admin | Stream & fetch Google Cloud BigQuery SQL data warehouse analytics |
+| `GET` | `/api/secrets/status` | ✅ | Admin | Check Google Cloud Secret Manager key status |
 | `GET` | `/api/users` | ✅ | Admin | List all registered platform users |
 | `GET` | `/api/users/{id}` | ✅ | Admin | Fetch user profile & plant details by User ID |
 | `PUT` | `/api/users/{id}/role` | ✅ | Admin | Change user role (`user` vs `admin`) |

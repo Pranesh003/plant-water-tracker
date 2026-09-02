@@ -1,4 +1,4 @@
-import { Bell, Download, KeyRound, Leaf, LockKeyhole, RefreshCw, Save, User, UserCog } from "lucide-react";
+import { Bell, Download, KeyRound, Leaf, LockKeyhole, RefreshCw, Save, Sparkles, User, UserCog } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePlantCare } from "../App.jsx";
@@ -15,7 +15,8 @@ const defaultSettings = {
   tempUnit: "°C",
   wateringAlerts: true,
   overdueAlerts: true,
-  activityNotifications: true
+  activityNotifications: true,
+  geminiApiKey: ""
 };
 
 export default function Settings() {
@@ -30,7 +31,8 @@ export default function Settings() {
 
   useEffect(() => {
     Promise.all([api.getUser(), Promise.resolve(readStorage(SETTINGS_KEY, defaultSettings))]).then(([userData, settings]) => {
-      const next = { name: userData?.name || "", email: userData?.email || "", ...defaultSettings, ...settings };
+      const storedKey = (typeof window !== "undefined" && (localStorage.getItem("geminiApiKey") || localStorage.getItem("openAiApiKey"))) || "";
+      const next = { name: userData?.name || "", email: userData?.email || "", ...defaultSettings, ...settings, geminiApiKey: storedKey || settings?.geminiApiKey || "" };
       setProfile(userData);
       setForm(next);
       applyTheme(next.theme);
@@ -101,6 +103,14 @@ export default function Settings() {
 
     try {
       await api.updateUser(profile.id, { ...profile, name: form.name.trim(), email: form.email.trim() });
+      const cleanKey = form.geminiApiKey ? form.geminiApiKey.trim() : "";
+      if (typeof window !== "undefined") {
+        if (cleanKey) {
+          localStorage.setItem("geminiApiKey", cleanKey);
+        } else {
+          localStorage.removeItem("geminiApiKey");
+        }
+      }
       const settings = {
         theme: form.theme,
         defaultLocation: form.defaultLocation,
@@ -109,7 +119,8 @@ export default function Settings() {
         tempUnit: form.tempUnit,
         wateringAlerts: form.wateringAlerts,
         overdueAlerts: form.overdueAlerts,
-        activityNotifications: form.activityNotifications
+        activityNotifications: form.activityNotifications,
+        geminiApiKey: cleanKey
       };
       writeStorage(SETTINGS_KEY, settings);
       applyTheme(form.theme);
@@ -221,7 +232,7 @@ export default function Settings() {
           <label className="check"><input type="checkbox" checked={form.activityNotifications} onChange={(e) => update("activityNotifications", e.target.checked)} /> Care history activity log alerts</label>
         </section>
 
-        {/* Section 5: Data Backup & Records Maintenance */}
+        {/* Section 6: Data Backup & Records Maintenance */}
         <section className="panel settings-section">
           <h2><Download size={20} /> Data & Record Maintenance</h2>
           <p className="muted" style={{ marginBottom: 14 }}>
@@ -237,7 +248,7 @@ export default function Settings() {
           </div>
         </section>
 
-        {/* Section 6: Security & Password Navigation */}
+        {/* Section 7: Security & Password Navigation */}
         <section className="panel settings-section">
           <h2><LockKeyhole size={20} /> Security & Password</h2>
           <p className="muted" style={{ marginBottom: 14 }}>

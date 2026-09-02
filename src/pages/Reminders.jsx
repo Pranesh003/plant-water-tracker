@@ -8,7 +8,7 @@ import { calculateNextWateringDate, calculateWateringStatus, formatDate, isPlant
 import { getPlantIconUrl } from "../utils/plantIconUtils.js";
 
 export default function Reminders() {
-  const { plants, history, waterPlant, refresh } = usePlantCare();
+  const { plants, history, waterPlant, refresh, user, notify } = usePlantCare();
   const navigate = useNavigate();
   const [filterTab, setFilterTab] = useState("all");
   const [query, setQuery] = useState("");

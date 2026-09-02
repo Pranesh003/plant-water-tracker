@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "plant-watering-tracker-2026"
-  }
+  },
+  "targets": {
+    "plant-watering-tracker-2026": {
+      "hosting": {
+        "main": [
+          "plant-watering-tracker-2026"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

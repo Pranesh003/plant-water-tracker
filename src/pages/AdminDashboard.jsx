@@ -158,6 +158,32 @@ export default function AdminDashboard() {
         </div>
       </section>
 
+      {/* GCP BigQuery & Looker Studio Admin BI Dashboard */}
+      <section className="panel" style={{ padding: "20px 24px", marginBottom: 24, background: "linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%)", color: "#ffffff", borderRadius: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+          <div>
+            <span style={{ fontSize: "0.78rem", background: "rgba(255, 255, 255, 0.2)", color: "#ffffff", padding: "4px 12px", borderRadius: 12, fontWeight: 700, textTransform: "uppercase" }}>
+              📊 Admin BI Analytics (BigQuery + Looker Studio)
+            </span>
+            <h3 style={{ margin: "8px 0 4px", fontSize: "1.2rem", fontWeight: 800, color: "#ffffff" }}>
+              Global Platform Analytics & Enterprise Reporting
+            </h3>
+            <p style={{ margin: 0, fontSize: "0.86rem", color: "#d8f3dc", opacity: 0.95 }}>
+              Aggregates all users, cities, room retention, and heatwave trends into GCP BigQuery dataset <code style={{ background: "rgba(0,0,0,0.3)", padding: "2px 6px", borderRadius: 4 }}>plant_analytics_db</code>.
+            </p>
+          </div>
+          <a
+            href="https://datastudio.google.com/reporting/9c8927e2-9477-4f48-a6d7-e73dbbc54129"
+            target="_blank"
+            rel="noreferrer"
+            className="primary-btn"
+            style={{ background: "linear-gradient(135deg, #4285F4 0%, #34A853 100%)", color: "#ffffff", fontWeight: 800, padding: "10px 18px", borderRadius: 12, textDecoration: "none" }}
+          >
+            Launch Looker Studio Admin BI
+          </a>
+        </div>
+      </section>
+
       {/* Middle Section (Watering Activity Chart + Plant Health Card) */}
       <section className="admin-dashboard-grid top-charts">
         <article className="panel chart-panel admin-chart-card">

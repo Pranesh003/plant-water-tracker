@@ -6,6 +6,8 @@ import { api } from "../services/api.js";
 import { readStorage, writeStorage } from "../utils/storageUtils.js";
 import { generatePlantNotifications } from "../utils/wateringUtils.js";
 
+import NotificationCenter from "./NotificationCenter.jsx";
+
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: Home },
   { to: "/my-plants", label: "My Plants", icon: Leaf },
@@ -166,7 +168,8 @@ export function DashboardHeader({ user, notifications, unreadCount, toggleNotifi
       </div>
 
       <div className="header-actions-right">
-        {/* Notifications Dropdown */}
+        {/* Automated Daily Reminders Notification Center */}
+        <NotificationCenter />
         <div className="notification-wrap" ref={notifRef}>
           <button className="icon-btn notif-btn" type="button" onClick={toggleNotifications} aria-label="Notifications">
             <Bell size={18} />

@@ -1,145 +1,94 @@
-import { useEffect, useRef, useState } from "react";
-import { Camera, Save, Sparkles, Trash2, X } from "lucide-react";
+import { Camera, Save, Trash2, X } from "lucide-react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../services/api.js";
 import { usePlantCare } from "../App.jsx";
-import { generatePlantRecommendation, validatePlantImage } from "../utils/plantAssistant.js";
-import { uploadPlantPhoto } from "../utils/storageUtils.js";
-import { todayISO } from "../utils/wateringUtils.js";
+import { api } from "../services/api.js";
 import PlantCard from "./PlantCard.jsx";
 import PlantSearch from "./PlantSearch.jsx";
 
-const initialForm = { name: "", species: "", location: "Living Room", locationCity: "Coimbatore", frequency: 7, lastWatered: "", sunlight: "Indirect Sunlight", notes: "", icon: "🌱", photoUrl: "", recommendedWaterMl: "", humidity: "" };
-
-// A new plant has not been watered until the user records a watering event.
-initialForm.lastWatered = "";
-
-export default function PlantForm({ plant, mode = "add" }) {
+export default function PlantForm({ plant, mode = "create" }) {
+  const { notify, refresh } = usePlantCare();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
-  const { refresh, notify } = usePlantCare();
+
+  const [form, setForm] = useState({
+    name: plant?.name || "",
+    species: plant?.species || "",
+    frequency: plant?.frequency || "7",
+    lastWatered: plant?.lastWatered || new Date().toISOString().split("T")[0],
+    sunlight: plant?.sunlight || "Indirect Sunlight",
+    notes: Array.isArray(plant?.notes) ? (plant.notes[0]?.text || "") : (typeof plant?.notes === "string" ? plant.notes : ""),
+    photoUrl: plant?.photoUrl || "",
+    icon: plant?.icon || "🌿",
+    location: plant?.location ? plant.location.split(",")[0].trim() : "Living Room",
+    locationCity: plant?.locationCity || (plant?.location && plant.location.includes(",") ? plant.location.split(",")[1].trim() : ""),
+    recommendedWaterMl: plant?.recommendedWaterMl || "450"
+  });
+
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(plant?.photoUrl || "");
   const [query, setQuery] = useState("");
   const [speciesSuggestions, setSpeciesSuggestions] = useState([]);
   const [isSearchingSpecies, setIsSearchingSpecies] = useState(false);
   const [speciesSearchError, setSpeciesSearchError] = useState("");
-  const [form, setForm] = useState(initialForm);
-  const [error, setError] = useState("");
-  const [aiRecommendation, setAiRecommendation] = useState(null);
-  const [imagePreview, setImagePreview] = useState("");
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    if (plant) {
-      const roomNames = ["living room", "bedroom", "kitchen", "balcony", "office", "garden", "other"];
-      let rawLoc = plant.location || "";
-      let parsedCity = plant.locationCity || "";
-      let parsedRoom = "Living Room";
-
-      if (rawLoc.includes(",")) {
-        const parts = rawLoc.split(",").map(s => s.trim()).filter(Boolean);
-        const first = parts[0];
-        const last = parts[parts.length - 1];
-        if (roomNames.includes(first.toLowerCase())) {
-          parsedRoom = first;
-          parsedCity = parsedCity || last;
-        } else {
-          parsedCity = parsedCity || last || first;
-        }
-      } else if (rawLoc) {
-        if (roomNames.includes(rawLoc.toLowerCase())) {
-          parsedRoom = rawLoc;
-        } else {
-          parsedCity = parsedCity || rawLoc;
-        }
-      }
-
-      setForm({
-        ...initialForm,
-        ...plant,
-        location: parsedRoom,
-        locationCity: parsedCity,
-        notes: ""
-      });
-      setImagePreview(plant.photoUrl || "");
-      setSelectedImage(null);
-    }
-  }, [plant]);
-
-  useEffect(() => {
-    const search = query.trim();
-    if (search.length < 2) {
-      setSpeciesSuggestions([]);
-      setSpeciesSearchError("");
-      setIsSearchingSpecies(false);
-      return undefined;
-    }
-    const timer = window.setTimeout(async () => {
-      setIsSearchingSpecies(true);
-      try {
-        const results = await api.searchSpecies(search);
-        setSpeciesSuggestions(results);
-        setSpeciesSearchError("");
-      } catch (requestError) {
-        setSpeciesSuggestions([]);
-        setSpeciesSearchError(requestError.message || "Plant species search is unavailable.");
-      } finally {
-        setIsSearchingSpecies(false);
-      }
-    }, 350);
-    return () => window.clearTimeout(timer);
-  }, [query]);
+  const [error, setError] = useState("");
 
   const update = (field, value) => setForm((current) => ({ ...current, [field]: value }));
 
-  const selectPlant = (suggestion) => {
-    setQuery("");
-    setSpeciesSuggestions([]);
-    setForm((current) => ({ ...current, name: suggestion.name, species: suggestion.species, frequency: suggestion.frequency || current.frequency, sunlight: suggestion.sunlight || current.sunlight, icon: suggestion.icon || current.icon }));
-  };
-
-  const handleImageSelection = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    const validation = validatePlantImage(file);
-    if (!validation.valid) {
-      setError(validation.error);
+  const setQueryAndSearch = async (val) => {
+    setQuery(val);
+    if (!val.trim()) {
+      setSpeciesSuggestions([]);
       return;
     }
-    setSelectedImage(file);
-    setImagePreview(URL.createObjectURL(file));
+    setIsSearchingSpecies(true);
+    setSpeciesSearchError("");
+    try {
+      const res = await api.searchSpecies(val);
+      setSpeciesSuggestions(res || []);
+    } catch {
+      setSpeciesSearchError("Species lookup unavailable.");
+    } finally {
+      setIsSearchingSpecies(false);
+    }
+  };
+
+  const selectPlant = (selected) => {
+    setForm((current) => ({
+      ...current,
+      name: current.name || selected.name,
+      species: selected.species,
+      frequency: String(selected.frequency || current.frequency),
+      sunlight: selected.sunlight || current.sunlight,
+      icon: selected.icon || current.icon
+    }));
+    setQuery(selected.name);
+    setSpeciesSuggestions([]);
+  };
+
+  const [imageMeta, setImageMeta] = useState(null);
+
+  const handleImageSelection = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const { optimizePlantImage } = await import("../services/imageOptimizerService.js");
+      const res = await optimizePlantImage(file, 400, 400);
+      setSelectedImage(res.file);
+      setImagePreview(res.previewUrl);
+      setImageMeta(res);
+    } catch {
+      setSelectedImage(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
   };
 
   const handleRemoveImage = () => {
     setSelectedImage(null);
     setImagePreview("");
+    setImageMeta(null);
     setForm((current) => ({ ...current, photoUrl: "" }));
-  };
-
-  const analyzeImage = () => {
-    if (!imagePreview) {
-      setError("Upload a plant image before identifying the plant.");
-      return;
-    }
-    setIsAnalyzing(true);
-    setError("");
-    const recommendation = generatePlantRecommendation({ name: imagePreview, size: 2500000, type: "image/jpeg" });
-    setTimeout(() => {
-      setAiRecommendation(recommendation);
-      setForm((current) => ({
-        ...current,
-        name: recommendation.plantName,
-        species: recommendation.species,
-        frequency: recommendation.wateringFrequencyDays,
-        sunlight: recommendation.sunlight,
-        location: recommendation.location?.split(" / ")[0] || current.location,
-        recommendedWaterMl: recommendation.recommendedWaterMl,
-        humidity: recommendation.humidity,
-        notes: recommendation.careTips.join(" ")
-      }));
-      setIsAnalyzing(false);
-    }, 600);
   };
 
   const submit = async (event) => {
@@ -151,11 +100,12 @@ export default function PlantForm({ plant, mode = "add" }) {
 
     const cleanCity = (form.locationCity || "").trim();
     const cleanRoom = (form.location || "Living Room").trim();
-
     const finalLocation = cleanCity ? `${cleanRoom}, ${cleanCity}` : cleanRoom;
 
     const payload = {
       ...form,
+      frequency: Number(form.frequency),
+      notes: typeof form.notes === "string" ? form.notes : (Array.isArray(form.notes) ? (form.notes[0]?.text || "") : ""),
       location: finalLocation,
       locationCity: cleanCity
     };
@@ -178,7 +128,7 @@ export default function PlantForm({ plant, mode = "add" }) {
   return (
     <div className="form-layout">
       <form className="panel plant-form" onSubmit={submit}>
-        <PlantSearch value={query} onChange={setQuery} onSelect={selectPlant} suggestions={speciesSuggestions} loading={isSearchingSpecies} error={speciesSearchError} />
+        <PlantSearch value={query} onChange={setQueryAndSearch} onSelect={selectPlant} suggestions={speciesSuggestions} loading={isSearchingSpecies} error={speciesSearchError} />
         {error && <p className="error" role="alert">{error}</p>}
 
         <section>
@@ -190,8 +140,14 @@ export default function PlantForm({ plant, mode = "add" }) {
             </label>
           </div>
           {imagePreview && <img src={imagePreview} alt="Plant preview" style={{ width: "100%", maxHeight: 220, objectFit: "cover", borderRadius: 12, marginTop: 12 }} />}
+          {imageMeta && (
+            <div style={{ marginTop: 8, padding: "8px 12px", background: "#f0f7f2", borderRadius: 8, border: "1px solid #c8e6c9", fontSize: "0.82rem", color: "#2d6a4f", fontWeight: 700 }}>
+              🖼️ <strong>400x400 WebP Thumbnail Generated</strong> ({imageMeta.sizeKb} KB) | {imageMeta.aiLabel}
+            </div>
+          )}
+          
           {imagePreview && (
-            <div style={{ display: "flex", gap: 12, marginTop: 12, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: 12, marginTop: 12, alignItems: "center" }}>
               <button type="button" className="ghost-btn" onClick={handleRemoveImage} style={{ color: "#d9534f", border: "1px solid #d9534f" }}>
                 <Trash2 size={16} /> Remove Photo
               </button>
@@ -199,27 +155,14 @@ export default function PlantForm({ plant, mode = "add" }) {
           )}
         </section>
 
-        {aiRecommendation && (
-          <section>
-            <h2>AI Plant Assistant</h2>
-            <div className="panel" style={{ padding: 16, background: "#f6fbf5" }}>
-              <p><strong>Plant:</strong> {aiRecommendation.plantName}</p>
-              <p><strong>Species:</strong> {aiRecommendation.species}</p>
-              <p><strong>Confidence:</strong> {aiRecommendation.confidence ? `${(aiRecommendation.confidence * 100).toFixed(0)}%` : "Low"}</p>
-              <p><strong>Watering:</strong> Every {aiRecommendation.wateringFrequencyDays} days</p>
-              <p><strong>Recommended water:</strong> {aiRecommendation.recommendedWaterMl} mL</p>
-              <p><strong>Sunlight:</strong> {aiRecommendation.sunlight}</p>
-              <p><strong>Location:</strong> {aiRecommendation.location}</p>
-              <p><strong>Humidity:</strong> {aiRecommendation.humidity}</p>
-              <ul>
-                {aiRecommendation.careTips.map((tip) => <li key={tip}>{tip}</li>)}
-              </ul>
-              <button type="button" className="ghost-btn" onClick={() => setAiRecommendation(null)}>Edit</button>
-            </div>
-          </section>
-        )}
+        <section>
+          <h2>Basic Information</h2>
+          <div className="field-grid">
+            <label>Plant Name / Nickname<input value={form.name} onChange={(e) => update("name", e.target.value)} /></label>
+            <label>Species<input value={form.species} onChange={(e) => update("species", e.target.value)} /></label>
+          </div>
+        </section>
 
-        <section><h2>Basic Information</h2><div className="field-grid"><label>Plant Name / Nickname<input value={form.name} onChange={(e) => update("name", e.target.value)} /></label><label>Species<input value={form.species} onChange={(e) => update("species", e.target.value)} /></label></div></section>
         <section>
           <h2>Location & Weather Region</h2>
           <div className="field-grid">
@@ -240,12 +183,38 @@ export default function PlantForm({ plant, mode = "add" }) {
             </label>
           </div>
         </section>
-        <section><h2>Watering</h2><div className="field-grid"><label>Watering frequency in days<input type="number" min="1" value={form.frequency} onChange={(e) => update("frequency", e.target.value)} /></label><label>Last watered date<input type="date" value={form.lastWatered} onChange={(e) => update("lastWatered", e.target.value)} /></label></div></section>
-        <section><h2>Sunlight</h2><div className="segmented" role="group" aria-label="Sunlight requirement">{["Direct Sunlight", "Indirect Sunlight", "Low Light"].map((item) => <button type="button" key={item} className={form.sunlight === item ? "selected" : ""} onClick={() => update("sunlight", item)}>{item}</button>)}</div></section>
-        <section><h2>Notes</h2><label>Initial observations<textarea rows="5" value={form.notes} placeholder="New leaf appeared, soil looked dry..." onChange={(e) => update("notes", e.target.value)} /></label></section>
-        <div className="form-actions"><button type="button" className="ghost-btn" onClick={() => navigate("/my-plants")}><X size={16} /> Cancel</button><button className="primary-btn" disabled={isSaving}><Save size={16} /> {isSaving ? "Saving..." : "Save Plant"}</button></div>
+
+        <section>
+          <h2>Watering</h2>
+          <div className="field-grid">
+            <label>Watering frequency in days<input type="number" min="1" value={form.frequency} onChange={(e) => update("frequency", e.target.value)} /></label>
+            <label>Last watered date<input type="date" value={form.lastWatered} onChange={(e) => update("lastWatered", e.target.value)} /></label>
+          </div>
+        </section>
+
+        <section>
+          <h2>Sunlight</h2>
+          <div className="segmented" role="group" aria-label="Sunlight requirement">
+            {["Direct Sunlight", "Indirect Sunlight", "Low Light"].map((item) => (
+              <button type="button" key={item} className={form.sunlight === item ? "selected" : ""} onClick={() => update("sunlight", item)}>{item}</button>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <h2>Notes</h2>
+          <label>Initial observations<textarea rows="5" value={form.notes} placeholder="New leaf appeared, soil looked dry..." onChange={(e) => update("notes", e.target.value)} /></label>
+        </section>
+
+        <div className="form-actions">
+          <button type="button" className="ghost-btn" onClick={() => navigate("/my-plants")}><X size={16} /> Cancel</button>
+          <button className="primary-btn" disabled={isSaving}><Save size={16} /> {isSaving ? "Saving..." : "Save Plant"}</button>
+        </div>
       </form>
-      <aside className="preview-column panel"><h2>Live Preview</h2><PlantCard plant={preview} preview /></aside>
+      <aside className="preview-column panel">
+        <h2>Live Preview</h2>
+        <PlantCard plant={preview} preview />
+      </aside>
     </div>
   );
 }

@@ -10,6 +10,7 @@ public class Plant {
     private String name;
     private String species;
     private String location;
+    private String locationCity;
     private String room;
     private Integer frequency;
     private Integer wateringFrequency;

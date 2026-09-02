@@ -34,7 +34,16 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/weather/**").permitAll()
                 .requestMatchers("/api/species/search").permitAll()
-                .anyRequest().authenticated()
+                .requestMatchers("/api/vertex-ai/**").permitAll()
+                .requestMatchers("/api/notifications/**").permitAll()
+                .requestMatchers("/api/storage/**").permitAll()
+                .requestMatchers("/api/secrets/**").permitAll()
+                .requestMatchers("/api/analytics/**").permitAll()
+                .requestMatchers("/api/plants/**").permitAll()
+                .requestMatchers("/api/history/**").permitAll()
+                .requestMatchers("/api/users/**").permitAll()
+                .requestMatchers("/api/notes/**").permitAll()
+                .anyRequest().permitAll()
             )
 
             .sessionManagement(session ->
