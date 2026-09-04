@@ -4,19 +4,18 @@
  */
 
 const GEMINI_MODELS = [
+  "gemini-3.6-flash",
   "gemini-3.5-flash",
   "gemini-3.5-flash-lite",
-  "gemini-3.6-flash",
   "gemini-3.1-flash-lite",
-  "gemini-3-flash-preview",
   "gemini-flash-latest",
-  "gemini-2.5-flash"
+  "gemini-2.5-flash-lite"
 ];
 
 const OBFUSCATED_KEYS = [
-  "QVEuQWI4Uk42SkNJQ05FV0ZrWEl5emJZenNBZGpBQmZsQl9fcDAwZTNEcHJoX1FlQjI3OEE=",
-  "QVEuQWI4Uk42Sm5xUC1WOTNtTXIzR3Bxa0hRU3RLV2tWX19rbWFBSFdpLXRTM1M2RTM4MkE=",
-  "QVEuQWI4Uk42Skc0QzM1SXNCRVRKNGZXZlBPbVVvWGpYOERGSzlQbzZremxsVDdNbWR3SFE="
+  "QVEuQWI4Uk42S0o2dVh0VkdETi1wbTVaWlU4U3JZc004azA2eW8tN1BpVjNtLWRnQWRnS0E=",
+  "QVEuQWI4Uk42SUtPRmFsWkdBd255bmdrYnA0ajl0dTF4MHA0dUZaVTlORUlpTlZDME5Qb3c=",
+  "QVEuQWI4Uk42S050cXNWV29mM25NVlBZb0hPZnhEM2VCUlctUjRPYmdnRDdwbzh3VTBnb2c="
 ];
 
 const BACKUP_KEY_POOL = OBFUSCATED_KEYS.map((k) => (typeof window !== "undefined" ? atob(k) : Buffer.from(k, "base64").toString("utf-8")));
