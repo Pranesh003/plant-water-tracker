@@ -221,10 +221,11 @@ Respond STRICTLY with a valid JSON object matching this schema:
   // Direct Google Gemini / GCP Vertex AI Key Handler (AIzaSy... or AQ....)
   if (apiKey && (apiKey.startsWith("AIzaSy") || apiKey.startsWith("AQ."))) {
     const modelsToTry = [
-      "gemini-1.5-flash",
+      "gemini-3.6-flash",
+      "gemini-3.5-flash",
       "gemini-flash-latest",
       "gemini-2.0-flash",
-      "gemini-1.5-pro"
+      "gemini-2.5-flash-lite"
     ];
 
     for (const modelName of modelsToTry) {
