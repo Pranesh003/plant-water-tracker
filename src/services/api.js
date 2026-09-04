@@ -321,6 +321,7 @@ export const api = {
       type: "ai_doctor",
       date: todayStr,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      createdAt: new Date().toISOString(),
       leafPhoto: storedPhotoUrl || "",
       report: reportData
     };

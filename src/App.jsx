@@ -130,6 +130,7 @@ export default function App() {
           type: "watering",
           date: todayStr,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          createdAt: new Date().toISOString(),
           streak: plant.currentStreak || 1
         };
 

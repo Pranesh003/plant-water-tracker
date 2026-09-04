@@ -39,21 +39,68 @@ export const getSpeciesBaseWaterMl = (plant) => {
   return 450;
 };
 
-export const parseSafeDate = (dateString) => {
-  if (!dateString || dateString === "null" || dateString === "undefined") return null;
-  const str = String(dateString).trim();
+export const parseSafeDate = (dateInput, timeString, createdAt) => {
+  let dateStr = dateInput;
+  let timeStr = timeString;
+  let createdStr = createdAt;
+
+  // Handle item object: parseSafeDate(item)
+  if (dateInput && typeof dateInput === "object" && !(dateInput instanceof Date)) {
+    dateStr = dateInput.date || dateInput.createdAt || dateInput.timestamp;
+    timeStr = dateInput.time;
+    createdStr = dateInput.createdAt || dateInput.timestamp;
+  }
+
+  // 1. If explicit ISO timestamp or epoch timestamp exists
+  if (createdStr) {
+    const d = typeof createdStr === "number" ? new Date(createdStr) : new Date(createdStr);
+    if (!Number.isNaN(d.getTime())) return d;
+  }
+
+  if (!dateStr || dateStr === "null" || dateStr === "undefined") return null;
+  const str = String(dateStr).trim();
   if (!str) return null;
-  const date = str.includes("T") ? new Date(str) : new Date(`${str}T12:00:00`);
+
+  // 2. If dateStr is a full ISO timestamp string
+  if (str.includes("T") || (str.includes(" ") && str.includes(":"))) {
+    const d = new Date(str);
+    if (!Number.isNaN(d.getTime())) return d;
+  }
+
+  // 3. If dateStr is "YYYY-MM-DD" and timeStr is "10:45 PM" or "22:45"
+  if (timeStr && typeof timeStr === "string") {
+    const combined = `${str} ${timeStr}`;
+    const d = new Date(combined);
+    if (!Number.isNaN(d.getTime())) return d;
+  }
+
+  // 4. If dateStr matches today's date
+  const today = todayISO();
+  if (str === today) {
+    return new Date();
+  }
+
+  // 5. Fallback for past YYYY-MM-DD dates
+  const date = new Date(`${str}T12:00:00`);
   if (Number.isNaN(date.getTime())) return null;
   return date;
 };
 
-export const formatTimeAgo = (dateString) => {
-  const date = parseSafeDate(dateString);
+export const formatTimeAgo = (dateInput, timeString, createdAt) => {
+  const date = parseSafeDate(dateInput, timeString, createdAt);
   if (!date) return "Recently";
-  const diffHours = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60));
-  if (diffHours < 1) return "Just now";
+
+  const diffMs = Date.now() - date.getTime();
+  if (diffMs < 0) return "Just now";
+
+  const diffSecs = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(diffSecs / 60);
+  const diffHours = Math.floor(diffMins / 60);
+
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins} ${diffMins === 1 ? "min" : "mins"} ago`;
   if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? "hour" : "hours"} ago`;
+
   const diffDays = Math.floor(diffHours / 24);
   return `${diffDays} ${diffDays === 1 ? "day" : "days"} ago`;
 };

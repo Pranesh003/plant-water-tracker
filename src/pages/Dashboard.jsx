@@ -493,7 +493,7 @@ export default function Dashboard() {
                       <p>
                         <strong>{item.plantName || "Plant"}</strong> {item.type === "watering" ? "watered" : "note added"}
                       </p>
-                      <small>{item.date ? formatTimeAgo(item.date) : "Recently"}</small>
+                      <small>{item.date ? formatTimeAgo(item) : "Recently"}</small>
                     </div>
                   </div>
                 ))

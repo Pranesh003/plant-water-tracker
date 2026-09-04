@@ -97,7 +97,7 @@ export default function HistoryItem({ item }) {
               {item.date && (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "0.78rem", color: "#94a3b8" }}>
                   <Clock size={12} />
-                  {formatTimeAgo(item.date)}
+                  {formatTimeAgo(item)}
                 </span>
               )}
 
