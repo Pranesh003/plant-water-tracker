@@ -282,19 +282,21 @@ export default function Settings() {
             </div>
           </div>
 
-          <div style={{ marginTop: 12, padding: "12px 14px", borderRadius: 12, background: "rgba(0, 0, 0, 0.25)", border: "1px solid rgba(255, 255, 255, 0.1)" }}>
-            <label htmlFor="settings-gemini-key" style={{ fontSize: "0.82rem", fontWeight: 750, color: "#d8f3dc", display: "block", marginBottom: 6 }}>
-              🔑 Custom Gemini API Key (Optional - default system key is active):
-            </label>
-            <input
-              id="settings-gemini-key"
-              type="password"
-              placeholder="Paste your key (e.g. AQ.Ab8RN... or AIzaSy...)"
-              value={form.geminiApiKey}
-              onChange={(e) => update("geminiApiKey", e.target.value)}
-              style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1px solid rgba(255, 255, 255, 0.2)", background: "rgba(255, 255, 255, 0.1)", color: "#ffffff", fontSize: "0.88rem" }}
-            />
-          </div>
+          {profile?.role === "admin" && (
+            <div style={{ marginTop: 12, padding: "12px 14px", borderRadius: 12, background: "rgba(0, 0, 0, 0.25)", border: "1px solid rgba(255, 255, 255, 0.1)" }}>
+              <label htmlFor="settings-gemini-key" style={{ fontSize: "0.82rem", fontWeight: 750, color: "#d8f3dc", display: "block", marginBottom: 6 }}>
+                🔑 System Gemini API Key Override (Admin Only):
+              </label>
+              <input
+                id="settings-gemini-key"
+                type="password"
+                placeholder="Paste key override..."
+                value={form.geminiApiKey}
+                onChange={(e) => update("geminiApiKey", e.target.value)}
+                style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1px solid rgba(255, 255, 255, 0.2)", background: "rgba(255, 255, 255, 0.1)", color: "#ffffff", fontSize: "0.88rem" }}
+              />
+            </div>
+          )}
         </section>
 
         {/* Section 3: Notifications & Desktop Push Alerts */}

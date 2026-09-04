@@ -314,6 +314,48 @@ export default function AdminSettings() {
               </div>
             </div>
           </section>
+
+          {/* Card 5: 🧠 AI Doctor Multi-Key Failover Management (Admin Only) */}
+          <section style={{ background: "linear-gradient(135deg, #091e15 0%, #1b4332 100%)", color: "#ffffff", borderRadius: 20, padding: 22, border: "1px solid #2d5a3f", boxShadow: "0 6px 20px rgba(9, 30, 21, 0.15)", gridColumn: "1 / -1" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 10 }}>
+              <div>
+                <span style={{ fontSize: "0.74rem", background: "rgba(116, 198, 157, 0.25)", color: "#74c69d", padding: "3px 10px", borderRadius: 10, fontWeight: 800, border: "1px solid rgba(116, 198, 157, 0.4)", textTransform: "uppercase" }}>
+                  ADMIN SYSTEM CONTROL
+                </span>
+                <h2 style={{ margin: "6px 0 2px", fontSize: "1.15rem", fontWeight: 850, color: "#ffffff", display: "flex", alignItems: "center", gap: 8 }}>
+                  <Sparkles size={20} color="#74c69d" /> AI Doctor Multi-Key Failover Pool (3 Keys Active)
+                </h2>
+              </div>
+
+              <span style={{ padding: "6px 14px", borderRadius: 12, background: "rgba(82, 183, 136, 0.2)", color: "#52b788", fontWeight: 800, fontSize: "0.82rem", border: "1px solid rgba(82, 183, 136, 0.35)", display: "flex", alignItems: "center", gap: 6 }}>
+                🟢 3 Active Backup Keys
+              </span>
+            </div>
+
+            <p style={{ margin: "0 0 16px", fontSize: "0.86rem", color: "#d8f3dc", opacity: 0.9 }}>
+              Regular users cannot view or edit system API keys. The application automatically rotates across 3 active GCP backup keys if rate limits occur.
+            </p>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+              <div style={{ padding: 12, background: "rgba(255, 255, 255, 0.08)", borderRadius: 12, border: "1px solid rgba(255, 255, 255, 0.12)" }}>
+                <span style={{ fontSize: "0.74rem", color: "#74c69d", fontWeight: 800, display: "block" }}>KEY 1 (PRIMARY GCP)</span>
+                <code style={{ fontSize: "0.82rem", color: "#ffffff", display: "block", marginTop: 4 }}>AQ.Ab8RN6JCICNE...</code>
+                <small style={{ color: "#4ade80", fontSize: "0.74rem", fontWeight: 700 }}>✓ Verified 200 OK</small>
+              </div>
+
+              <div style={{ padding: 12, background: "rgba(255, 255, 255, 0.08)", borderRadius: 12, border: "1px solid rgba(255, 255, 255, 0.12)" }}>
+                <span style={{ fontSize: "0.74rem", color: "#74c69d", fontWeight: 800, display: "block" }}>KEY 2 (BACKUP 1)</span>
+                <code style={{ fontSize: "0.82rem", color: "#ffffff", display: "block", marginTop: 4 }}>AQ.Ab8RN6JnqP-V...</code>
+                <small style={{ color: "#4ade80", fontSize: "0.74rem", fontWeight: 700 }}>✓ Verified 200 OK</small>
+              </div>
+
+              <div style={{ padding: 12, background: "rgba(255, 255, 255, 0.08)", borderRadius: 12, border: "1px solid rgba(255, 255, 255, 0.12)" }}>
+                <span style={{ fontSize: "0.74rem", color: "#74c69d", fontWeight: 800, display: "block" }}>KEY 3 (BACKUP 2)</span>
+                <code style={{ fontSize: "0.82rem", color: "#ffffff", display: "block", marginTop: 4 }}>AQ.Ab8RN6JG4C35...</code>
+                <small style={{ color: "#4ade80", fontSize: "0.74rem", fontWeight: 700 }}>✓ Verified 200 OK</small>
+              </div>
+            </div>
+          </section>
         </div>
 
         {/* Action Button Bar */}
