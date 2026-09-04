@@ -292,38 +292,9 @@ export default function PlantForm({ plant, mode = "create" }) {
                 {isAiAnalyzing ? "Scanning Pixels with Gemini 1.5 Flash..." : "Auto-Identify & Diagnose with Gemini AI"}
               </button>
 
-              <button
-                type="button"
-                className="ghost-btn"
-                onClick={() => setShowApiKeyInput(!showApiKeyInput)}
-                style={{ fontSize: "0.82rem", display: "inline-flex", alignItems: "center", gap: 6 }}
-              >
-                <Key size={14} /> {localStorage.getItem("geminiApiKey") ? "API Key Set ✓" : "Set API Key"}
-              </button>
-
               <button type="button" className="ghost-btn" onClick={handleRemoveImage} style={{ color: "#d9534f", border: "1px solid #d9534f" }}>
                 <Trash2 size={16} /> Remove Photo
               </button>
-            </div>
-          )}
-
-          {showApiKeyInput && (
-            <div style={{ marginTop: 12, padding: 14, background: "#f8faf7", borderRadius: 14, border: "1px solid #cbd5e1" }}>
-              <label style={{ fontSize: "0.82rem", fontWeight: 750, color: "#0f172a", display: "block", marginBottom: 6 }}>
-                🔑 Google Gemini API Key (for live real-time cloud AI identification):
-              </label>
-              <div style={{ display: "flex", gap: 8 }}>
-                <input
-                  type="password"
-                  placeholder="Paste your Gemini API Key (e.g. AIzaSy...)"
-                  value={apiKeyInput}
-                  onChange={(e) => setApiKeyInput(e.target.value)}
-                  style={{ flex: 1, padding: "8px 12px", borderRadius: 8, border: "1px solid #cbd5e1", fontSize: "0.86rem" }}
-                />
-                <button type="button" onClick={handleSaveApiKey} style={{ padding: "8px 14px", borderRadius: 8, background: "#16a34a", color: "#fff", fontWeight: 800, border: "none", cursor: "pointer" }}>
-                  Save Key
-                </button>
-              </div>
             </div>
           )}
 
