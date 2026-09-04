@@ -204,11 +204,16 @@ public class PlantController {
         if (plantRequest.getName() != null) plant.setName(plantRequest.getName().trim());
         if (plantRequest.getSpecies() != null) plant.setSpecies(plantRequest.getSpecies().trim());
         if (plantRequest.getLocation() != null) {
-            plant.setLocation(plantRequest.getLocation());
-            plant.setRoom(plantRequest.getLocation());
+            String loc = plantRequest.getLocation().trim();
+            plant.setLocation(loc);
+            plant.setRoom(loc.contains(",") ? loc.split(",")[0].trim() : loc);
+            if (loc.contains(",") && (plantRequest.getLocationCity() == null || plantRequest.getLocationCity().isBlank())) {
+                String[] parts = loc.split(",");
+                plant.setLocationCity(parts[parts.length - 1].trim());
+            }
         }
-        if (plantRequest.getLocationCity() != null) {
-            plant.setLocationCity(plantRequest.getLocationCity());
+        if (plantRequest.getLocationCity() != null && !plantRequest.getLocationCity().isBlank()) {
+            plant.setLocationCity(plantRequest.getLocationCity().trim());
         }
         if (plantRequest.getFrequency() != null) {
             plant.setFrequency(plantRequest.getFrequency());

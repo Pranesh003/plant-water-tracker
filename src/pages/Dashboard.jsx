@@ -10,7 +10,7 @@ import { api } from "../services/api.js";
 import { filterPlants } from "../utils/analyticsUtils.js";
 import { getPlantIconUrl } from "../utils/plantIconUtils.js";
 import { readStorage, writeStorage } from "../utils/storageUtils.js";
-import { calculateNextWateringDate, calculateWateringStatus, formatDate, formatTimeAgo, generatePlantNotifications, isPlantWaterable } from "../utils/wateringUtils.js";
+import { calculateNextWateringDate, calculateWateringStatus, daysBetween, formatDate, formatTimeAgo, generatePlantNotifications, isPlantWaterable, todayISO } from "../utils/wateringUtils.js";
 
 const SEEN_NOTIFICATIONS_KEY = "plantCareSeenNotifications";
 
@@ -131,9 +131,9 @@ export default function Dashboard() {
       <header className="dashboard-top-header">
         <div className="header-greeting-wrap">
           <span className="eyebrow-tag">TODAY'S CARE PLAN</span>
-          <h1 style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <span>{greeting}, {user?.name || "Dinesh S"}</span>
-            <img src="/sprout_icon.png" alt="Sprout Icon" style={{ width: 32, height: 32, objectFit: "contain", display: "inline-block" }} />
+          <h1 style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "4px 0" }}>
+            <span>{greeting}, {user?.name || "Plant Care Admin"}</span>
+            <img src="/sprout_icon.png" alt="Sprout Icon" style={{ width: 32, height: 32, objectFit: "contain" }} />
           </h1>
           <p>Let's take care of your plants today.</p>
         </div>
@@ -323,12 +323,12 @@ export default function Dashboard() {
                     const isSoon = pStatus === "Water Soon";
 
                     return (
-                      <article key={plant.id} className={`inner-plant-card state-${pStatus.toLowerCase().replace(/\s+/g, "-")}`}>
-                        <div className="inner-plant-img-wrap">
+                      <article key={plant.id} className={`inner-plant-card state-${pStatus.toLowerCase().replace(/\s+/g, "-")}`} style={{ background: "#ffffff", borderRadius: 16, overflow: "hidden", border: "1px solid #e2e8f0", boxShadow: "0 4px 14px rgba(0,0,0,0.04)" }}>
+                        <div className="inner-plant-img-wrap" style={{ height: 160, position: "relative" }}>
                           {plant.photoUrl ? (
-                            <img src={plant.photoUrl} alt={plant.name} className="inner-plant-img" />
+                            <img src={plant.photoUrl} alt={plant.name} className="inner-plant-img" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                           ) : (
-                            <img src="/monstera_photo.jpg" alt={plant.name} className="inner-plant-img" onError={(e) => { e.target.style.display = 'none'; }} />
+                            <img src="/monstera_photo.jpg" alt={plant.name} className="inner-plant-img" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => { e.target.style.display = 'none'; }} />
                           )}
                         </div>
 
@@ -367,17 +367,54 @@ export default function Dashboard() {
                           </div>
                         )}
 
-                        <div className="inner-plant-body">
-                          <h4>{plant.name}</h4>
-                          <div className={`dash-schedule-badge ${isOverdue ? "overdue" : isSoon ? "soon" : "safe"}`}>
-                            <Droplets size={12} />
-                            <span>
-                              {isOverdue ? "Overdue" : isSoon ? "Tomorrow, 8:00 AM" : `In ${plant.frequency || 7} days`}
+                        <div className="inner-plant-body" style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+                          <h4 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 800, color: "#0f172a" }}>{plant.name}</h4>
+                          
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                            <div className={`dash-schedule-badge ${isOverdue ? "overdue" : isSoon ? "soon" : "safe"}`} style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 5,
+                              padding: "4px 10px",
+                              borderRadius: 20,
+                              fontSize: "0.8rem",
+                              fontWeight: 700,
+                              background: isOverdue ? "#fef2f2" : isSoon ? "#fffbe6" : "#f0fdf4",
+                              color: isOverdue ? "#dc2626" : isSoon ? "#d97706" : "#16a34a",
+                              border: `1px solid ${isOverdue ? "#fecaca" : isSoon ? "#ffe58f" : "#bbf7d0"}`
+                            }}>
+                              <Droplets size={13} />
+                              <span>
+                                {(() => {
+                                  if (!plant.lastWatered) return "Schedule Pending";
+                                  const freq = Number(plant.frequency || 7);
+                                  const daysElapsed = daysBetween(plant.lastWatered, todayISO());
+                                  const remaining = freq - daysElapsed;
+                                  if (remaining < 0) return `Overdue by ${Math.abs(remaining)} day${Math.abs(remaining) === 1 ? "" : "s"}`;
+                                  if (remaining === 0) return "Due Today";
+                                  if (remaining === 1) return "In 1 day";
+                                  return `In ${remaining} days`;
+                                })()}
+                              </span>
+                            </div>
+
+                            <span className="dash-location-tag" style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              padding: "3px 10px",
+                              borderRadius: 20,
+                              fontSize: "0.78rem",
+                              fontWeight: 600,
+                              background: "#f1f5f9",
+                              color: "#475569",
+                              border: "1px solid #e2e8f0"
+                            }}>
+                              {(() => {
+                                const loc = plant.location || "Indoor";
+                                return loc.split(",").map(part => part.trim().split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ")).join(", ");
+                              })()}
                             </span>
                           </div>
-                          <span className="dash-location-tag">
-                            {plant.location || "Indoor"}
-                          </span>
                         </div>
                       </article>
                     );
@@ -447,9 +484,9 @@ export default function Dashboard() {
                   <div key={item.id} className="activity-feed-item">
                     <span className={`activity-icon-badge ${item.type === "watering" ? "water" : "note"}`}>
                       {item.type === "watering" ? (
-                        <img src="/plant_icons/watering_can.png" alt="Water" style={{ width: 22, height: 22, objectFit: "contain" }} />
+                        <img src="/plant_icons/watering_can.png" alt="Watering Can" style={{ width: 22, height: 22, objectFit: "contain" }} />
                       ) : (
-                        <img src="/plant_icons/herb.png" alt="Note" style={{ width: 22, height: 22, objectFit: "contain" }} />
+                        <img src="/plant_icons/herb.png" alt="Note Herb" style={{ width: 22, height: 22, objectFit: "contain" }} />
                       )}
                     </span>
                     <div className="activity-feed-content">

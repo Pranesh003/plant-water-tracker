@@ -1,11 +1,25 @@
-import { Edit, Eye, Plus, Search, User, X } from "lucide-react";
+import { Calendar, Edit, Eye, Mail, Plus, Search, Shield, Sprout, User, UserCheck, Users, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AdminHeader } from "../components/AdminSidebar.jsx";
 import Pagination from "../components/Pagination.jsx";
 import { api } from "../services/api.js";
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 10;
+
+const AVATAR_COLORS = [
+  { bg: "#dcfce7", color: "#15803d" },
+  { bg: "#e0f2fe", color: "#0369a1" },
+  { bg: "#fef3c7", color: "#b45309" },
+  { bg: "#f3e8ff", color: "#7e22ce" },
+  { bg: "#ffe4e6", color: "#be123c" }
+];
+
+const getAvatarStyle = (name) => {
+  let hash = 0;
+  for (let i = 0; i < (name || "").length; i++) hash += name.charCodeAt(i);
+  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
+};
 
 export default function AdminUsers() {
   const navigate = useNavigate();
@@ -56,6 +70,14 @@ export default function AdminUsers() {
     return map;
   }, [plantsList]);
 
+  const stats = useMemo(() => {
+    const total = usersList.length;
+    const active = usersList.filter(u => (u.status || "Active").toLowerCase() === "active").length;
+    const admins = usersList.filter(u => (u.role || "user").toLowerCase() === "admin").length;
+    const totalPlants = plantsList.length;
+    return { total, active, admins, totalPlants };
+  }, [usersList, plantsList]);
+
   const filteredUsers = useMemo(() => {
     return usersList.filter((u) => {
       if (query.trim()) {
@@ -86,37 +108,104 @@ export default function AdminUsers() {
   };
 
   return (
-    <div className="admin-users-page">
+    <div className="admin-users-page" style={{ maxWidth: 1200, margin: "0 auto", paddingBottom: 40 }}>
       <AdminHeader title="Users" eyebrow="USER MANAGEMENT" />
-      <p style={{ margin: "-18px 0 24px 0", color: "var(--muted)", fontSize: "0.92rem" }}>
-        Manage all users registered in the system.
+      <p style={{ margin: "-16px 0 24px 0", color: "#64748b", fontSize: "0.92rem", fontWeight: 500 }}>
+        Manage platform accounts, role permissions, and user activity status.
       </p>
 
-      {error && <p className="error" role="alert" style={{ marginBottom: 16 }}>{error}</p>}
+      {error && (
+        <div style={{ padding: "12px 16px", background: "#fef2f2", color: "#dc2626", borderRadius: 14, border: "1px solid #fecaca", marginBottom: 20, fontSize: "0.88rem", fontWeight: 700 }}>
+          {error}
+        </div>
+      )}
 
-      {/* Floating Toolbar Row matching screenshot */}
-      <section className="dashboard-floating-toolbar admin-toolbar-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, marginBottom: 24 }}>
-        <div style={{ display: "flex", gap: 14, flex: 1, alignItems: "center" }}>
+      {/* Top 4 Summary Cards */}
+      <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 24 }}>
+        <div style={{ background: "#ffffff", borderRadius: 20, padding: "18px 20px", border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.03)", display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ width: 44, height: 44, borderRadius: 14, background: "#e0f2fe", color: "#0284c7", display: "grid", placeItems: "center" }}>
+            <Users size={22} />
+          </div>
+          <div>
+            <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: 700, display: "block" }}>Total Registered</span>
+            <strong style={{ fontSize: "1.45rem", fontWeight: 850, color: "#0f172a" }}>{stats.total} users</strong>
+          </div>
+        </div>
+
+        <div style={{ background: "#ffffff", borderRadius: 20, padding: "18px 20px", border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.03)", display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ width: 44, height: 44, borderRadius: 14, background: "#dcfce7", color: "#16a34a", display: "grid", placeItems: "center" }}>
+            <UserCheck size={22} />
+          </div>
+          <div>
+            <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: 700, display: "block" }}>Active Accounts</span>
+            <strong style={{ fontSize: "1.45rem", fontWeight: 850, color: "#16a34a" }}>{stats.active} active</strong>
+          </div>
+        </div>
+
+        <div style={{ background: "#ffffff", borderRadius: 20, padding: "18px 20px", border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.03)", display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ width: 44, height: 44, borderRadius: 14, background: "#f3e8ff", color: "#7e22ce", display: "grid", placeItems: "center" }}>
+            <Shield size={22} />
+          </div>
+          <div>
+            <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: 700, display: "block" }}>Administrators</span>
+            <strong style={{ fontSize: "1.45rem", fontWeight: 850, color: "#7e22ce" }}>{stats.admins} admins</strong>
+          </div>
+        </div>
+
+        <div style={{ background: "#ffffff", borderRadius: 20, padding: "18px 20px", border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.03)", display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ width: 44, height: 44, borderRadius: 14, background: "#fef3c7", color: "#d97706", display: "grid", placeItems: "center" }}>
+            <Sprout size={22} />
+          </div>
+          <div>
+            <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: 700, display: "block" }}>Total User Plants</span>
+            <strong style={{ fontSize: "1.45rem", fontWeight: 850, color: "#d97706" }}>{stats.totalPlants} plants</strong>
+          </div>
+        </div>
+      </section>
+
+      {/* Floating Toolbar Row */}
+      <section style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, marginBottom: 20, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 12, flex: "1 1 360px", alignItems: "center", flexWrap: "wrap" }}>
           {/* Search Box */}
-          <div className="floating-search-wrap" style={{ flex: "1 1 320px", maxWidth: 400 }}>
-            <Search size={18} className="search-icon" />
+          <div style={{ position: "relative", flex: "1 1 260px", maxWidth: 380 }}>
+            <Search size={18} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
             <input
               type="text"
-              placeholder="Search users..."
+              placeholder="Search by user name or email..."
               value={query}
               onChange={(e) => { setPage(1); setQuery(e.target.value); }}
+              style={{
+                width: "100%",
+                padding: "10px 14px 10px 42px",
+                borderRadius: 14,
+                border: "1px solid #cbd5e1",
+                fontSize: "0.88rem",
+                outline: "none",
+                background: "#ffffff",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.02)"
+              }}
             />
           </div>
 
           {/* Role Filter Dropdown */}
-          <select value={role} onChange={(e) => { setPage(1); setRole(e.target.value); }} aria-label="Filter by role">
+          <select
+            value={role}
+            onChange={(e) => { setPage(1); setRole(e.target.value); }}
+            style={{ padding: "10px 14px", borderRadius: 14, border: "1px solid #cbd5e1", fontSize: "0.86rem", fontWeight: 700, color: "#334155", background: "#ffffff", cursor: "pointer" }}
+            aria-label="Filter by role"
+          >
             <option value="All Roles">All Roles</option>
             <option value="user">User</option>
             <option value="admin">Admin</option>
           </select>
 
           {/* Status Filter Dropdown */}
-          <select value={userStatus} onChange={(e) => { setPage(1); setUserStatus(e.target.value); }} aria-label="Filter by status">
+          <select
+            value={userStatus}
+            onChange={(e) => { setPage(1); setUserStatus(e.target.value); }}
+            style={{ padding: "10px 14px", borderRadius: 14, border: "1px solid #cbd5e1", fontSize: "0.86rem", fontWeight: 700, color: "#334155", background: "#ffffff", cursor: "pointer" }}
+            aria-label="Filter by status"
+          >
             <option value="All Status">All Status</option>
             <option value="Active">Active</option>
             <option value="Inactive">Inactive</option>
@@ -124,21 +213,43 @@ export default function AdminUsers() {
         </div>
 
         {/* Add User Button */}
-        <button className="add-plant-btn-top" onClick={() => setShowAddUserModal(true)}>
-          <Plus size={16} /> Add User
+        <button
+          onClick={() => setShowAddUserModal(true)}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "11px 20px",
+            borderRadius: 14,
+            background: "linear-gradient(135deg, #16a34a 0%, #15803d 100%)",
+            color: "#ffffff",
+            fontWeight: 800,
+            fontSize: "0.9rem",
+            border: "none",
+            boxShadow: "0 6px 18px rgba(22, 163, 74, 0.25)",
+            cursor: "pointer",
+            transition: "transform 0.18s ease"
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-1px)"}
+          onMouseLeave={(e) => e.currentTarget.style.transform = "none"}
+        >
+          <Plus size={18} />
+          <span>Add User</span>
         </button>
       </section>
 
-      {/* Large Covered White Card Container */}
-      <section className="panel admin-table-panel" style={{ padding: 0, overflow: "hidden", borderRadius: 24, background: "#ffffff", border: "1px solid #e1ebe0" }}>
+      {/* Main Covered White Card Table Container with Internal Scroll */}
+      <section style={{ borderRadius: 20, background: "#ffffff", border: "1px solid #e2e8f0", boxShadow: "0 4px 20px rgba(0,0,0,0.03)", overflow: "hidden" }}>
         {loading ? (
-          <div style={{ padding: 40, textAlign: "center", color: "var(--muted)" }}>Loading users...</div>
+          <div style={{ padding: 48, textAlign: "center", color: "#64748b", fontWeight: 600 }}>
+            Loading users data...
+          </div>
         ) : filteredUsers.length ? (
           <>
-            <div style={{ overflowX: "auto" }}>
-              <table className="admin-data-table admin-users-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+            <div className="custom-scroll" style={{ maxHeight: 520, overflowY: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
                 <thead>
-                  <tr style={{ background: "#f8faf7", borderBottom: "1px solid #e1ebe0", textAlign: "left", fontSize: "0.78rem", fontWeight: 850, letterSpacing: "0.05em", color: "#1b4332" }}>
+                  <tr style={{ background: "#f8faf7", borderBottom: "1px solid #e2e8f0", fontSize: "0.78rem", fontWeight: 850, letterSpacing: "0.05em", color: "#0f172a" }}>
                     <th style={{ padding: "14px 20px" }}>USER</th>
                     <th style={{ padding: "14px 20px" }}>EMAIL</th>
                     <th style={{ padding: "14px 20px" }}>ROLE</th>
@@ -162,46 +273,51 @@ export default function AdminUsers() {
                     const isAdmin = usrRole === "admin";
                     const usrPlantsCount = plantsCountMap.get(usr.id) || 0;
                     const joinedDate = usr.createdDate || "2026-08-27";
-                    const usrIdTag = `USR${String(index + 1).padStart(3, "0")}`;
+                    const usrIdTag = `USR${String((page - 1) * PAGE_SIZE + index + 1).padStart(3, "0")}`;
+                    const avatarStyle = getAvatarStyle(usr.name);
 
                     return (
-                      <tr key={usr.id} style={{ borderBottom: "1px solid #f0f7ef", fontSize: "0.88rem" }}>
+                      <tr key={usr.id} style={{ borderBottom: "1px solid #f1f5f9", transition: "background 0.15s ease" }} onMouseEnter={(e) => e.currentTarget.style.background = "#f8faf7"} onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
                         <td style={{ padding: "14px 20px", whiteSpace: "nowrap" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                            <div style={{ width: 38, height: 38, borderRadius: "50%", background: "#d8e7d7", color: "#1b4332", fontWeight: 900, display: "grid", placeItems: "center", fontSize: "0.85rem", flexShrink: 0 }}>
+                            <div style={{ width: 40, height: 40, borderRadius: "50%", background: avatarStyle.bg, color: avatarStyle.color, fontWeight: 850, display: "grid", placeItems: "center", fontSize: "0.88rem", flexShrink: 0, border: `1px solid ${avatarStyle.color}33` }}>
                               {initials}
                             </div>
                             <div>
-                              <strong style={{ display: "block", color: "#1b4332", fontSize: "0.9rem" }}>{usr.name}</strong>
-                              <small style={{ fontSize: "0.72rem", color: "var(--muted)", fontFamily: "monospace" }}>
+                              <strong style={{ display: "block", color: "#0f172a", fontSize: "0.92rem", fontWeight: 800 }}>{usr.name}</strong>
+                              <span style={{ fontSize: "0.72rem", color: "#94a3b8", fontFamily: "monospace", fontWeight: 700 }}>
                                 ID: {usrIdTag}
-                              </small>
+                              </span>
                             </div>
                           </div>
                         </td>
-                        <td style={{ padding: "14px 20px", color: "#1b4332", whiteSpace: "nowrap" }}>
+                        <td style={{ padding: "14px 20px", color: "#334155", fontWeight: 600, fontSize: "0.88rem", whiteSpace: "nowrap" }}>
                           {usr.email}
                         </td>
                         <td style={{ padding: "14px 20px", whiteSpace: "nowrap" }}>
                           <span style={{
                             padding: "4px 12px",
-                            borderRadius: 999,
+                            borderRadius: 12,
                             fontSize: "0.78rem",
                             fontWeight: 800,
                             background: isAdmin ? "#f3e8ff" : "#e0f2fe",
-                            color: isAdmin ? "#7e22ce" : "#0369a1"
+                            color: isAdmin ? "#7e22ce" : "#0369a1",
+                            border: `1px solid ${isAdmin ? "#e9d5ff" : "#bae6fd"}`
                           }}>
                             {isAdmin ? "Admin" : "User"}
                           </span>
                         </td>
-                        <td style={{ padding: "14px 20px", whiteSpace: "nowrap", fontWeight: 700, color: "#1b4332" }}>
-                          {usrPlantsCount}
+                        <td style={{ padding: "14px 20px", whiteSpace: "nowrap" }}>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 10, background: "#f0fdf4", color: "#16a34a", fontWeight: 800, fontSize: "0.82rem", border: "1px solid #bbf7d0" }}>
+                            <Sprout size={13} /> {usrPlantsCount}
+                          </span>
                         </td>
-                        <td style={{ padding: "14px 20px", whiteSpace: "nowrap", color: "var(--muted)" }}>
+                        <td style={{ padding: "14px 20px", whiteSpace: "nowrap", color: "#64748b", fontSize: "0.85rem", fontWeight: 600 }}>
                           {joinedDate}
                         </td>
                         <td style={{ padding: "14px 20px", whiteSpace: "nowrap" }}>
-                          <span style={{ padding: "4px 12px", borderRadius: 999, fontSize: "0.78rem", fontWeight: 800, background: "#dcfce7", color: "#15803d" }}>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 12, fontSize: "0.78rem", fontWeight: 800, background: "#dcfce7", color: "#15803d", border: "1px solid #bbf7d0" }}>
+                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#16a34a" }} />
                             Active
                           </span>
                         </td>
@@ -209,19 +325,21 @@ export default function AdminUsers() {
                           <div style={{ display: "inline-flex", gap: 8 }}>
                             <button
                               type="button"
-                              className="icon-btn"
-                              style={{ width: 34, height: 34, borderRadius: 10, background: "#f0f7ef", border: "1px solid #d8e5d7", color: "#1b4332", display: "grid", placeItems: "center", cursor: "pointer" }}
+                              style={{ width: 34, height: 34, borderRadius: 10, background: "#f1f5f9", border: "1px solid #cbd5e1", color: "#475569", display: "grid", placeItems: "center", cursor: "pointer", transition: "all 0.15s ease" }}
                               onClick={() => navigate(`/admin/users/${usr.id}`)}
-                              title="View details"
+                              title="View user details"
+                              onMouseEnter={(e) => { e.currentTarget.style.background = "#e2e8f0"; e.currentTarget.style.color = "#0f172a"; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = "#f1f5f9"; e.currentTarget.style.color = "#475569"; }}
                             >
                               <Eye size={15} />
                             </button>
                             <button
                               type="button"
-                              className="icon-btn"
-                              style={{ width: 34, height: 34, borderRadius: 10, background: "#f0f7ef", border: "1px solid #d8e5d7", color: "#1b4332", display: "grid", placeItems: "center", cursor: "pointer" }}
+                              style={{ width: 34, height: 34, borderRadius: 10, background: "#f1f5f9", border: "1px solid #cbd5e1", color: "#475569", display: "grid", placeItems: "center", cursor: "pointer", transition: "all 0.15s ease" }}
                               onClick={() => navigate(`/admin/users/${usr.id}/manage`)}
-                              title="Edit user"
+                              title="Edit user permissions"
+                              onMouseEnter={(e) => { e.currentTarget.style.background = "#e2e8f0"; e.currentTarget.style.color = "#0f172a"; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = "#f1f5f9"; e.currentTarget.style.color = "#475569"; }}
                             >
                               <Edit size={15} />
                             </button>
@@ -235,7 +353,7 @@ export default function AdminUsers() {
             </div>
 
             {/* Pagination Footer */}
-            <div style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #e1ebe0", fontSize: "0.86rem", color: "var(--muted)" }}>
+            <div style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #e2e8f0", fontSize: "0.86rem", color: "#64748b", fontWeight: 600, background: "#ffffff" }}>
               <span>
                 Showing {Math.min((page - 1) * PAGE_SIZE + 1, filteredUsers.length)} to {Math.min(page * PAGE_SIZE, filteredUsers.length)} of {filteredUsers.length} users
               </span>
@@ -243,39 +361,39 @@ export default function AdminUsers() {
             </div>
           </>
         ) : (
-          <div style={{ padding: 40, textAlign: "center", color: "var(--muted)" }}>
-            No users match your filter selection.
+          <div style={{ padding: 48, textAlign: "center", color: "#64748b" }}>
+            <p style={{ margin: 0, fontWeight: 700, fontSize: "0.95rem" }}>No users match your filter criteria.</p>
           </div>
         )}
       </section>
 
       {/* Add User Modal */}
       {showAddUserModal && (
-        <div className="modal-backdrop" role="dialog" aria-modal="true">
-          <section className="confirm-modal" style={{ maxWidth: 440, padding: 24, borderRadius: 20 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <h2 style={{ margin: 0, fontSize: "1.2rem", color: "#1b4332" }}>Add New User</h2>
-              <button className="ghost-btn" onClick={() => setShowAddUserModal(false)} style={{ padding: 4 }}><X size={18} /></button>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(6px)", zIndex: 100, display: "grid", placeItems: "center", padding: 16 }}>
+          <section style={{ width: "100%", maxWidth: 440, padding: 26, borderRadius: 20, background: "#ffffff", boxShadow: "0 20px 40px rgba(0,0,0,0.15)", border: "1px solid #e2e8f0" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+              <h2 style={{ margin: 0, fontSize: "1.2rem", color: "#0f172a", fontWeight: 850 }}>Add New User Account</h2>
+              <button onClick={() => setShowAddUserModal(false)} style={{ background: "#f1f5f9", border: "none", borderRadius: 10, width: 32, height: 32, display: "grid", placeItems: "center", cursor: "pointer", color: "#64748b" }}><X size={18} /></button>
             </div>
-            <form onSubmit={handleAddUserSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <label htmlFor="modal-user-name" style={{ display: "flex", flexDirection: "column", gap: 6, fontWeight: 750, color: "#1b4332" }}>
+            <form onSubmit={handleAddUserSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <label style={{ display: "flex", flexDirection: "column", gap: 6, fontWeight: 750, color: "#0f172a", fontSize: "0.88rem" }}>
                 Full Name
-                <input id="modal-user-name" type="text" value={newUser.name} onChange={(e) => setNewUser({ ...newUser, name: e.target.value })} placeholder="John Doe" required />
+                <input type="text" value={newUser.name} onChange={(e) => setNewUser({ ...newUser, name: e.target.value })} placeholder="Jane Doe" required style={{ padding: "10px 14px", borderRadius: 12, border: "1px solid #cbd5e1", fontSize: "0.9rem" }} />
               </label>
-              <label htmlFor="modal-user-email" style={{ display: "flex", flexDirection: "column", gap: 6, fontWeight: 750, color: "#1b4332" }}>
+              <label style={{ display: "flex", flexDirection: "column", gap: 6, fontWeight: 750, color: "#0f172a", fontSize: "0.88rem" }}>
                 Email Address
-                <input id="modal-user-email" type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} placeholder="john@example.com" required />
+                <input type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} placeholder="jane@example.com" required style={{ padding: "10px 14px", borderRadius: 12, border: "1px solid #cbd5e1", fontSize: "0.9rem" }} />
               </label>
-              <label htmlFor="modal-user-role" style={{ display: "flex", flexDirection: "column", gap: 6, fontWeight: 750, color: "#1b4332" }}>
-                Role
-                <select id="modal-user-role" value={newUser.role} onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}>
+              <label style={{ display: "flex", flexDirection: "column", gap: 6, fontWeight: 750, color: "#0f172a", fontSize: "0.88rem" }}>
+                Role Permission
+                <select value={newUser.role} onChange={(e) => setNewUser({ ...newUser, role: e.target.value })} style={{ padding: "10px 14px", borderRadius: 12, border: "1px solid #cbd5e1", fontSize: "0.9rem", fontWeight: 700 }}>
                   <option value="user">User</option>
                   <option value="admin">Admin</option>
                 </select>
               </label>
               <div style={{ display: "flex", gap: 12, marginTop: 10 }}>
-                <button type="button" className="ghost-btn" onClick={() => setShowAddUserModal(false)} style={{ flex: 1 }}>Cancel</button>
-                <button type="submit" className="primary-btn" style={{ flex: 1 }}>Create User</button>
+                <button type="button" onClick={() => setShowAddUserModal(false)} style={{ flex: 1, padding: "11px", borderRadius: 12, border: "1px solid #cbd5e1", background: "#f8faf7", fontWeight: 750, color: "#475569", cursor: "pointer" }}>Cancel</button>
+                <button type="submit" style={{ flex: 1, padding: "11px", borderRadius: 12, border: "none", background: "#16a34a", color: "#ffffff", fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 14px rgba(22, 163, 74, 0.25)" }}>Create Account</button>
               </div>
             </form>
           </section>

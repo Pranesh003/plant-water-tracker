@@ -1,14 +1,17 @@
 # 🌿 Plant Care Tracker (Plant Water Tracker)
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/Pranesh003/plant-water-tracker)
+[![Live Hosting](https://img.shields.io/badge/Live-plant--watering--tracker--2026.web.app-16a34a.svg)](https://plant-watering-tracker-2026.web.app)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-green.svg)](https://spring.io/projects/spring-boot)
 [![React](https://img.shields.io/badge/React-18.x-blue.svg)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-5.x-646CFF.svg)](https://vitejs.dev/)
-[![Firebase](https://img.shields.io/badge/Firebase-Auth%20%26%20Hosting-FFCA28.svg)](https://firebase.google.com/)
-[![Google Cloud](https://img.shields.io/badge/GCP-Firestore%20%26%20Cloud%20Storage-4285F4.svg)](https://cloud.google.com/)
+[![Firebase](https://img.shields.io/badge/Firebase-Auth%20%26%20Storage-FFCA28.svg)](https://firebase.google.com/)
+[![Google Cloud](https://img.shields.io/badge/GCP-Firestore%20%26%20Cloud%20Run-4285F4.svg)](https://cloud.google.com/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**Plant Care Tracker** is an enterprise-grade, full-stack smart plant care and automated watering management platform. Designed for plant enthusiasts, home gardeners, urban farmers, and agricultural administrators, the application simplifies plant maintenance through intelligent scheduling, streak retention metrics, real-time weather-adjusted hydration insights, automated species cataloging, downloadable PDF audit reports, and multi-tenant administrative controls.
+**Plant Care Tracker** is an enterprise-grade, full-stack smart plant care and automated watering management platform. Designed for plant enthusiasts, home gardeners, urban farmers, and agricultural administrators, the application simplifies plant maintenance through intelligent scheduling, streak retention metrics, real-time weather-adjusted hydration insights, automated species cataloging, downloadable PDF audit reports, multi-tenant administrative controls, live camera photo capture, and Gemini Multimodal Vision AI leaf diagnosis.
+
+🌐 **Live Application Deployment**: [https://plant-watering-tracker-2026.web.app](https://plant-watering-tracker-2026.web.app)
 
 ---
 
@@ -32,21 +35,9 @@
   - [💻 Technology Stack Breakdown](#-technology-stack-breakdown)
   - [📂 Comprehensive Project Directory Structure](#-comprehensive-project-directory-structure)
   - [🗄️ Database Schemas \& Firestore Document Models](#️-database-schemas--firestore-document-models)
-    - [`users` Collection](#users-collection)
-    - [`plants` Collection](#plants-collection)
-    - [`history` Collection](#history-collection)
-    - [`notes` Collection](#notes-collection)
   - [📡 REST API Endpoints Specification](#-rest-api-endpoints-specification)
   - [⚙️ Local Setup \& Installation Guide](#️-local-setup--installation-guide)
-    - [Prerequisites](#prerequisites)
-    - [1. Clone Repository](#1-clone-repository)
-    - [2. Configure Environment Variables](#2-configure-environment-variables)
-    - [3. Backend Spring Boot Setup \& Execution](#3-backend-spring-boot-setup--execution)
-    - [4. Frontend Vite/React Setup \& Execution](#4-frontend-vitereact-setup--execution)
-    - [5. Express Proxy/Mock Server (Optional)](#5-express-proxymock-server-optional)
   - [☁️ Cloud Deployment Guide](#️-cloud-deployment-guide)
-    - [Backend (Google Cloud Run)](#backend-google-cloud-run)
-    - [Frontend (Firebase Hosting)](#frontend-firebase-hosting)
   - [🛡️ Security, Authentication \& Access Control](#️-security-authentication--access-control)
   - [🔧 Troubleshooting \& Frequently Asked Questions](#-troubleshooting--frequently-asked-questions)
   - [📄 License \& Author](#-license--author)
@@ -58,12 +49,13 @@
 Plant care requires consistency, precise moisture management, and awareness of environmental conditions. Over-watering or under-watering is the leading cause of houseplant mortality. **Plant Care Tracker** bridges the gap between manual care and automated intelligence by offering:
 
 1. **Precision Hydration Schedules**: Calculates next watering deadlines based on species moisture requirements, pot sizing, and ambient environment.
-2. **AI Plant Health Doctor & Diagnostic Engine**: Multimodal image analysis powered by **Google Vertex AI / Gemini 1.5 Flash Vision** to diagnose diseases, chlorosis, pests, and nutrient deficiencies.
-3. **Environmental Adaptation**: Connects with live weather providers (OpenWeather API and Open-Meteo) to dynamically compute temperature, humidity, and rainfall factors that adjust recommended watering volumes.
-4. **Enterprise Cloud BigQuery Analytics**: Real-time streaming pipeline into **Google Cloud BigQuery** for running SQL data warehouse analytics, overdue risk distributions, and regional care insights.
-5. **GCP Cloud Scheduler & Notification Engine**: Automated daily cron scheduling and real-time in-app notification center for pending and overdue plant care reminders.
-6. **Botanical Knowledge Integration**: Integrates the Trefle API and AI vision for auto-completing species details, family names, and growth attributes.
-7. **Enterprise Multi-Tenancy**: Built with Spring Boot 3 microservice architecture, Google Cloud Firestore NoSQL storage, Google Cloud Storage, and Secret Manager.
+2. **AI Plant Health Doctor & Diagnostic Engine**: Multimodal image analysis powered by **Google Gemini 1.5 Flash Vision AI** to diagnose leaf diseases, chlorosis, pest infestations, nutrient burn, and soil pH requirements.
+3. **Live Camera Snapshot Capture (`CameraCaptureModal`)**: Take live photos directly using your mobile or laptop camera when registering plants or running instant AI Doctor leaf scans.
+4. **Universal AI Doctor Full Review Modal (`AiDoctorReportModal`)**: 1-click dialog to inspect full visual disease symptoms, leaf photos, care metrics (water mL, sunlight, soil pH, temp), step-by-step organic treatment plans, and real-time token quota meters.
+5. **Firebase Cloud Storage Bucket**: Automatically uploads and stores high-resolution leaf photos and plant images directly in Firebase Storage (`plant-watering-tracker-2026.appspot.com`).
+6. **Real-time Gemini Token & Daily Quota Meter**: Live tracking of token consumption per scan and daily remaining API quota counter.
+7. **Environmental Adaptation**: Connects with live weather providers (OpenWeather API and Open-Meteo) to dynamically compute temperature, humidity, and rainfall factors that adjust recommended watering volumes.
+8. **Enterprise Cloud BigQuery Analytics**: Real-time streaming pipeline into **Google Cloud BigQuery** for running SQL data warehouse analytics, overdue risk distributions, and regional care insights.
 
 ---
 
@@ -71,15 +63,26 @@ Plant care requires consistency, precise moisture management, and awareness of e
 
 ### 👤 End-User Functionality
 
-- **🤖 AI Plant Doctor & Leaf Diagnostic Scanner (Google Vertex AI / Gemini Vision)**:
-  - Upload or snap leaf photos to instantly diagnose diseases, pest infestations, root rot, or nutrient burn.
-  - Generates disease severity ratings (`Healthy`, `Mild Concern`, `Action Required`) and actionable step-by-step treatment instructions.
-  - Automatically logs AI health audit results directly into the plant's Care History and Notes.
+- **🤖 AI Plant Doctor & Leaf Diagnostic Scanner (Google Gemini 1.5 Flash Vision)**:
+  - Snap live camera photos or upload leaf files to instantly diagnose leaf diseases, pest infestations, root rot, or nutrient burn.
+  - Generates disease severity ratings (`Healthy`, `Mild Concern`, `Action Required`), confidence scores, and step-by-step organic treatment instructions.
+  - Automatically logs AI health audit results directly into the plant's Care History, Notes, and Backend Cloud Run database.
+
+- **📸 Live Hardware Camera Capture Modal (`CameraCaptureModal.jsx`)**:
+  - Embedded camera preview modal supporting device camera switching (front/back cameras).
+  - Snapshot capture button for instant photo uploads while filling plant forms or conducting AI vision scans.
+
+- **👁️ Full Review Modal & History Report Inspector (`AiDoctorReportModal.jsx`)**:
+  - Interactive report viewer for all historical AI Doctor scans across plant detail pages and global timeline history.
+  - Normalizes scan data (`extractAiReport`) to present complete visual symptoms, care parameters (Water mL, Sunlight, Soil pH, Temp), organic treatment steps, and token stats.
+
+- **⚡ Real-Time Gemini Token & Quota Meter**:
+  - Displays token count consumed for each vision scan and remaining daily quota limit (e.g. `1,485 / 1,500 scans remaining`).
 
 - **📸 Snap-to-Identify AI Plant Species Generator**:
   - Automatically recognizes unknown plant species from images and pre-fills form fields (Common Name, Scientific Species, Category, Watering Frequency in days, and Water Volume in ml).
 
-- **🔔 GCP Cloud Scheduler & Real-Time Notification Center**:
+- **🔔 Real-Time Notification Center & Schedule Sync**:
   - Automated background scheduler checking daily care deadlines every morning.
   - Interactive top navigation Notification Center with real-time badges, unread indicators, sound effects, and schedule sync.
 
@@ -92,7 +95,7 @@ Plant care requires consistency, precise moisture management, and awareness of e
 - **Plant Collection Management**:
   - Create, view, update, and delete individual plant profiles.
   - Custom fields: Name, Scientific Species, Category (Indoor, Outdoor, Succulent, Herb, Flowering, Fern, Fiddle Leaf, etc.), Watering Frequency (days), Water Volume (ml), Location, Sunlight Requirements, and Acquisition Date.
-  - Automated image optimization & WebP compression before uploading to **Google Cloud Storage** buckets.
+  - Automatic upload to **Firebase Cloud Storage** buckets with fallback optimization.
 
 - **Smart Hydration & Streak Engine**:
   - Timezone-aware date and streak calculations using `timezoneUtils.js` to evaluate plant local time across global cities (e.g., Coimbatore, London, NYC, Tokyo).
@@ -100,34 +103,9 @@ Plant care requires consistency, precise moisture management, and awareness of e
   - Calculates care streaks (`currentStreak` and `longestStreak`) based on watering logs.
   - Visual status badges: `Overdue` (red), `Due Today` (amber), `Healthy` (green).
 
-- **Botanical Water Requirement Engine**:
-  - Species-aware hydration volume calculator (`getSpeciesBaseWaterMl`) providing tailored base water defaults for Succulents (220ml), Monsteras & Palms (650ml), Flowering Plants (520ml), Peace Lilies (420ml), Ferns (480ml), and Bonsai (350ml).
-  - Custom `locationCity` and `recommendedWaterMl` overrides per plant entity.
-
-- **Resilient Weather Intelligence & Client Fallback**:
-  - Integrated OpenWeather API with a direct client-side Open-Meteo geocoding and forecasting fallback engine.
-  - Automatic city string cleaning (parsing room locations vs city names) to guarantee uninterrupted weather advisory rendering.
-
 - **Care History & Logging**:
   - Detailed historical timeline of every watering event, fertilization, pruning, and repotting.
-  - Filterable by date, action type, and specific plant.
-
-- **Notes & Observation Tracker**:
-  - Attach rich text notes with dates and custom titles to track plant growth, pest treatments, or repotting observations.
-
-- **Species Botanical Search**:
-  - Integrated Trefle API autocomplete for searching thousands of plant species with scientific names, family taxonomies, and built-in fallback catalogs.
-
-- **Analytical Insights & Data Visualization**:
-  - Recharts-powered graphs analyzing watering consistency over 30 days.
-  - Plant distribution by category and indoor vs. outdoor location metrics.
-
-- **PDF Health Audit Report Export**:
-  - One-click generation of comprehensive PDF care summary reports containing user information, plant rosters, upcoming schedules, and recent logs.
-
-- **User Profile & Account Security**:
-  - Firebase Authentication + Spring Security JWT authentication.
-  - Password change, password reset link request via email, and profile preference management.
+  - Dedicated `🧠 AI Doctor` filter tab and keyword search.
 
 ---
 
@@ -140,8 +118,8 @@ Plant care requires consistency, precise moisture management, and awareness of e
   - View all user profiles, toggle user roles (`ROLE_USER` vs. `ROLE_ADMIN`), activate/deactivate user access, and inspect individual user plant collections.
 - **Global Plant Supervision**:
   - View all plants registered across the platform with user ownership details.
-- **System Configuration & Secret Manager**:
-  - Admin settings for configuring platform maintenance modes, global default notification intervals, and Secret Manager status for sensitive API keys (`TREFLE_API_TOKEN`, `OPENWEATHER_API_KEY`, `GEMINI_API_KEY`).
+- **System Configuration & Custom Gemini API Key Management**:
+  - Admin settings for configuring custom Gemini Vision API keys, Secret Manager integration, and platform maintenance toggles.
 
 ---
 
@@ -151,48 +129,33 @@ The project follows a decoupled **Client-Server Microservices Architecture** wit
 
 ```mermaid
 graph TB
-    subgraph Client ["Client Layer (Frontend SPA)"]
-        A["React 18 + Vite Web App"] -->|HTTP / REST API| B["API Gateway Service / CORS Filter"]
-        A -->|Direct SDK Sync| C["Firebase Auth Console"]
-        A -->|PDFKit Engine| D["PDF Audit Report Generator"]
-        A -->|Real-time Badges| N1["Notification Center Widget"]
-        A -->|AI Photo Scan| A1["AiPlantDoctorCard Component"]
+    subgraph Client ["Client Layer (Frontend SPA - React 18 + Vite)"]
+        A["React 18 SPA"] -->|HTTP / REST API| B["Google Cloud Run API Service"]
+        A -->|Direct SDK Auth & Storage| C["Firebase Auth & Cloud Storage"]
+        A -->|Camera API| CAM["CameraCaptureModal (WebRTC)"]
+        A -->|Modal Viewer| ADM["AiDoctorReportModal (Full Review)"]
+        A -->|PDF Generator| D["PDF Audit Report Engine"]
     end
 
-    subgraph Backend ["API Gateway & Microservices (Backend Layer)"]
-        B -->|JWT Verification| E["Spring Boot Plant Care Microservice"]
-        E --> F["Auth Controller"]
-        E --> G["Plant Controller"]
-        E --> H["History & Notes Controller"]
-        E --> I["Species Search Controller"]
-        E --> J["Weather Controller"]
-        E --> K["Analytics & Admin Controller"]
-        E --> V1["Vertex AI Diagnostic Controller"]
+    subgraph Backend ["Backend API & Microservices"]
+        B -->|JWT Verification| E["Spring Boot Core Microservice"]
+        E --> F["Auth & User Controllers"]
+        E --> G["Plant & History Controllers"]
+        E --> V1["Gemini Vision AI Service"]
         E --> B1["BigQuery Analytics Controller"]
-        E --> N2["Notification Scheduler & Controller"]
-        E --> O1["Image Optimizer Controller"]
         E --> S1["Secret Manager Config Controller"]
+      end
+
+    subgraph External ["External Cloud APIs"]
+        V1 -->|Multimodal Vision API| AI["Google Gemini 1.5 Flash Vision AI"]
+        C -->|Bucket Storage| FS["Firebase Cloud Storage Bucket"]
+        E -->|REST API| L["Trefle Botanical API"]
+        E -->|REST API| M["OpenWeatherMap / Open-Meteo"]
     end
 
-    subgraph External ["External Cloud Services & APIs"]
-        V1 -->|Multimodal Vision API| AI["Google Vertex AI / Gemini 1.5 Flash"]
-        I -->|REST Query| L["Trefle Botanical API"]
-        J -->|REST Query| M["OpenWeatherMap API"]
-        J -->|Keyless Fallback| N["Open-Meteo Weather API"]
-        J -->|Reverse Geocoding| O["OpenStreetMap Nominatim API"]
-        O1 -->|WebP Compression| P["Google Cloud Storage Bucket"]
-        S1 -->|Secret Fetch| SM["Google Cloud Secret Manager"]
-        F -->|ID Token Sync| C
-    end
-
-    subgraph Storage ["Persistence Layer & Data Warehouse"]
-        E -->|Firestore SDK / gRPC| Q[("Google Cloud Firestore NoSQL")]
-        B1 -->|Streaming Analytics| BQ[("Google Cloud BigQuery Warehouse")]
-        Q --> Q1[("users Collection")]
-        Q --> Q2[("plants Collection")]
-        Q --> Q3[("history Collection")]
-        Q --> Q4[("notes Collection")]
-        BQ --> BQ1[("plant_care_dataset.plants")]
+    subgraph Storage ["Data Persistence & Analytics"]
+        E -->|Firestore SDK| Q[("Google Cloud Firestore NoSQL")]
+        B1 -->|Streaming SQL| BQ[("Google Cloud BigQuery Warehouse")]
     end
 ```
 
@@ -489,6 +452,8 @@ plant_watering/
     ├── firebase.js                   # Client Firebase Authentication SDK config
     ├── components/                   # Reusable UI Components
     │   ├── AdminSidebar.jsx          # Admin Portal Navigation Drawer
+    │   ├── AiDoctorReportModal.jsx   # Universal AI Doctor diagnosis report modal dialog
+    │   ├── CameraCaptureModal.jsx    # Hardware camera preview & live snapshot capture modal
     │   ├── Navbar.jsx                # Top Header Navigation Bar
     │   ├── PlantCard.jsx             # Individual Plant Profile Card with Water Button
     │   ├── PlantForm.jsx             # Add/Edit Plant Modal Dialog

@@ -1,6 +1,6 @@
 import { plantSuggestions } from "../data/mockPlants";
 import { readStorage, writeStorage } from "../utils/storageUtils";
-import { syncFirebaseUser } from "../firebase.js";
+import { syncFirebaseUser, uploadLeafImageToFirebase } from "../firebase.js";
 import { analyzePlantWithAiVision } from "./aiVisionService.js";
 
 const KEYS = {
@@ -258,10 +258,77 @@ export const api = {
     method: 'POST',
     body: JSON.stringify({ text })
   }),
+  addAiDoctorRecord: async (plantId, reportData, leafPhotoUrl = "") => {
+    const todayStr = new Date().toISOString().split("T")[0];
+
+    // Upload leaf photo to Firebase Storage bucket if available
+    let storedPhotoUrl = leafPhotoUrl;
+    if (leafPhotoUrl && (leafPhotoUrl.startsWith("data:") || leafPhotoUrl.startsWith("blob:"))) {
+      try {
+        const cloudUrl = await uploadLeafImageToFirebase(leafPhotoUrl, "ai_doctor_scans");
+        if (cloudUrl) {
+          storedPhotoUrl = cloudUrl;
+        }
+      } catch {
+        // preserve existing photo
+      }
+    }
+
+    const log = {
+      id: `aidoc_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      plantId,
+      plantName: reportData.name || "Plant",
+      type: "ai_doctor",
+      date: todayStr,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      leafPhoto: storedPhotoUrl || "",
+      report: reportData
+    };
+    
+    // Save to LocalStorage history cache
+    const currentHistory = readStorage(KEYS.history, []);
+    writeStorage(KEYS.history, [log, ...currentHistory]);
+
+    // Save to dedicated AI Doctor logs storage
+    const currentAiLogs = readStorage("plantCareAiDoctorLogs", []);
+    writeStorage("plantCareAiDoctorLogs", [log, ...currentAiLogs]);
+
+    // Try posting diagnosis note to backend API
+    try {
+      await fetchApi(`/api/plants/${plantId}/notes`, {
+        method: 'POST',
+        body: JSON.stringify({
+          text: `[Vertex AI Doctor Diagnosis]: ${reportData.diseaseName || "Healthy"} (${reportData.severity || "Healthy"}). ${reportData.symptoms || ""}`
+        })
+      });
+    } catch {
+      // fallback
+    }
+
+    return log;
+  },
+  getAiDoctorLogs: (plantId) => {
+    const allAiLogs = readStorage("plantCareAiDoctorLogs", []);
+    const historyLogs = readStorage(KEYS.history, []).filter(h => h.type === "ai_doctor");
+    const combined = [...allAiLogs, ...historyLogs];
+    const uniqueMap = new Map();
+    combined.forEach(item => {
+      if (item && item.id && (!plantId || item.plantId === plantId)) {
+        uniqueMap.set(item.id, item);
+      }
+    });
+    return Array.from(uniqueMap.values()).sort((a, b) => (b.id > a.id ? 1 : -1));
+  },
   getHistory: async () => {
     try {
       const history = await fetchApi('/api/history');
-      if (Array.isArray(history)) writeStorage(KEYS.history, history);
+      if (Array.isArray(history)) {
+        const cached = readStorage(KEYS.history, []);
+        const aiDoctorLogs = (cached || []).filter(h => h.type === "ai_doctor");
+        const merged = [...history, ...aiDoctorLogs];
+        writeStorage(KEYS.history, merged);
+        return merged;
+      }
       return history;
     } catch (err) {
       const cached = readStorage(KEYS.history, []);

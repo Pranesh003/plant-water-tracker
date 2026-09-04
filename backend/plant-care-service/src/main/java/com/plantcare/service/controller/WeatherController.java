@@ -3,7 +3,6 @@ package com.plantcare.service.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,6 +25,24 @@ import java.util.Map;
 @RequestMapping("/api/weather")
 public class WeatherController {
 
+    private static final Map<String, double[]> CITY_COORDINATES = new HashMap<>();
+
+    static {
+        CITY_COORDINATES.put("chennai", new double[]{13.0827, 80.2707});
+        CITY_COORDINATES.put("coimbatore", new double[]{11.0168, 76.9558});
+        CITY_COORDINATES.put("salem", new double[]{11.6643, 78.1460});
+        CITY_COORDINATES.put("madurai", new double[]{9.9252, 78.1198});
+        CITY_COORDINATES.put("trichy", new double[]{10.7905, 78.7047});
+        CITY_COORDINATES.put("bengaluru", new double[]{12.9716, 77.5946});
+        CITY_COORDINATES.put("bangalore", new double[]{12.9716, 77.5946});
+        CITY_COORDINATES.put("mumbai", new double[]{19.0760, 72.8777});
+        CITY_COORDINATES.put("delhi", new double[]{28.6139, 77.2090});
+        CITY_COORDINATES.put("hyderabad", new double[]{17.3850, 78.4867});
+        CITY_COORDINATES.put("london", new double[]{51.5074, -0.1278});
+        CITY_COORDINATES.put("tokyo", new double[]{35.6762, 139.6503});
+        CITY_COORDINATES.put("new york", new double[]{40.7128, -74.0060});
+    }
+
     private final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))
             .build();
@@ -34,12 +51,8 @@ public class WeatherController {
 
     private final String weatherApiKey;
 
-    public WeatherController(@Value("${weather.api-key:}") String weatherApiKey) {
+    public WeatherController(@Value("${OPENWEATHER_API_KEY:${weather.api-key:}}") String weatherApiKey) {
         this.weatherApiKey = weatherApiKey;
-    }
-
-    private int kmh(double ms) {
-        return (int) Math.round(ms * 3.6);
     }
 
     private String conditionFromWmoCode(int code) {
@@ -72,53 +85,51 @@ public class WeatherController {
                 if (city.isBlank()) city = address.path("town").asText();
                 if (city.isBlank()) city = address.path("village").asText();
                 if (city.isBlank()) city = address.path("county").asText();
+                if (city.isBlank()) city = address.path("state_district").asText();
                 if (!city.isBlank()) return city;
             }
-        } catch (Exception ignored) {
-            // Weather still works when reverse geocoding is unavailable.
-        }
+        } catch (Exception ignored) {}
         return String.format(Locale.US, "%.4f, %.4f", latitude, longitude);
     }
 
-    /**
-     * Key-free fallback using Open-Meteo so local development & Cloud Run work flawlessly
-     * without relying on OpenWeather API key validity.
-     */
     private ResponseEntity<?> getOpenMeteoWeather(Double lat, Double lon, String city, Double baseWaterMl, Boolean outdoor) {
         try {
             Double latitude = lat;
             Double longitude = lon;
-            String locationName = city;
+            String locationName = null;
 
-            if (latitude == null || longitude == null) {
-                if (city == null || city.trim().isEmpty()) {
-                    locationName = "Coimbatore";
-                    latitude = 11.0168;
-                    longitude = 76.9558;
+            if (latitude != null && longitude != null) {
+                locationName = resolveCityName(latitude, longitude);
+            } else {
+                locationName = city;
+                String cleanCityKey = (city != null && !city.isBlank()) ? city.trim().toLowerCase() : "chennai";
+                if (CITY_COORDINATES.containsKey(cleanCityKey)) {
+                    double[] coords = CITY_COORDINATES.get(cleanCityKey);
+                    latitude = coords[0];
+                    longitude = coords[1];
+                    locationName = city.substring(0, 1).toUpperCase() + city.substring(1);
                 } else {
                     String geocodeUrl = "https://geocoding-api.open-meteo.com/v1/search?name="
-                            + URLEncoder.encode(city.trim(), StandardCharsets.UTF_8) + "&count=1&language=en&format=json";
+                            + URLEncoder.encode(cleanCityKey, StandardCharsets.UTF_8) + "&count=5&language=en&format=json";
                     HttpResponse<String> geocodeResponse = httpClient.send(
                             HttpRequest.newBuilder().uri(URI.create(geocodeUrl)).GET().build(),
                             HttpResponse.BodyHandlers.ofString());
-                    
+
+                    boolean matched = false;
                     if (geocodeResponse.statusCode() == 200) {
                         JsonNode locations = objectMapper.readTree(geocodeResponse.body()).path("results");
                         if (locations.isArray() && !locations.isEmpty()) {
                             JsonNode location = locations.get(0);
-                            latitude = location.path("latitude").asDouble(11.0168);
-                            longitude = location.path("longitude").asDouble(76.9558);
+                            latitude = location.path("latitude").asDouble(13.0827);
+                            longitude = location.path("longitude").asDouble(80.2707);
                             locationName = location.path("name").asText(city);
-                        } else {
-                            // Default to Coimbatore coordinates if city not matched
-                            latitude = 11.0168;
-                            longitude = 76.9558;
-                            locationName = city;
+                            matched = true;
                         }
-                    } else {
-                        latitude = 11.0168;
-                        longitude = 76.9558;
-                        locationName = city;
+                    }
+                    if (!matched) {
+                        latitude = 13.0827;
+                        longitude = 80.2707;
+                        locationName = (city != null && !city.isBlank()) ? city : "Chennai";
                     }
                 }
             }
@@ -139,11 +150,11 @@ public class WeatherController {
             if (forecastResponse.statusCode() == 200) {
                 JsonNode data = objectMapper.readTree(forecastResponse.body());
                 JsonNode current = data.path("current");
-                int temperature = (int) Math.round(current.path("temperature_2m").asDouble(28.0));
-                int humidity = current.path("relative_humidity_2m").asInt(65);
+                int temperature = (int) Math.round(current.path("temperature_2m").asDouble(30.0));
+                int humidity = current.path("relative_humidity_2m").asInt(75);
                 int windSpeed = (int) Math.round(current.path("wind_speed_10m").asDouble(12.0));
                 int rainProbability = data.path("daily").path("precipitation_probability_max").path(0).asInt(
-                        current.path("precipitation").asDouble(0) > 0 ? 100 : 20);
+                        current.path("precipitation").asDouble(0) > 0 ? 100 : 30);
                 String condition = conditionFromWmoCode(current.path("weather_code").asInt(0));
 
                 double tempFactor = temperature < 20 ? 0.9 : temperature <= 28 ? 1.0 : temperature <= 34 ? 1.1 : 1.2;
@@ -167,22 +178,21 @@ public class WeatherController {
             }
         } catch (Exception ignored) {}
 
-        // Safe Fallback response if all external APIs fail
-        return ResponseEntity.ok(createFallbackWeather(city != null ? city : "Coimbatore", baseWaterMl));
+        return ResponseEntity.ok(createFallbackWeather(city != null ? city : "Chennai", baseWaterMl));
     }
 
     private Map<String, Object> createFallbackWeather(String cityName, Double baseWaterMl) {
         Map<String, Object> result = new HashMap<>();
         result.put("location", cityName);
-        result.put("temperature", 28);
-        result.put("humidity", 65);
-        result.put("condition", "partly cloudy");
-        result.put("rainProbability", 20);
-        result.put("windSpeed", 12);
+        result.put("temperature", 30);
+        result.put("humidity", 78);
+        result.put("condition", "cloudy");
+        result.put("rainProbability", 40);
+        result.put("windSpeed", 13);
         result.put("updatedAt", Instant.now().toString());
         result.put("source", "System Preset");
         result.put("watering", Map.of("baseWaterMl", baseWaterMl, "recommendedWaterMl", (int) (baseWaterMl * 1.05), "factors", Map.of(
-                "tempFactor", 1.0, "humFactor", 1.0, "rainFactor", 1.0, "sunlightFactor", 1.05)));
+                "tempFactor", 1.05, "humFactor", 1.0, "rainFactor", 1.0, "sunlightFactor", 1.0)));
         return result;
     }
 
@@ -194,86 +204,6 @@ public class WeatherController {
             @RequestParam(defaultValue = "400") Double baseWaterMl,
             @RequestParam(defaultValue = "false") Boolean outdoor
     ) {
-        try {
-            if (weatherApiKey == null || weatherApiKey.trim().isEmpty()) {
-                return getOpenMeteoWeather(lat, lon, city, baseWaterMl, outdoor);
-            }
-
-            Double latitude = lat;
-            Double longitude = lon;
-
-            if (latitude == null || longitude == null) {
-                if (city == null || city.trim().isEmpty()) {
-                    return getOpenMeteoWeather(lat, lon, city, baseWaterMl, outdoor);
-                }
-
-                String geoUrl = String.format(Locale.US, "https://api.openweathermap.org/geo/1.0/direct?q=%s&limit=1&appid=%s",
-                        URLEncoder.encode(city.trim(), StandardCharsets.UTF_8), weatherApiKey);
-
-                HttpRequest geoRequest = HttpRequest.newBuilder().uri(URI.create(geoUrl)).GET().build();
-                HttpResponse<String> geoResponse = httpClient.send(geoRequest, HttpResponse.BodyHandlers.ofString());
-
-                if (geoResponse.statusCode() != 200) {
-                    return getOpenMeteoWeather(lat, lon, city, baseWaterMl, outdoor);
-                }
-
-                JsonNode geoJson = objectMapper.readTree(geoResponse.body());
-                if (!geoJson.isArray() || geoJson.isEmpty()) {
-                    return getOpenMeteoWeather(lat, lon, city, baseWaterMl, outdoor);
-                }
-
-                latitude = geoJson.get(0).get("lat").asDouble();
-                longitude = geoJson.get(0).get("lon").asDouble();
-            }
-
-            String onecall = String.format(Locale.US, "https://api.openweathermap.org/data/2.5/weather?lat=%.6f&lon=%.6f&units=metric&appid=%s",
-                    latitude, longitude, weatherApiKey);
-
-            HttpRequest weatherRequest = HttpRequest.newBuilder().uri(URI.create(onecall)).GET().build();
-            HttpResponse<String> weatherResponse = httpClient.send(weatherRequest, HttpResponse.BodyHandlers.ofString());
-
-            if (weatherResponse.statusCode() != 200) {
-                return getOpenMeteoWeather(lat, lon, city, baseWaterMl, outdoor);
-            }
-
-            JsonNode data = objectMapper.readTree(weatherResponse.body());
-            JsonNode current = data;
-
-            int temperature = (int) Math.round(current.path("main").path("temp").asDouble(25.0));
-            int humidity = current.path("main").path("humidity").asInt(50);
-
-            String condition = "Unknown";
-            JsonNode weatherArray = current.path("weather");
-            if (weatherArray.isArray() && !weatherArray.isEmpty()) {
-                condition = weatherArray.get(0).path("description").asText("Unknown");
-            }
-
-            int rainProbability = current.path("rain").path("1h").asDouble(0.0) > 0 ? 100 : 0;
-            int windSpeed = kmh(current.path("wind").path("speed").asDouble(0.0));
-            String updatedAt = Instant.ofEpochSecond(current.path("dt").asLong(Instant.now().getEpochSecond())).toString();
-
-            double tempFactor = temperature < 20 ? 0.9 : temperature <= 28 ? 1.0 : temperature <= 34 ? 1.1 : 1.2;
-            double humFactor = humidity > 80 ? 0.9 : humidity >= 60 ? 1.0 : humidity >= 40 ? 1.1 : 1.25;
-            double rainFactor = rainProbability >= 60 && Boolean.TRUE.equals(outdoor) ? 0.5 : rainProbability >= 30 ? 0.8 : 1.0;
-            double sunlightFactor = condition.toLowerCase().contains("cloud") ? 0.95 : condition.toLowerCase().contains("rain") ? 0.9 : 1.1;
-
-            int recommended = (int) Math.max(0, Math.round(baseWaterMl * tempFactor * humFactor * rainFactor * sunlightFactor));
-
-            Map<String, Object> result = new HashMap<>();
-            result.put("location", lat != null && lon != null ? resolveCityName(latitude, longitude) : city);
-            result.put("temperature", temperature);
-            result.put("humidity", humidity);
-            result.put("condition", condition);
-            result.put("rainProbability", rainProbability);
-            result.put("windSpeed", windSpeed);
-            result.put("updatedAt", updatedAt);
-            result.put("source", "OpenWeatherMap");
-            result.put("watering", Map.of("baseWaterMl", baseWaterMl, "recommendedWaterMl", recommended, "factors", Map.of(
-                    "tempFactor", tempFactor, "humFactor", humFactor, "rainFactor", rainFactor, "sunlightFactor", sunlightFactor)));
-
-            return ResponseEntity.ok(result);
-        } catch (Exception e) {
-            return getOpenMeteoWeather(lat, lon, city, baseWaterMl, outdoor);
-        }
+        return getOpenMeteoWeather(lat, lon, city, baseWaterMl, outdoor);
     }
 }

@@ -27,7 +27,8 @@ import Settings from "./pages/Settings.jsx";
 import Reminders from "./pages/Reminders.jsx";
 import ChangePassword from "./pages/ChangePassword.jsx";
 import { applyTheme } from "./utils/themeUtils.js";
-import { readStorage } from "./utils/storageUtils.js";
+import { readStorage, writeStorage } from "./utils/storageUtils.js";
+import { todayISO } from "./utils/wateringUtils.js";
 
 const PlantCareContext = createContext(null);
 export const usePlantCare = () => useContext(PlantCareContext);
@@ -116,8 +117,31 @@ export default function App() {
     waterPlant: async (id) => {
       try {
         const plant = await api.waterPlant(id);
+        
+        // 1. Update plant in state immediately
         setPlants((current) => current.map((item) => item.id === id ? plant : item));
-        await refresh();
+
+        // 2. Optimistically prepend new watering log to history state immediately
+        const todayStr = todayISO();
+        const newHistoryLog = {
+          id: `h_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+          plantId: id,
+          plantName: plant.name || "Plant",
+          type: "watering",
+          date: todayStr,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          streak: plant.currentStreak || 1
+        };
+
+        setHistory((current) => [newHistoryLog, ...current]);
+
+        // 3. Persist to LocalStorage cache immediately
+        const cachedHistory = readStorage(api.keys.history, []);
+        writeStorage(api.keys.history, [newHistoryLog, ...cachedHistory]);
+
+        // 4. Background sync
+        refresh().catch(() => {});
+
         notify("Plant watered successfully.");
         return plant;
       } catch {
@@ -128,7 +152,23 @@ export default function App() {
     addNote: async (id, text) => {
       try {
         await api.addNote(id, text);
-        await refresh();
+        const targetPlant = plants.find((p) => p.id === id);
+        const todayStr = todayISO();
+        const newNoteLog = {
+          id: `h_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+          plantId: id,
+          plantName: targetPlant?.name || "Plant",
+          type: "note",
+          text: text,
+          date: todayStr,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+
+        setHistory((current) => [newNoteLog, ...current]);
+        const cachedHistory = readStorage(api.keys.history, []);
+        writeStorage(api.keys.history, [newNoteLog, ...cachedHistory]);
+
+        refresh().catch(() => {});
         notify("Note added to your plant timeline.");
       } catch {
         notify("Something went wrong. Please try again.");

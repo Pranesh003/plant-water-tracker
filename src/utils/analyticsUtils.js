@@ -10,8 +10,21 @@ export const filterPlants = (plants, { location = "All Plants", status = "All", 
 export const filterHistory = (history, { plantId = "All Plants", type = "All Activities", range = "All" }) =>
   history.filter((item) => {
     const matchesPlant = plantId === "All Plants" || item.plantId === plantId;
-    const normalizedType = type === "Notes" ? "note" : type.toLowerCase();
-    const matchesType = type === "All Activities" || item.type === normalizedType;
+    const isAiDoc = item.type === "ai_doctor" || (typeof item.text === "string" && item.text.includes("[Vertex AI Doctor Diagnosis]"));
+    
+    let matchesType = true;
+    if (type.includes("AI Doctor") || type === "ai_doctor") {
+      matchesType = isAiDoc;
+    } else if (type === "Notes" || type === "note") {
+      matchesType = (item.type === "note" || !!item.text) && !isAiDoc;
+    } else if (type === "Watering" || type === "watering") {
+      matchesType = (item.type === "watering" || (!item.type && !item.text)) && !isAiDoc;
+    } else if (type === "Streak" || type === "streak") {
+      matchesType = item.type === "streak" || (item.streak != null && Number(item.streak) > 0);
+    } else if (type !== "All Activities") {
+      matchesType = item.type === type.toLowerCase();
+    }
+
     const matchesRange = range === "All" || daysBetween(item.date, todayISO()) <= Number(range);
     return matchesPlant && matchesType && matchesRange;
   });

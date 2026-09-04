@@ -5,7 +5,7 @@ import { usePlantCare } from "../App.jsx";
 import { findPlantMatch } from "../data/plantDatabase.js";
 import { getPlantIconUrl } from "../utils/plantIconUtils.js";
 import { readStorage } from "../utils/storageUtils.js";
-import { calculateNextWateringDate, calculateWateringStatus, formatDate, isPlantWaterable, todayISO } from "../utils/wateringUtils.js";
+import { calculateNextWateringDate, calculateWateringStatus, daysBetween, formatDate, isPlantWaterable, todayISO } from "../utils/wateringUtils.js";
 import PlantStatusBadge from "./PlantStatusBadge.jsx";
 import StreakBadge from "./StreakBadge.jsx";
 
@@ -149,50 +149,122 @@ export default function PlantCard({ plant, preview = false, onDelete, weather })
               </div>
             )}
           </div>
-          <div className="plant-card-content">
-            <div className="plant-card-row">
+          <div className="plant-card-content" style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12 }}>
+            {/* Header Title & Status Badge */}
+            <div className="plant-card-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div>
-                <h3>{plant.name || "Plant Name"}</h3>
-                <p className="muted">{plant.species || "Species"}</p>
+                <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 850, color: "#0f172a" }}>{plant.name || "Plant Name"}</h3>
+                <p className="muted" style={{ margin: "2px 0 0", fontSize: "0.82rem", color: "#64748b" }}>{plant.species || "Species"}</p>
               </div>
               <PlantStatusBadge status={status} />
             </div>
 
-            <div className="plant-metrics" aria-label="Plant overview">
-              <span><Thermometer size={15} /> <strong>Temp</strong> {displayTemp}</span>
-              <span><Droplets size={15} /> <strong>Humidity</strong> {displayHumidity}</span>
-              <span><Sun size={15} /> <strong>Sunlight</strong> {displaySunlight}</span>
+            {/* 3 Overview Metrics */}
+            <div className="plant-metrics" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6, background: "#f8faf7", padding: "10px 12px", borderRadius: 14, border: "1px solid #e2e8f0" }}>
+              <span style={{ display: "flex", flexDirection: "column", alignItems: "center", fontSize: "0.76rem", color: "#475569" }}><Thermometer size={14} color="#16a34a" /> <strong style={{ color: "#0f172a", fontSize: "0.8rem", marginTop: 2 }}>{displayTemp}</strong></span>
+              <span style={{ display: "flex", flexDirection: "column", alignItems: "center", fontSize: "0.76rem", color: "#475569" }}><Droplets size={14} color="#0284c7" /> <strong style={{ color: "#0f172a", fontSize: "0.8rem", marginTop: 2 }}>{displayHumidity}</strong></span>
+              <span style={{ display: "flex", flexDirection: "column", alignItems: "center", fontSize: "0.76rem", color: "#475569" }}><Sun size={14} color="#d97706" /> <strong style={{ color: "#0f172a", fontSize: "0.8rem", marginTop: 2 }}>{displaySunlight}</strong></span>
             </div>
 
-            <div className="watering-summary">
-              <span><Droplets size={16} /> Recommended: {recommendedWater}</span>
-              <span><CalendarDays size={16} /> Last watered: {hasWateringHistory ? formatDate(plant.lastWatered) : "Not yet"}</span>
+            {/* Clean Pill Tags (Schedule + Location + Recommended) */}
+            <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+              <span style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                padding: "4px 10px",
+                borderRadius: 20,
+                fontSize: "0.78rem",
+                fontWeight: 700,
+                background: status === "Overdue" ? "#fef2f2" : status === "Water Soon" ? "#fffbe6" : "#f0fdf4",
+                color: status === "Overdue" ? "#dc2626" : status === "Water Soon" ? "#d97706" : "#16a34a",
+                border: `1px solid ${status === "Overdue" ? "#fecaca" : status === "Water Soon" ? "#ffe58f" : "#bbf7d0"}`
+              }}>
+                <Droplets size={12} />
+                {(() => {
+                  if (!plant.lastWatered) return "Schedule Pending";
+                  const freq = Number(plant.frequency || 7);
+                  const daysElapsed = daysBetween(plant.lastWatered, todayISO());
+                  const remaining = freq - daysElapsed;
+                  if (remaining < 0) return `Overdue by ${Math.abs(remaining)} day${Math.abs(remaining) === 1 ? "" : "s"}`;
+                  if (remaining === 0) return "Due Today";
+                  if (remaining === 1) return "In 1 day";
+                  return `In ${remaining} days`;
+                })()}
+              </span>
+
+              <span style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                padding: "4px 10px",
+                borderRadius: 20,
+                fontSize: "0.78rem",
+                fontWeight: 600,
+                background: "#f1f5f9",
+                color: "#475569",
+                border: "1px solid #e2e8f0"
+              }}>
+                <MapPin size={12} />
+                {(() => {
+                  const loc = plant.location || "Indoor";
+                  return loc.split(",").map(part => part.trim().split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ")).join(", ");
+                })()}
+              </span>
+
+              <span style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                padding: "4px 10px",
+                borderRadius: 20,
+                fontSize: "0.78rem",
+                fontWeight: 600,
+                background: "#fffbe6",
+                color: "#92400e",
+                border: "1px solid #ffe58f"
+              }}>
+                <CalendarDays size={12} />
+                {recommendedWater}
+              </span>
             </div>
 
-            <StreakBadge streak={streak} best={bestStreak} />
+            {/* Streak & Last Watered Row */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.8rem", color: "#64748b", background: "#fdf8f6", padding: "8px 12px", borderRadius: 12, border: "1px solid #fce8e6" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 5, fontWeight: 700, color: "#c2410c" }}>
+                <Flame size={14} color="#ea580c" /> {streak} Day Streak
+              </span>
+              <span>
+                Last: <strong>{hasWateringHistory ? formatDate(plant.lastWatered) : "Not yet"}</strong>
+              </span>
+            </div>
 
+            {/* Clean Action Buttons */}
             {!preview && (
-              <div className="card-actions-grid" onClick={stopCardFlip}>
-                <div className="actions-row-two">
-                  <button type="button" className={`primary-btn ${(!isWaterable || watered || wateredToday) ? "success-btn" : ""}`} onClick={handleWaterPlant} disabled={isButtonDisabled}>
-                    {(!isWaterable || watered || wateredToday) ? <Check size={16} /> : <Droplets size={16} />}
+              <div className="card-actions-grid" onClick={stopCardFlip} style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  <button type="button" className={`primary-btn ${(!isWaterable || watered || wateredToday) ? "success-btn" : ""}`} onClick={handleWaterPlant} disabled={isButtonDisabled} style={{ minHeight: 40, fontSize: "0.84rem", borderRadius: 12 }}>
+                    {(!isWaterable || watered || wateredToday) ? <Check size={15} /> : <Droplets size={15} />}
                     {isWatering ? "Watering..." : (!isWaterable || watered || wateredToday) ? "Watered" : "Water Now"}
                   </button>
-                  <Link className="ghost-btn" to={`/edit-plant/${plant.id}`} onClick={stopCardFlip}><Camera size={16} /> Upload Photo</Link>
-                </div>
-
-                <div className="actions-row-two">
-                  <Link className="ghost-btn" to={`/plant/${plant.id}`} onClick={stopCardFlip}><MessageSquare size={16} /> Add Note</Link>
-                  <Link className="ghost-btn" to={`/edit-plant/${plant.id}`} onClick={stopCardFlip}><Edit size={16} /> Edit Plant</Link>
-                </div>
-
-                <div className="actions-row-view-delete">
-                  <button type="button" className="full-view-btn" onClick={(event) => { stopCardFlip(event); navigate(`/plant/${plant.id}`); }} aria-label="View plant details">
-                    <Eye size={16} /> View Details
+                  
+                  <button type="button" className="full-view-btn" onClick={(event) => { stopCardFlip(event); navigate(`/plant/${plant.id}`); }} style={{ minHeight: 40, fontSize: "0.84rem", borderRadius: 12 }}>
+                    <Eye size={15} /> View Details
                   </button>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 40px", gap: 8 }}>
+                  <Link className="ghost-btn" to={`/edit-plant/${plant.id}`} onClick={stopCardFlip} style={{ minHeight: 38, fontSize: "0.8rem", borderRadius: 12, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                    <Edit size={14} /> Edit Plant
+                  </Link>
+                  
+                  <Link className="ghost-btn" to={`/plant/${plant.id}`} onClick={stopCardFlip} style={{ minHeight: 38, fontSize: "0.8rem", borderRadius: 12, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                    <MessageSquare size={14} /> Note / Photo
+                  </Link>
+
                   {onDelete && (
-                    <button type="button" className="trash-icon-btn" onClick={(event) => { stopCardFlip(event); onDelete(plant); }} title="Delete" aria-label={`Delete ${plant.name}`}>
-                      <Trash2 size={16} />
+                    <button type="button" className="trash-icon-btn" onClick={(event) => { stopCardFlip(event); onDelete(plant); }} title="Delete" style={{ width: 40, height: 38, borderRadius: 12, flex: "0 0 40px" }}>
+                      <Trash2 size={15} />
                     </button>
                   )}
                 </div>

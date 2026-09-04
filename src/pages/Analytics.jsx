@@ -1,4 +1,4 @@
-import { Award, BarChart3, Droplets, Flame, Globe, Leaf, RefreshCw, ThermometerSun } from "lucide-react";
+import { Award, BarChart3, Calendar, Droplets, Flame, Globe, History as HistoryIcon, Leaf, RefreshCw, ThermometerSun } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { usePlantCare } from "../App.jsx";
@@ -10,7 +10,21 @@ import { getPlantIconUrl } from "../utils/plantIconUtils.js";
 
 const PAGE_SIZE = 6;
 
-const colors = { Safe: "#6FA86F", "Water Soon": "#E6C95C", Overdue: "#DF7D73" };
+const colors = { Safe: "#16a34a", "Water Soon": "#d97706", Overdue: "#dc2626" };
+
+const formatLocation = (locStr) => {
+  if (!locStr) return "Indoor";
+  return locStr
+    .split(",")
+    .map(part => part.trim().split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" "))
+    .join(", ");
+};
+
+const sanitizeRegionText = (str) => {
+  if (!str) return "";
+  return str.replace(/\(\(/g, "(").replace(/\)\)/g, ")");
+};
+
 const activityData = (history, days) => Array.from({ length: days }, (_, index) => {
   const date = new Date();
   date.setDate(date.getDate() - (days - 1 - index));
@@ -43,110 +57,175 @@ export default function Analytics() {
   if (!plants.length) return <EmptyState title="No analytics yet." message="Add plants and water them to see care insights." action="Add Plant" to="/add-plant" />;
 
   return (
-    <>
-      <section className="page-title">
-        <p className="eyebrow">PERSONAL GARDEN INSIGHTS</p>
-        <h1 style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <span>My Personal Garden Analytics</span>
-          <img src="/analytics_icon.png" alt="Analytics Icon" style={{ width: 34, height: 34, objectFit: "contain" }} />
-        </h1>
+    <div className="analytics-page-container">
+      {/* Page Header */}
+      <header className="dashboard-top-header">
+        <div>
+          <span className="eyebrow-tag">PERSONAL GARDEN INSIGHTS</span>
+          <h1 style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "4px 0" }}>
+            <span>My Personal Garden Analytics</span>
+            <img src="/analytics_icon.png" alt="Analytics Icon" style={{ width: 32, height: 32, objectFit: "contain" }} />
+          </h1>
+          <p>Real-time analytics, watering consistency, species breakdown, and regional climate trends.</p>
+        </div>
+      </header>
+
+      {/* 5 Summary Metric Cards */}
+      <section className="summary-grid-cards" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 24 }}>
+        <div className="dash-metric-card">
+          <div className="metric-icon-circle green">
+            <Leaf size={20} />
+          </div>
+          <div className="metric-info">
+            <span className="metric-label">Total Plants</span>
+            <strong className="metric-value">{plants.length}</strong>
+            <span className="metric-subtext">Active garden specimens</span>
+          </div>
+        </div>
+
+        <div className="dash-metric-card">
+          <div className="metric-icon-circle green-soft">
+            <Droplets size={20} />
+          </div>
+          <div className="metric-info">
+            <span className="metric-label">Total Waterings</span>
+            <strong className="metric-value">{analytics.totalWaterings}</strong>
+            <span className="metric-subtext">Hydration events logged</span>
+          </div>
+        </div>
+
+        <div className="dash-metric-card">
+          <div className="metric-icon-circle yellow">
+            <Flame size={20} />
+          </div>
+          <div className="metric-info">
+            <span className="metric-label">Active Streak</span>
+            <strong className="metric-value">{analytics.currentActiveStreak} days</strong>
+            <span className="metric-subtext">Current care streak</span>
+          </div>
+        </div>
+
+        <div className="dash-metric-card">
+          <div className="metric-icon-circle red">
+            <Award size={20} />
+          </div>
+          <div className="metric-info">
+            <span className="metric-label">Best Streak</span>
+            <strong className="metric-value">{analytics.bestStreak} days</strong>
+            <span className="metric-subtext">All-time record</span>
+          </div>
+        </div>
+
+        <div className="dash-metric-card">
+          <div className="metric-icon-circle green">
+            <BarChart3 size={20} />
+          </div>
+          <div className="metric-info">
+            <span className="metric-label">Watering Consistency</span>
+            <strong className="metric-value">{analytics.consistency}%</strong>
+            <span className="metric-subtext">On-time care rate</span>
+          </div>
+        </div>
       </section>
 
-      <section className="analytics-grid">
-        <AnalyticsCard title="Total Plants" value={plants.length} />
-        <AnalyticsCard title="Total Waterings" value={analytics.totalWaterings} />
-        <AnalyticsCard title="Current Active Streak" value={`${analytics.currentActiveStreak} days`} />
-        <AnalyticsCard title="Best Streak" value={`${analytics.bestStreak} days`} />
-        <AnalyticsCard title="Watering Consistency" value={`${analytics.consistency}%`} />
-      </section>
-
-      {/* Personal Garden Insights */}
+      {/* Personal Garden Insights (3 Column Cards) */}
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20, marginBottom: 24 }}>
-        {/* Metric 1: My Popular Plant Species */}
-        <div className="panel" style={{ padding: 20 }}>
-          <h3 style={{ margin: "0 0 12px", fontSize: "1.05rem", fontWeight: 800, color: "#1b4332", display: "flex", alignItems: "center", gap: 8 }}>
-            <Globe size={20} color="#2d6a4f" /> My Top Species by Location
+        {/* Metric 1: My Popular Plant Species by Location */}
+        <div style={{ background: "#ffffff", borderRadius: 20, padding: 20, border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.03)" }}>
+          <h3 style={{ margin: "0 0 16px", fontSize: "1.05rem", fontWeight: 850, color: "#0f172a", display: "flex", alignItems: "center", gap: 8 }}>
+            <Globe size={20} color="#16a34a" /> My Top Species by Location
           </h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div className="custom-scroll" style={{ display: "flex", flexDirection: "column", gap: 12, maxHeight: 290, overflowY: "auto" }}>
             {personalReport?.mostPopularSpeciesByCity?.map((item, idx) => (
-              <div key={idx} style={{ padding: 12, background: "#f8f9fa", borderRadius: 10, border: "1px solid #e9ecef" }}>
-                <strong style={{ color: "#1b4332", fontSize: "0.92rem", display: "block" }}>📍 {item.city}</strong>
-                <span style={{ fontSize: "0.85rem", color: "#2d6a4f", fontWeight: 700 }}>🌴 {item.topSpecies}</span>
-                <small style={{ display: "block", color: "#6c757d" }}>{item.totalPlants} specimen in your garden</small>
+              <div key={idx} style={{ padding: "12px 14px", background: "#f8faf7", borderRadius: 14, border: "1px solid #e2e8f0" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <strong style={{ color: "#0f172a", fontSize: "0.94rem" }}>📍 {formatLocation(item.city)}</strong>
+                  <span style={{ fontSize: "0.78rem", fontWeight: 700, background: "#f0fdf4", color: "#16a34a", padding: "2px 8px", borderRadius: 12, border: "1px solid #bbf7d0" }}>
+                    {item.totalPlants} plant{item.totalPlants === 1 ? "" : "s"}
+                  </span>
+                </div>
+                <span style={{ fontSize: "0.86rem", color: "#16a34a", fontWeight: 700, display: "block", marginTop: 4 }}>🌴 {item.topSpecies}</span>
               </div>
             )) || (
-              <div style={{ padding: 12, background: "#f8f9fa", borderRadius: 10 }}>
-                <strong>📍 My Garden Locations</strong>
-                <span style={{ display: "block", color: "#2d6a4f" }}>🌴 Areca Palm / Monstera</span>
+              <div style={{ padding: 14, background: "#f8faf7", borderRadius: 14, border: "1px solid #e2e8f0" }}>
+                <strong style={{ color: "#0f172a" }}>📍 My Garden Locations</strong>
+                <span style={{ display: "block", color: "#16a34a", fontWeight: 700, marginTop: 4 }}>🌴 Areca Palm / Monstera</span>
               </div>
             )}
           </div>
         </div>
 
         {/* Metric 2: Average Streak Retention by Room Location */}
-        <div className="panel" style={{ padding: 20 }}>
-          <h3 style={{ margin: "0 0 12px", fontSize: "1.05rem", fontWeight: 800, color: "#1b4332", display: "flex", alignItems: "center", gap: 8 }}>
-            <Flame size={20} color="#e63946" /> My Room Streak Retention
+        <div style={{ background: "#ffffff", borderRadius: 20, padding: 20, border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.03)" }}>
+          <h3 style={{ margin: "0 0 16px", fontSize: "1.05rem", fontWeight: 850, color: "#0f172a", display: "flex", alignItems: "center", gap: 8 }}>
+            <Flame size={20} color="#ea580c" /> My Room Streak Retention
           </h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div className="custom-scroll" style={{ display: "flex", flexDirection: "column", gap: 12, maxHeight: 290, overflowY: "auto" }}>
             {personalReport?.averageStreakRetentionByLocation?.map((item, idx) => (
-              <div key={idx} style={{ padding: 12, background: "#fff5f5", borderRadius: 10, border: "1px solid #ffe3e3" }}>
-                <strong style={{ color: "#c92a2a", fontSize: "0.92rem", display: "block" }}>🏡 {item.roomLocation}</strong>
-                <span style={{ fontSize: "0.85rem", color: "#1b4332", fontWeight: 700 }}>Average Streak: {item.avgStreakDays}</span>
-                <small style={{ display: "block", color: "#e03131", fontWeight: 700 }}>Care Consistency: {item.retentionRate}</small>
+              <div key={idx} style={{ padding: "12px 14px", background: "#fff7ed", borderRadius: 14, border: "1px solid #ffedd5" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <strong style={{ color: "#c2410c", fontSize: "0.94rem" }}>🏡 {formatLocation(item.roomLocation)}</strong>
+                  <span style={{ fontSize: "0.78rem", fontWeight: 800, color: "#ea580c" }}>{item.retentionRate}</span>
+                </div>
+                <span style={{ fontSize: "0.84rem", color: "#475569", fontWeight: 600, display: "block", marginTop: 4 }}>Average Streak: <strong>{item.avgStreakDays}</strong></span>
               </div>
             )) || (
-              <div style={{ padding: 12, background: "#fff5f5", borderRadius: 10 }}>
-                <strong>🏡 Living Room</strong>
-                <span>Average Streak: 8.5 days</span>
+              <div style={{ padding: 14, background: "#fff7ed", borderRadius: 14, border: "1px solid #ffedd5" }}>
+                <strong style={{ color: "#c2410c" }}>🏡 Living Room</strong>
+                <span style={{ display: "block", color: "#475569", marginTop: 4 }}>Average Streak: 8.5 days</span>
               </div>
             )}
           </div>
         </div>
 
         {/* Metric 3: Regional Climate & Heatwave Guidance */}
-        <div className="panel" style={{ padding: 20 }}>
-          <h3 style={{ margin: "0 0 12px", fontSize: "1.05rem", fontWeight: 800, color: "#1b4332", display: "flex", alignItems: "center", gap: 8 }}>
-            <ThermometerSun size={20} color="#d9480f" /> Regional Climate & Care Guidance
+        <div style={{ background: "#ffffff", borderRadius: 20, padding: 20, border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.03)" }}>
+          <h3 style={{ margin: "0 0 16px", fontSize: "1.05rem", fontWeight: 850, color: "#0f172a", display: "flex", alignItems: "center", gap: 8 }}>
+            <ThermometerSun size={20} color="#d97706" /> Regional Climate Guidance
           </h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div className="custom-scroll" style={{ display: "flex", flexDirection: "column", gap: 12, maxHeight: 290, overflowY: "auto" }}>
             {personalReport?.overdueHeatwaveTrends?.map((item, idx) => (
-               <div key={idx} style={{ padding: 12, background: "#fff9db", borderRadius: 10, border: "1px solid #fff3bf" }}>
-                <strong style={{ color: "#e65c00", fontSize: "0.92rem", display: "block" }}>🌡️ {item.region} ({item.avgTempC})</strong>
-                <span style={{ fontSize: "0.85rem", color: "#c92a2a", fontWeight: 800 }}>{item.overdueIncreasePercent}</span>
-                <p style={{ margin: "4px 0 0", fontSize: "0.8rem", color: "#5c940d" }}>{item.insight}</p>
+              <div key={idx} style={{ padding: "12px 14px", background: "#fffbe6", borderRadius: 14, border: "1px solid #ffe58f" }}>
+                <strong style={{ color: "#b45309", fontSize: "0.92rem", display: "block" }}>🌡️ {sanitizeRegionText(item.region)}</strong>
+                <span style={{ fontSize: "0.82rem", color: "#dc2626", fontWeight: 800, display: "inline-block", marginTop: 2 }}>{item.overdueIncreasePercent}</span>
+                <p style={{ margin: "4px 0 0", fontSize: "0.8rem", color: "#475569", lineHeight: 1.4 }}>{item.insight}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="chart-grid">
-        <div className="panel chart-panel">
-          <div className="chart-head">
-            <h2><Droplets size={19} /> Watering Activity</h2>
-            <select value={range} onChange={(e) => setRange(e.target.value)}>
+      {/* Recharts Charts Grid */}
+      <section className="chart-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: 20, marginBottom: 24 }}>
+        <div style={{ background: "#ffffff", borderRadius: 20, padding: 20, border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.03)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 850, color: "#0f172a", display: "flex", alignItems: "center", gap: 8 }}>
+              <Droplets size={19} color="#0284c7" /> Watering Activity
+            </h3>
+            <select value={range} onChange={(e) => setRange(e.target.value)} style={{ padding: "6px 12px", borderRadius: 10, border: "1px solid #cbd5e1", fontSize: "0.84rem", fontWeight: 600 }}>
               <option value="7">7 days</option>
               <option value="30">30 days</option>
             </select>
           </div>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={activityData(history, Number(range))}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#dbe8dc" />
-              <XAxis dataKey="day" interval={range === "30" ? 4 : 0} />
-              <YAxis allowDecimals={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <XAxis dataKey="day" interval={range === "30" ? 4 : 0} tick={{ fontSize: 12, fill: "#64748b" }} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: "#64748b" }} />
               <Tooltip />
-              <Bar dataKey="waterings" fill="#2F6B3F" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="waterings" fill="#16a34a" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        <div className="panel chart-panel">
-          <h2><BarChart3 size={19} /> Plant Status</h2>
+        <div style={{ background: "#ffffff", borderRadius: 20, padding: 20, border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.03)" }}>
+          <h3 style={{ margin: "0 0 16px", fontSize: "1.05rem", fontWeight: 850, color: "#0f172a", display: "flex", alignItems: "center", gap: 8 }}>
+            <BarChart3 size={19} color="#16a34a" /> Plant Health Status
+          </h3>
           <ResponsiveContainer width="100%" height={260}>
             <PieChart>
               <Pie data={statusData} dataKey="value" nameKey="name" innerRadius={58} outerRadius={92} paddingAngle={4}>
-                {statusData.map((entry) => <Cell key={entry.name} fill={colors[entry.name]} />)}
+                {statusData.map((entry) => <Cell key={entry.name} fill={colors[entry.name] || "#16a34a"} />)}
               </Pie>
               <Tooltip />
               <Legend />
@@ -155,36 +234,45 @@ export default function Analytics() {
         </div>
       </section>
 
-      <section className="insight-grid">
-        <div className="panel top-plant">
-          <Award size={34} />
-          <p>Most Consistent Plant</p>
-          <h2 style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "center" }}>
+      {/* Bottom Insights Row */}
+      <section className="insight-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+        <div style={{ background: "#ffffff", borderRadius: 20, padding: 24, border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.03)", textAlign: "center" }}>
+          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#f0fdf4", color: "#16a34a", display: "grid", placeItems: "center", margin: "0 auto 12px" }}>
+            <Award size={30} />
+          </div>
+          <p style={{ margin: 0, fontSize: "0.85rem", color: "#64748b", fontWeight: 600 }}>Most Consistent Plant</p>
+          <h3 style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "center", margin: "6px 0", fontSize: "1.2rem", fontWeight: 850, color: "#0f172a" }}>
             {analytics.topPlant && <img src={getPlantIconUrl(analytics.topPlant)} alt="" style={{ width: 28, height: 28, objectFit: "contain" }} />}
-            <span>{analytics.topPlant?.name}</span>
-          </h2>
-          <strong>{analytics.topPlant?.consistency}% watering consistency</strong>
+            <span>{analytics.topPlant?.name || "None yet"}</span>
+          </h3>
+          <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#16a34a" }}>{analytics.topPlant?.consistency || 100}% watering consistency</span>
         </div>
 
-        <div className="panel leaderboard">
-          <h2><Flame size={19} /> Streak Leaderboard</h2>
-          {paginatedLeaderboard.map((plant, index) => (
-            <div key={plant.id}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                {((leaderboardPage - 1) * PAGE_SIZE) + index + 1}. <img src={getPlantIconUrl(plant)} alt="" style={{ width: 22, height: 22, objectFit: "contain" }} /> {plant.name}
-              </span>
-              <strong>{plant.currentStreak} days</strong>
-            </div>
-          ))}
+        <div style={{ background: "#ffffff", borderRadius: 20, padding: 20, border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.03)" }}>
+          <h3 style={{ margin: "0 0 14px", fontSize: "1.05rem", fontWeight: 850, color: "#0f172a", display: "flex", alignItems: "center", gap: 8 }}>
+            <Flame size={19} color="#ea580c" /> Streak Leaderboard
+          </h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {paginatedLeaderboard.map((plant, index) => (
+              <div key={plant.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "#f8faf7", borderRadius: 12, border: "1px solid #f1f5f9" }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: "0.88rem", fontWeight: 700, color: "#0f172a" }}>
+                  {((leaderboardPage - 1) * PAGE_SIZE) + index + 1}. <img src={getPlantIconUrl(plant)} alt="" style={{ width: 22, height: 22, objectFit: "contain" }} /> {plant.name}
+                </span>
+                <strong style={{ fontSize: "0.85rem", color: "#ea580c" }}>{plant.currentStreak} {plant.currentStreak === 1 ? "day" : "days"}</strong>
+              </div>
+            ))}
+          </div>
           <Pagination page={leaderboardPage} totalItems={leaderboard.length} pageSize={PAGE_SIZE} onPageChange={setLeaderboardPage} />
         </div>
 
-        <div className="panel leaderboard">
-          <h2><Leaf size={19} /> Consistency</h2>
-          <p className="large-percent">{analytics.consistency}%</p>
-          <small>Completed on time across your active plant family.</small>
+        <div style={{ background: "#ffffff", borderRadius: 20, padding: 24, border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.03)", textAlign: "center" }}>
+          <h3 style={{ margin: "0 0 12px", fontSize: "1.05rem", fontWeight: 850, color: "#0f172a", display: "flex", alignItems: "center", gap: 8, justifyContent: "center" }}>
+            <Leaf size={19} color="#16a34a" /> Overall Consistency
+          </h3>
+          <p style={{ fontSize: "2.8rem", fontWeight: 900, color: "#16a34a", margin: "8px 0" }}>{analytics.consistency}%</p>
+          <small style={{ color: "#64748b", fontSize: "0.82rem" }}>Completed on time across your active plant family.</small>
         </div>
       </section>
-    </>
+    </div>
   );
 }

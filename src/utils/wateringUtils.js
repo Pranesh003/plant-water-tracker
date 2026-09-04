@@ -100,7 +100,7 @@ export const calculateWateringStatus = (lastWatered, frequency, plantLocationCit
   const daysElapsed = daysBetween(lastWatered, plantToday);
   const remaining = freq - daysElapsed;
   if (remaining < 0) return "Overdue";
-  if (remaining <= 1) return "Water Soon";
+  if (remaining === 0) return "Water Soon";
   return "Safe";
 };
 

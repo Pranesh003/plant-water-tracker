@@ -1,4 +1,4 @@
-import { Plus, Search } from "lucide-react";
+import { Leaf, Plus, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { usePlantCare } from "../App.jsx";
@@ -75,9 +75,9 @@ export default function MyPlants() {
       <header className="dashboard-top-header">
         <div>
           <span className="eyebrow-tag">MY PLANTS</span>
-          <h1 style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <h1 style={{ display: "flex", alignItems: "center", gap: 10, margin: "4px 0" }}>
             <span>My Plants</span>
-            <img src="/my_plants_icon.png" alt="My Plants Icon" style={{ width: 34, height: 34, objectFit: "contain" }} />
+            <img src="/my_plants_icon.png" alt="My Plants Icon" style={{ width: 32, height: 32, objectFit: "contain" }} />
           </h1>
           <p>Keep track of your plants and their watering needs.</p>
         </div>

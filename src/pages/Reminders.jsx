@@ -1,14 +1,22 @@
-import { AlertTriangle, Bell, Calendar, Check, CheckCircle2, Clock, Droplets, MapPin, Search, Sprout } from "lucide-react";
+import { AlertTriangle, Bell, Calendar, Check, CheckCircle2, Clock, Droplets, MapPin, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { usePlantCare } from "../App.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import PlantStatusBadge from "../components/PlantStatusBadge.jsx";
-import { calculateNextWateringDate, calculateWateringStatus, formatDate, isPlantWaterable, todayISO } from "../utils/wateringUtils.js";
+import { calculateNextWateringDate, calculateWateringStatus, daysBetween, formatDate, isPlantWaterable, todayISO } from "../utils/wateringUtils.js";
 import { getPlantIconUrl } from "../utils/plantIconUtils.js";
 
+const formatLocation = (locStr) => {
+  if (!locStr) return "Indoor";
+  return locStr
+    .split(",")
+    .map(part => part.trim().split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" "))
+    .join(", ");
+};
+
 export default function Reminders() {
-  const { plants, history, waterPlant, refresh, user, notify } = usePlantCare();
+  const { plants, history, waterPlant, refresh, user } = usePlantCare();
   const navigate = useNavigate();
   const [filterTab, setFilterTab] = useState("all");
   const [query, setQuery] = useState("");
@@ -73,9 +81,9 @@ export default function Reminders() {
       <header className="dashboard-top-header">
         <div>
           <span className="eyebrow-tag">CARE SCHEDULE</span>
-          <h1 style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <h1 style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "4px 0" }}>
             <span>Watering Reminders</span>
-            <img src="/alarm_clock_icon.png" alt="Alarm Clock Icon" style={{ width: 32, height: 32, objectFit: "contain", display: "inline-block" }} />
+            <img src="/alarm_clock_icon.png" alt="Reminders Icon" style={{ width: 32, height: 32, objectFit: "contain" }} />
           </h1>
           <p>Stay on top of upcoming and overdue watering schedules for all your plants.</p>
         </div>
@@ -85,7 +93,7 @@ export default function Reminders() {
       </header>
 
       {/* 4 Summary Metric Cards */}
-      <section className="summary-grid-cards" style={{ marginBottom: 24 }}>
+      <section className="summary-grid-cards" style={{ marginBottom: 20 }}>
         <div className="dash-metric-card" onClick={() => setFilterTab("today")}>
           <div className="metric-icon-circle yellow">
             <Clock size={20} />
@@ -171,7 +179,7 @@ export default function Reminders() {
       </section>
 
       {/* Floating Search Toolbar */}
-      <section className="dashboard-floating-toolbar" style={{ marginTop: 16, marginBottom: 24 }}>
+      <section className="dashboard-floating-toolbar" style={{ marginTop: 16, marginBottom: 20 }}>
         <div className="floating-search-wrap" style={{ flex: 1 }}>
           <Search size={18} className="search-icon" />
           <input
@@ -193,11 +201,23 @@ export default function Reminders() {
             return (
               <div
                 key={plant.id}
-                className={`panel reminder-item-card ${plant.isOverdue ? "is-overdue" : plant.isSoon ? "is-soon" : ""}`}
+                className={`reminder-item-card ${plant.isOverdue ? "is-overdue" : plant.isSoon ? "is-soon" : ""}`}
+                style={{
+                  background: "#ffffff",
+                  borderRadius: 20,
+                  padding: "16px 20px",
+                  border: `1px solid ${plant.isOverdue ? "#fecaca" : plant.isSoon ? "#ffe58f" : "#e2e8f0"}`,
+                  boxShadow: "0 4px 16px rgba(0,0,0,0.03)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 16,
+                  flexWrap: "wrap"
+                }}
               >
-                {/* Left: Plant Photo & Title */}
-                <div className="reminder-card-left">
-                  <div className="reminder-plant-thumb">
+                {/* Left: Plant Thumbnail Photo & Details */}
+                <div style={{ display: "flex", alignItems: "center", gap: 16, flex: "1 1 300px" }}>
+                  <div style={{ width: 56, height: 56, borderRadius: 16, overflow: "hidden", background: "#f8faf7", border: "1px solid #e2e8f0", flex: "0 0 56px", display: "grid", placeItems: "center" }}>
                     {plant.photoUrl ? (
                       <img src={plant.photoUrl} alt={plant.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     ) : (
@@ -205,28 +225,79 @@ export default function Reminders() {
                     )}
                   </div>
 
-                  <div>
-                    <div className="reminder-title-row">
-                      <strong style={{ fontSize: "1.05rem", color: "#1b4332" }}>{plant.name}</strong>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                      <strong style={{ fontSize: "1.05rem", fontWeight: 850, color: "#0f172a" }}>{plant.name}</strong>
                       <PlantStatusBadge status={isDone ? "Safe" : plant.status} />
                     </div>
-                    <div className="reminder-meta-row">
-                      <span>
-                        <MapPin size={14} color="#52b788" /> {plant.location || "Indoor"}
+
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      {/* Schedule Remaining Badge */}
+                      <span style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 5,
+                        padding: "3px 10px",
+                        borderRadius: 20,
+                        fontSize: "0.78rem",
+                        fontWeight: 700,
+                        background: plant.isOverdue ? "#fef2f2" : plant.isSoon ? "#fffbe6" : "#f0fdf4",
+                        color: plant.isOverdue ? "#dc2626" : plant.isSoon ? "#d97706" : "#16a34a",
+                        border: `1px solid ${plant.isOverdue ? "#fecaca" : plant.isSoon ? "#ffe58f" : "#bbf7d0"}`
+                      }}>
+                        <Clock size={12} />
+                        {(() => {
+                          if (!plant.lastWatered) return "Schedule Pending";
+                          const freq = Number(plant.frequency || 7);
+                          const daysElapsed = daysBetween(plant.lastWatered, todayISO());
+                          const remaining = freq - daysElapsed;
+                          if (remaining < 0) return `Overdue by ${Math.abs(remaining)} day${Math.abs(remaining) === 1 ? "" : "s"}`;
+                          if (remaining === 0) return "Due Today";
+                          if (remaining === 1) return "In 1 day";
+                          return `In ${remaining} days`;
+                        })()}
                       </span>
-                      <span>
-                        <Droplets size={14} color="#0284c7" /> {plant.recWater}
+
+                      {/* Capitalized Location Tag */}
+                      <span style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 5,
+                        padding: "3px 10px",
+                        borderRadius: 20,
+                        fontSize: "0.78rem",
+                        fontWeight: 600,
+                        background: "#f1f5f9",
+                        color: "#475569",
+                        border: "1px solid #e2e8f0"
+                      }}>
+                        <MapPin size={12} />
+                        {formatLocation(plant.location)}
                       </span>
-                      <span>
-                        <Clock size={14} color="#d97706" /> {plant.lastWatered ? `Due: ${formatDate(plant.nextDate)}` : "Needs first water"}
+
+                      {/* Recommended Water Volume */}
+                      <span style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 5,
+                        padding: "3px 10px",
+                        borderRadius: 20,
+                        fontSize: "0.78rem",
+                        fontWeight: 600,
+                        background: "#f0f9ff",
+                        color: "#0369a1",
+                        border: "1px solid #bae6fd"
+                      }}>
+                        <Droplets size={12} />
+                        {plant.recWater}
                       </span>
                     </div>
                   </div>
                 </div>
 
                 {/* Right: Quick Action Buttons */}
-                <div className="reminder-card-actions">
-                  <Link className="ghost-btn" to={`/plant/${plant.id}`}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <Link className="ghost-btn" to={`/plant/${plant.id}`} style={{ padding: "8px 16px", borderRadius: 12, fontSize: "0.86rem", fontWeight: 700 }}>
                     View Details
                   </Link>
 
@@ -235,6 +306,7 @@ export default function Reminders() {
                     className={`primary-btn ${isDone ? "success-btn" : ""}`}
                     onClick={() => handleWaterNow(plant.id)}
                     disabled={isDone}
+                    style={{ padding: "8px 18px", borderRadius: 12, fontSize: "0.86rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}
                   >
                     {isDone ? (
                       <>
@@ -252,9 +324,7 @@ export default function Reminders() {
           })}
         </section>
       ) : (
-        <div className="reminders-empty-card" style={{ padding: 40, background: "#ffffff", borderRadius: 24, border: "1px dashed #cfe2ce", textAlign: "center" }}>
-          <EmptyState title="No reminders found." message="All plants are hydrated! Check back later for upcoming care schedules." action="Add Plant" to="/add-plant" />
-        </div>
+        <EmptyState title="No reminders found" message="All your plants are healthy and hydrated!" action="Add Plant" to="/add-plant" />
       )}
     </div>
   );

@@ -44,8 +44,14 @@ public class BigQueryAnalyticsService {
             String city = "Chennai";
             if (p.getLocationCity() != null && !p.getLocationCity().isBlank()) {
                 city = p.getLocationCity().trim();
-            } else if (p.getLocation() != null && p.getLocation().contains(",")) {
-                city = p.getLocation().split(",")[1].trim();
+            } else if (p.getLocation() != null && !p.getLocation().isBlank()) {
+                String loc = p.getLocation().trim();
+                if (loc.contains(",")) {
+                    String[] parts = loc.split(",");
+                    city = parts[parts.length - 1].trim();
+                } else {
+                    city = loc;
+                }
             }
 
             String species = (p.getSpecies() != null && !p.getSpecies().isBlank()) ? p.getSpecies().trim() : p.getName();

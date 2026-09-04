@@ -5,6 +5,7 @@ import {
   createUserWithEmailAndPassword,
   signOut
 } from "firebase/auth";
+import { getStorage, ref, uploadString, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const apiKey = import.meta.env.VITE_FIREBASE_API_KEY || "";
 
@@ -19,6 +20,7 @@ const firebaseConfig = {
 
 export const app = apiKey ? initializeApp(firebaseConfig) : null;
 export const auth = app ? getAuth(app) : null;
+export const storage = app ? getStorage(app) : null;
 
 /**
  * Syncs user authentication to Firebase Auth if a valid Web API key is configured.
@@ -47,4 +49,29 @@ export async function syncFirebaseUser(email, password = "PlantCare2026!") {
     }
   }
   return null;
+}
+
+/**
+ * Uploads a leaf photo or image file directly to Firebase Storage bucket.
+ */
+export async function uploadLeafImageToFirebase(imageData, pathName = "ai_scans") {
+  if (!storage || !imageData) return null;
+  try {
+    const filename = `${pathName}/${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
+    const storageRef = ref(storage, filename);
+
+    if (typeof imageData === "string" && imageData.startsWith("data:")) {
+      await uploadString(storageRef, imageData, "data_url");
+    } else if (imageData instanceof Blob || imageData instanceof File) {
+      await uploadBytes(storageRef, imageData);
+    } else {
+      return null;
+    }
+
+    const downloadUrl = await getDownloadURL(storageRef);
+    return downloadUrl;
+  } catch (err) {
+    console.warn("Firebase Storage upload fallback:", err);
+    return null;
+  }
 }

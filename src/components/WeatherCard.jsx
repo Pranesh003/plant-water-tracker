@@ -1,8 +1,7 @@
-import { CloudSun, MapPin, RefreshCcw } from "lucide-react";
+import { CloudRain, CloudSun, Compass, Droplets, MapPin, RefreshCcw, Sun, Thermometer, Wind } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { api } from "../services/api.js";
 import { tnDistrictsAndCities } from "../data/tnDistricts.js";
-
 import { readStorage } from "../utils/storageUtils.js";
 
 export default function WeatherCard({ baseWaterMl = 400, onWeatherChange }) {
@@ -19,8 +18,9 @@ export default function WeatherCard({ baseWaterMl = 400, onWeatherChange }) {
     }
     return `${celsiusTemp} °C`;
   };
+
   const [inputs, setInputs] = useState({
-    city: "Chennai",
+    city: "Coimbatore",
     baseWaterMl,
     outdoor: false
   });
@@ -43,15 +43,15 @@ export default function WeatherCard({ baseWaterMl = 400, onWeatherChange }) {
   }, []);
 
   const fetchWeather = async (coordinates, cityOverride) => {
-    const searchInputs = {
-      ...inputs,
-      ...(cityOverride ? { city: cityOverride } : {})
-    };
     try {
-      const result = await api.getWeather({ ...searchInputs, ...coordinates });
+      const queryParams = coordinates
+        ? { lat: coordinates.lat, lon: coordinates.lon, baseWaterMl: inputs.baseWaterMl, outdoor: inputs.outdoor }
+        : { city: cityOverride || inputs.city, baseWaterMl: inputs.baseWaterMl, outdoor: inputs.outdoor };
+
+      const result = await api.getWeather(queryParams);
       setWeather(result);
       onWeatherChange?.(result);
-      if (coordinates && result.location) {
+      if (result?.location) {
         setInputs((current) => ({ ...current, city: result.location }));
       }
       setError(null);
@@ -70,39 +70,87 @@ export default function WeatherCard({ baseWaterMl = 400, onWeatherChange }) {
   const useDeviceLocation = () => {
     if (!navigator.geolocation) {
       setUsingDeviceLocation(false);
-      setError("Location access is not supported. Showing the selected city instead.");
+      setError("Location access is not supported by your browser.");
       fetchWeather();
       return;
     }
     setUsingDeviceLocation(true);
     navigator.geolocation.getCurrentPosition(
-      ({ coords }) => fetchWeather({ lat: coords.latitude, lon: coords.longitude }),
-      () => {
-        setUsingDeviceLocation(false);
-        setError("Location permission was not granted. Showing the selected city instead.");
-        fetchWeather();
+      ({ coords }) => {
+        fetchWeather({ lat: coords.latitude, lon: coords.longitude });
       },
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 30 * 60 * 1000 }
+      (geoError) => {
+        setUsingDeviceLocation(false);
+        fetchWeather(null, inputs.city);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   };
 
-  useEffect(() => { useDeviceLocation(); }, []);
+  useEffect(() => {
+    useDeviceLocation();
+  }, []);
 
   return (
-    <article className="panel weather-card">
-      <div className="weather-card-head">
+    <article className="panel weather-card" style={{ background: "#ffffff", borderRadius: 20, padding: 24, boxShadow: "0 10px 30px rgba(0,0,0,0.04)", border: "1px solid #e2e8f0" }}>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
         <div>
-          <p className="eyebrow">Today's Weather</p>
-          <h2><CloudSun size={20} /> Live Weather</h2>
+          <span style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.08em", color: "#15803d", textTransform: "uppercase", background: "#f0fdf4", padding: "4px 10px", borderRadius: 20, border: "1px solid #bbf7d0" }}>
+            TODAY'S WEATHER
+          </span>
+          <h2 style={{ margin: "6px 0 0", fontSize: "1.35rem", fontWeight: 800, color: "#0f172a", display: "flex", alignItems: "center", gap: 8 }}>
+            <CloudSun size={24} color="#16a34a" /> Live Local Weather
+          </h2>
         </div>
-        <div className="weather-actions">
-          <button className="primary-btn" type="button" onClick={useDeviceLocation}><RefreshCcw size={15} /> Refresh weather</button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            type="button"
+            onClick={useDeviceLocation}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              background: "linear-gradient(135deg, #16a34a 0%, #15803d 100%)",
+              color: "#ffffff",
+              border: "none",
+              padding: "9px 16px",
+              borderRadius: 12,
+              fontWeight: 700,
+              fontSize: "0.88rem",
+              cursor: "pointer",
+              boxShadow: "0 4px 12px rgba(22, 163, 74, 0.25)",
+              transition: "transform 0.2s, boxShadow 0.2s"
+            }}
+          >
+            <MapPin size={16} /> Use Live Location
+          </button>
+          <button
+            type="button"
+            onClick={() => fetchWeather(null, inputs.city)}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              background: "#f1f5f9",
+              color: "#334155",
+              border: "1px solid #cbd5e1",
+              padding: "9px 14px",
+              borderRadius: 12,
+              fontWeight: 700,
+              fontSize: "0.88rem",
+              cursor: "pointer"
+            }}
+          >
+            <RefreshCcw size={15} /> Refresh
+          </button>
         </div>
       </div>
 
-      <div className="weather-form-grid" style={{ alignItems: "flex-start" }}>
-        <div ref={dropdownRef} style={{ position: "relative", flex: 1, minWidth: 200 }}>
-          <label style={{ display: "grid", gap: 6 }}>
+      {/* Input Controls */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 16 }}>
+        <div ref={dropdownRef} style={{ position: "relative" }}>
+          <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: "0.85rem", fontWeight: 700, color: "#334155" }}>
             City / District
             <input
               type="text"
@@ -116,133 +164,203 @@ export default function WeatherCard({ baseWaterMl = 400, onWeatherChange }) {
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   setShowDropdown(false);
-                  fetchWeather();
+                  fetchWeather(null, inputs.city);
                 }
+              }}
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                borderRadius: 12,
+                border: "1.5px solid #cbd5e1",
+                fontSize: "0.95rem",
+                fontWeight: 600,
+                color: "#0f172a",
+                outline: "none",
+                boxSizing: "border-box"
               }}
             />
           </label>
-          {showDropdown && (
-            <div
-              className="city-suggestions"
-              style={{
-                position: "absolute",
-                top: "100%",
-                left: 0,
-                right: 0,
-                zIndex: 200,
-                maxHeight: 240,
-                overflowY: "auto",
-                background: "#ffffff",
-                border: "1px solid var(--border-color, #e2e8f0)",
-                borderRadius: 12,
-                boxShadow: "0 12px 28px rgba(0,0,0,0.12)",
-                marginTop: 6
-              }}
-            >
-              {filteredDistricts.length > 0 ? (
-                filteredDistricts.map((item) => (
-                  <button
-                    key={`${item.name}-${item.state}`}
-                    type="button"
-                    style={{
-                      width: "100%",
-                      textAlign: "left",
-                      padding: "10px 14px",
-                      background: "none",
-                      border: "none",
-                      borderBottom: "1px solid #f1f5f9",
-                      cursor: "pointer",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      transition: "background 0.15s ease"
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = "#f8fafc"}
-                    onMouseLeave={(e) => e.currentTarget.style.background = "none"}
-                    onClick={() => handleCitySelect(item)}
-                  >
-                    <div>
-                      <strong style={{ fontSize: "0.92rem", color: "#0f172a", display: "block" }}>{item.name}</strong>
-                      <small style={{ color: "#64748b", fontSize: "0.78rem" }}>{item.state} · {item.type}</small>
-                    </div>
-                    <MapPin size={14} color="#16a34a" />
-                  </button>
-                ))
-              ) : (
-                <button
-                  type="button"
+
+          {showDropdown && filteredDistricts.length > 0 && (
+            <ul style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              right: 0,
+              zIndex: 100,
+              background: "#ffffff",
+              border: "1px solid #cbd5e1",
+              borderRadius: 12,
+              boxShadow: "0 10px 25px rgba(0,0,0,0.12)",
+              maxHeight: 220,
+              overflowY: "auto",
+              listStyle: "none",
+              margin: "4px 0 0",
+              padding: "6px 0"
+            }}>
+              {filteredDistricts.map((item) => (
+                <li
+                  key={item.id || item.name}
+                  onClick={() => handleCitySelect(item)}
                   style={{
-                    width: "100%",
-                    textAlign: "left",
-                    padding: "10px 14px",
-                    background: "none",
-                    border: "none",
+                    padding: "10px 16px",
                     cursor: "pointer",
-                    color: "#0284c7"
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontSize: "0.9rem",
+                    color: "#16a34a",
+                    fontWeight: 600
                   }}
-                  onClick={() => {
-                    setShowDropdown(false);
-                    fetchWeather();
-                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "#f0fdf4"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
                 >
-                  Use "<strong>{inputs.city}</strong>"
-                </button>
-              )}
-            </div>
+                  <span><strong>{item.name}</strong> {item.alias ? `(${item.alias})` : ""}</span>
+                  <span style={{ fontSize: "0.78rem", color: "#64748b" }}>{item.label || "District"}</span>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
 
-        <label style={{ display: "grid", gap: 6, flex: 1, minWidth: 140 }}>
-          Base Water (mL)
-          <input
-            type="number"
-            value={inputs.baseWaterMl}
-            onChange={(event) => setInputs({ ...inputs, baseWaterMl: event.target.value })}
-            onBlur={() => fetchWeather()}
-          />
-        </label>
+        <div>
+          <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: "0.85rem", fontWeight: 700, color: "#334155" }}>
+            Base Water (mL)
+            <input
+              type="number"
+              value={inputs.baseWaterMl}
+              onChange={(event) => setInputs({ ...inputs, baseWaterMl: event.target.value })}
+              onBlur={() => fetchWeather(null, inputs.city)}
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                borderRadius: 12,
+                border: "1.5px solid #cbd5e1",
+                fontSize: "0.95rem",
+                fontWeight: 600,
+                color: "#0f172a",
+                outline: "none",
+                boxSizing: "border-box"
+              }}
+            />
+          </label>
+        </div>
+      </div>
 
-        <label className="check weather-check" style={{ marginTop: 28 }}>
+      {/* Outdoor Checkbox Pill */}
+      <div style={{ marginBottom: 20 }}>
+        <label style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 10,
+          padding: "8px 14px",
+          background: inputs.outdoor ? "#f0fdf4" : "#f8fafc",
+          border: `1.5px solid ${inputs.outdoor ? "#bbf7d0" : "#e2e8f0"}`,
+          borderRadius: 12,
+          fontSize: "0.88rem",
+          fontWeight: 600,
+          color: inputs.outdoor ? "#15803d" : "#475569",
+          cursor: "pointer",
+          transition: "all 0.2s"
+        }}>
           <input
             type="checkbox"
-            checked={!!inputs.outdoor}
+            checked={inputs.outdoor}
             onChange={(event) => {
-              const updatedOutdoor = event.target.checked;
-              setInputs((curr) => ({ ...curr, outdoor: updatedOutdoor }));
-              fetchWeather(null, null);
+              const updated = event.target.checked;
+              setInputs({ ...inputs, outdoor: updated });
+              fetchWeather(null, inputs.city);
             }}
+            style={{ width: 16, height: 16, accentColor: "#16a34a", cursor: "pointer" }}
           />
-          Outdoor plant
+          🌧️ Outdoor plant (automatically adjusts water calculations for local rainfall)
         </label>
       </div>
 
-      {error && <div className="error weather-message" role="alert" style={{ marginTop: 12 }}>{error}</div>}
-      {!weather && !error && <div className="weather-empty">Weather data unavailable</div>}
+      {error && (
+        <div style={{ padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 12, color: "#dc2626", fontSize: "0.88rem", fontWeight: 600, marginBottom: 16 }}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      {weather && (() => {
-        let pop = weather.rainProbability;
-        if (pop == null || pop === 0) {
-          const hum = weather.humidity || 50;
-          const cond = (weather.condition || "").toLowerCase();
-          if (cond.includes("rain") || cond.includes("shower") || cond.includes("drizzle") || cond.includes("thunder")) pop = 85;
-          else if (cond.includes("cloud")) pop = Math.min(65, Math.max(18, Math.round((hum - 25) * 0.75)));
-          else if (hum > 70) pop = Math.min(50, Math.round((hum - 45) * 1.1));
-          else pop = Math.max(5, Math.round(hum * 0.2));
-        }
+      {/* Metric Cards Grid */}
+      {weather && (
+        <>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+            gap: 14
+          }}>
+            {/* Temperature */}
+            <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
+              <span style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.05em", color: "#64748b", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 4 }}>
+                <Thermometer size={14} color="#ea580c" /> TEMPERATURE
+              </span>
+              <strong style={{ fontSize: "1.35rem", fontWeight: 800, color: "#0f172a" }}>
+                {formatTemperature(weather.temperature)}
+              </strong>
+            </div>
 
-        return (
-          <div className="weather-result" style={{ marginTop: 14 }}>
-            <div><small>Temperature</small><strong>{formatTemperature(weather.temperature)}</strong></div>
-            <div><small>Humidity</small><strong>{weather.humidity != null ? `${weather.humidity}%` : "Not available"}</strong></div>
-            <div><small>Rain Chance</small><strong style={{ color: pop > 40 ? "#0284c7" : "#1b4332" }}>{pop}%</strong></div>
-            <div><small>Wind</small><strong>{weather.windSpeed != null ? `${weather.windSpeed} km/h` : "12 km/h"}</strong></div>
-            <div><small>Condition</small><strong>{weather.condition || "Not available"}</strong></div>
-            <div><small>Recommended Water</small><strong>{weather.watering ? `${weather.watering.recommendedWaterMl} mL` : "Not available"}</strong></div>
-            <p className="muted">{usingDeviceLocation ? "Using your device location" : `Using ${inputs.city}`}{weather.source ? ` · Source: ${weather.source}` : ""}</p>
-            <p className="muted">Last updated: {new Date(weather.updatedAt).toLocaleString()}</p>
+            {/* Humidity */}
+            <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
+              <span style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.05em", color: "#64748b", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 4 }}>
+                <Droplets size={14} color="#0284c7" /> HUMIDITY
+              </span>
+              <strong style={{ fontSize: "1.35rem", fontWeight: 800, color: "#0f172a" }}>
+                {weather.humidity != null ? `${weather.humidity}%` : "N/A"}
+              </strong>
+            </div>
+
+            {/* Rain Chance */}
+            <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
+              <span style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.05em", color: "#64748b", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 4 }}>
+                <CloudRain size={14} color="#2563eb" /> RAIN CHANCE
+              </span>
+              <strong style={{ fontSize: "1.35rem", fontWeight: 800, color: "#2563eb" }}>
+                {weather.rainProbability != null ? `${weather.rainProbability}%` : "N/A"}
+              </strong>
+            </div>
+
+            {/* Wind */}
+            <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
+              <span style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.05em", color: "#64748b", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 4 }}>
+                <Wind size={14} color="#0284c7" /> WIND SPEED
+              </span>
+              <strong style={{ fontSize: "1.35rem", fontWeight: 800, color: "#0f172a" }}>
+                {weather.windSpeed != null ? `${weather.windSpeed} km/h` : "N/A"}
+              </strong>
+            </div>
+
+            {/* Condition */}
+            <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
+              <span style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.05em", color: "#64748b", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 4 }}>
+                <Sun size={14} color="#d97706" /> CONDITION
+              </span>
+              <strong style={{ fontSize: "1.2rem", fontWeight: 800, color: "#0f172a", textTransform: "capitalize" }}>
+                {weather.condition || "N/A"}
+              </strong>
+            </div>
+
+            {/* Recommended Water (Highlighted Green Card) */}
+            <div style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)", border: "1.5px solid #bbf7d0", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
+              <span style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.05em", color: "#15803d", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 4 }}>
+                <Droplets size={14} color="#16a34a" /> RECOMMENDED WATER
+              </span>
+              <strong style={{ fontSize: "1.4rem", fontWeight: 900, color: "#15803d" }}>
+                {weather.watering?.recommendedWaterMl != null ? `${weather.watering.recommendedWaterMl} mL` : "N/A"}
+              </strong>
+            </div>
           </div>
-        );
-      })()}
+
+          {/* Footer Metadata */}
+          <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px dashed #e2e8f0", fontSize: "0.82rem", color: "#64748b", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 600 }}>
+              <Compass size={14} color="#16a34a" />
+              {usingDeviceLocation ? "📍 Live GPS Location" : "🏙️ Selected City"}: <strong style={{ color: "#0f172a" }}>{weather.location}</strong> · Source: Open-Meteo
+            </span>
+            <span>Last updated: {new Date(weather.updatedAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+          </div>
+        </>
+      )}
     </article>
   );
 }
