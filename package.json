@@ -6,9 +6,15 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
-    "preview": "vite preview --host 127.0.0.1"
+    "preview": "vite preview --host 127.0.0.1",
+    "cap:build": "vite build && npx cap copy android",
+    "cap:open": "npx cap open android",
+    "cap:sync": "vite build && npx cap sync android"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.1",
+    "@capacitor/cli": "^8.5.1",
+    "@capacitor/core": "^8.5.1",
     "@vitejs/plugin-react": "latest",
     "firebase": "^12.18.0",
     "lucide-react": "latest",
