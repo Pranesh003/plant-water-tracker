@@ -326,7 +326,7 @@ export default function Dashboard() {
                       <article key={plant.id} className={`inner-plant-card state-${pStatus.toLowerCase().replace(/\s+/g, "-")}`} style={{ background: "#ffffff", borderRadius: 16, overflow: "hidden", border: "1px solid #e2e8f0", boxShadow: "0 4px 14px rgba(0,0,0,0.04)" }}>
                         <div className="inner-plant-img-wrap" style={{ height: 160, position: "relative" }}>
                           {plant.photoUrl ? (
-                            <img src={plant.photoUrl} alt={plant.name} className="inner-plant-img" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            <img src={plant.photoUrl} alt={plant.name} className="inner-plant-img" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => { e.target.src = getPlantIconUrl(plant); }} />
                           ) : (
                             <img src="/monstera_photo.jpg" alt={plant.name} className="inner-plant-img" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => { e.target.style.display = 'none'; }} />
                           )}

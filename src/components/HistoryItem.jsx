@@ -19,12 +19,26 @@ export default function HistoryItem({ item }) {
   const plant = plants.find((p) => p.id === item.plantId || p.name === item.plantName);
   const [showModal, setShowModal] = useState(false);
 
+  const fallbackIcon = getPlantIconUrl(plant || { name: item.plantName, species: item.plantName });
+  const [imgSrc, setImgSrc] = useState(item.leafPhoto || plant?.photoUrl || fallbackIcon);
+  const [imgFailed, setImgFailed] = useState(false);
+
   const isAiDoctor = item.type === "ai_doctor" || (typeof item.text === "string" && item.text.includes("[Vertex AI Doctor Diagnosis]"));
   const isWatering = item.type === "watering" || (!item.type && !item.text && !isAiDoctor);
   const isNote = (item.type === "note" || !!item.text) && !isAiDoctor;
   const isStreak = item.type === "streak";
 
   const streakVal = item.streak || plant?.currentStreak || 0;
+
+  const handleImgError = () => {
+    if (imgSrc === item.leafPhoto && plant?.photoUrl) {
+      setImgSrc(plant.photoUrl);
+    } else if (imgSrc !== fallbackIcon) {
+      setImgSrc(fallbackIcon);
+    } else {
+      setImgFailed(true);
+    }
+  };
 
   return (
     <>
@@ -50,12 +64,13 @@ export default function HistoryItem({ item }) {
         <div style={{ display: "flex", alignItems: "center", gap: 16, flex: "1 1 320px" }}>
           {/* Plant Photo Thumbnail */}
           <div style={{ width: 56, height: 56, borderRadius: 16, overflow: "hidden", background: "#f8faf7", border: "1px solid #e2e8f0", flex: "0 0 56px", display: "grid", placeItems: "center" }}>
-            {item.leafPhoto ? (
-              <img src={item.leafPhoto} alt={item.plantName || "Plant leaf"} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            ) : plant?.photoUrl ? (
-              <img src={plant.photoUrl} alt={item.plantName || "Plant"} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            ) : plant ? (
-              <img src={getPlantIconUrl(plant)} alt="" style={{ width: 34, height: 34, objectFit: "contain" }} />
+            {!imgFailed && imgSrc ? (
+              <img
+                src={imgSrc}
+                alt={item.plantName || "Plant"}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                onError={handleImgError}
+              />
             ) : (
               <div style={{ width: 36, height: 36, borderRadius: 10, background: isAiDoctor ? "#f0fdf4" : isWatering ? "#e0f2fe" : isNote ? "#fef3c7" : "#dcfce7", display: "grid", placeItems: "center" }}>
                 {isAiDoctor ? <span style={{ fontSize: "1.2rem" }}>🧠</span> : isWatering ? <Droplets size={18} color="#0284c7" /> : isNote ? <MessageSquare size={18} color="#d97706" /> : <Flame size={18} color="#16a34a" />}

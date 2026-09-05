@@ -169,7 +169,7 @@ export default function AiDoctorReportModal({ log, onClose }) {
           {/* Leaf Photo Preview if captured */}
           {leafPhoto && (
             <div style={{ borderRadius: 16, overflow: "hidden", border: "2px solid #bbf7d0", maxHeight: 240 }}>
-              <img src={leafPhoto} alt="Scanned plant leaf" style={{ width: "100%", height: 240, objectFit: "cover" }} />
+              <img src={leafPhoto} alt="Scanned plant leaf" style={{ width: "100%", height: 240, objectFit: "cover" }} onError={(e) => { e.target.style.display = 'none'; }} />
             </div>
           )}
 
