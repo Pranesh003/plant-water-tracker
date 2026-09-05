@@ -16,10 +16,10 @@ public class NotificationScheduler {
         this.notificationService = notificationService;
     }
 
-    // Daily Cron Job at 8:00 AM every morning
-    @Scheduled(cron = "0 0 8 * * ?")
+    // Daily Cron Job at 8:00 AM IST every morning
+    @Scheduled(cron = "0 0 8 * * ?", zone = "Asia/Kolkata")
     public void runDailyMorning8AmReminders() {
-        System.out.println("⏰ [8:00 AM Cron] Running daily automated plant watering reminder job...");
+        System.out.println("⏰ [8:00 AM IST Cron] Running daily automated plant watering reminder job...");
         notificationService.triggerDailyCronJob();
     }
 }
