@@ -1,8 +1,10 @@
-import { Bell, Download, KeyRound, Leaf, LockKeyhole, RefreshCw, Save, Settings as SettingsIcon, Sparkles, User, UserCog } from "lucide-react";
+import { Bell, Download, Globe, KeyRound, Leaf, LockKeyhole, RefreshCw, Save, Settings as SettingsIcon, Sparkles, User, UserCog } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePlantCare } from "../App.jsx";
+import LanguageSelector from "../components/LanguageSelector.jsx";
 import { api } from "../services/api.js";
+import { useTranslation } from "../utils/i18n.js";
 import { readStorage, writeStorage } from "../utils/storageUtils.js";
 import { applyTheme } from "../utils/themeUtils.js";
 
@@ -21,6 +23,7 @@ const defaultSettings = {
 
 export default function Settings() {
   const { user, plants, history, notify, refresh } = usePlantCare();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [form, setForm] = useState({ name: "", email: "", ...defaultSettings });
@@ -171,8 +174,16 @@ export default function Settings() {
           </div>
 
           <button className="primary-btn" onClick={saveProfileSettings} style={{ padding: "10px 22px", borderRadius: 14, fontSize: "0.88rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 8 }}>
-            <Save size={18} /> Save All Changes
+            <Save size={18} /> {t("btn_save")}
           </button>
+        </section>
+
+        {/* Section: App Language & Regional Settings */}
+        <section style={{ background: "#ffffff", borderRadius: 20, padding: 24, border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.03)" }}>
+          <h3 style={{ margin: "0 0 16px", fontSize: "1.05rem", fontWeight: 850, color: "#0f172a", display: "flex", alignItems: "center", gap: 10 }}>
+            <Globe size={20} color="#16a34a" /> {t("language_section")}
+          </h3>
+          <LanguageSelector showHelp={true} />
         </section>
 
         {/* Section 1: Personal Profile */}

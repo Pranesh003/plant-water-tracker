@@ -1,8 +1,10 @@
-import { Bell, CheckCircle2, LockKeyhole, Palette, Save, ShieldCheck, Sparkles, UserCheck, UserCog } from "lucide-react";
+import { Bell, CheckCircle2, Globe, LockKeyhole, Palette, Save, ShieldCheck, Sparkles, UserCheck, UserCog } from "lucide-react";
 import { useEffect, useState } from "react";
 import { usePlantCare } from "../App.jsx";
 import { AdminHeader } from "../components/AdminSidebar.jsx";
+import LanguageSelector from "../components/LanguageSelector.jsx";
 import { api } from "../services/api.js";
+import { useTranslation } from "../utils/i18n.js";
 import { readStorage, writeStorage } from "../utils/storageUtils.js";
 import { applyTheme } from "../utils/themeUtils.js";
 
@@ -17,6 +19,7 @@ const defaultSettings = {
 
 export default function AdminSettings() {
   const { notify, refresh } = usePlantCare();
+  const { t } = useTranslation();
   const [admin, setAdmin] = useState(null);
   const [form, setForm] = useState({ name: "", email: "", ...defaultSettings });
   const [initial, setInitial] = useState(null);
@@ -167,6 +170,14 @@ export default function AdminSettings() {
       )}
 
       <form onSubmit={save}>
+        {/* System Language Settings Card */}
+        <section style={{ background: "#ffffff", borderRadius: 20, padding: 22, border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.03)", marginBottom: 20 }}>
+          <h3 style={{ margin: "0 0 16px", fontSize: "1.05rem", fontWeight: 850, color: "#0f172a", display: "flex", alignItems: "center", gap: 10 }}>
+            <Globe size={20} color="#16a34a" /> {t("admin_system_lang")}
+          </h3>
+          <LanguageSelector showHelp={true} />
+        </section>
+
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20, marginBottom: 24 }}>
           {/* Card 1: Account Settings */}
           <section style={{ background: "#ffffff", borderRadius: 20, padding: 22, border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.03)" }}>

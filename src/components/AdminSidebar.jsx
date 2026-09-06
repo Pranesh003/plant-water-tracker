@@ -2,16 +2,18 @@ import { ChevronDown, LayoutDashboard, Leaf, LogOut, Menu, Settings as SettingsI
 import { useEffect, useRef, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { api } from "../services/api.js";
+import { useTranslation } from "../utils/i18n.js";
 
-const adminNavItems = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/admin/users", label: "Users", icon: Users },
-  { to: "/admin/plants", label: "Plants", icon: Leaf },
-  { to: "/admin/settings", label: "Settings", icon: SettingsIcon }
+const adminNavItemsConfig = [
+  { to: "/admin", key: "nav_dashboard", defaultLabel: "Dashboard", icon: LayoutDashboard },
+  { to: "/admin/users", key: "nav_users", defaultLabel: "Users", icon: Users },
+  { to: "/admin/plants", key: "nav_my_plants", defaultLabel: "Plants", icon: Leaf },
+  { to: "/admin/settings", key: "nav_admin_settings", defaultLabel: "Settings", icon: SettingsIcon }
 ];
 
 export default function AdminSidebar() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const closeMobile = () => setMobileOpen(false);
@@ -71,16 +73,16 @@ export default function AdminSidebar() {
         </div>
 
         <nav className="sidebar-nav">
-          {adminNavItems.map(({ to, label, icon: Icon }) => (
+          {adminNavItemsConfig.map(({ to, key, defaultLabel, icon: Icon }) => (
             <NavLink
-              key={label}
+              key={key}
               to={to}
               end={to === "/admin"}
               onClick={closeMobile}
               className={({ isActive }) => (isActive ? "sidebar-link active" : "sidebar-link")}
             >
               <Icon size={19} />
-              <span>{label}</span>
+              <span>{t(key) || defaultLabel}</span>
             </NavLink>
           ))}
         </nav>

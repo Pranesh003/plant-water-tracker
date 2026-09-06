@@ -6,21 +6,23 @@ import { api } from "../services/api.js";
 import { readStorage, writeStorage } from "../utils/storageUtils.js";
 import { generatePlantNotifications } from "../utils/wateringUtils.js";
 
+import { useTranslation } from "../utils/i18n.js";
 import NotificationCenter from "./NotificationCenter.jsx";
 
-const navItems = [
-  { to: "/dashboard", label: "Dashboard", icon: Home },
-  { to: "/my-plants", label: "My Plants", icon: Leaf },
-  { to: "/reminders", label: "Reminders", icon: Calendar },
-  { to: "/history", label: "History", icon: History },
-  { to: "/analytics", label: "Analytics", icon: BarChart3 },
-  { to: "/settings", label: "Settings", icon: Settings }
+const navItemsConfig = [
+  { to: "/dashboard", key: "nav_dashboard", defaultLabel: "Dashboard", icon: Home },
+  { to: "/my-plants", key: "nav_my_plants", defaultLabel: "My Plants", icon: Leaf },
+  { to: "/reminders", key: "nav_reminders", defaultLabel: "Reminders", icon: Calendar },
+  { to: "/history", key: "nav_history", defaultLabel: "History", icon: History },
+  { to: "/analytics", key: "nav_analytics", defaultLabel: "Analytics", icon: BarChart3 },
+  { to: "/settings", key: "nav_settings", defaultLabel: "Settings", icon: Settings }
 ];
 
 const SEEN_NOTIFICATIONS_KEY = "plantCareSeenNotifications";
 
 export default function Navbar() {
   const { user, plants, history } = usePlantCare();
+  const { t } = useTranslation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -101,15 +103,15 @@ export default function Navbar() {
         </div>
 
         <nav className="sidebar-nav">
-          {navItems.map(({ to, label, icon: Icon }) => (
+          {navItemsConfig.map(({ to, key, defaultLabel, icon: Icon }) => (
             <NavLink
-              key={label}
+              key={key}
               to={to}
               onClick={closeMobile}
               className={({ isActive }) => (isActive ? "sidebar-link active" : "sidebar-link")}
             >
               <Icon size={19} />
-              <span>{label}</span>
+              <span>{t(key) || defaultLabel}</span>
             </NavLink>
           ))}
         </nav>
@@ -121,14 +123,14 @@ export default function Navbar() {
 
       {/* Fixed Bottom Navigation Bar (< 768px) */}
       <nav className="mobile-bottom-nav" aria-label="Mobile Quick Nav">
-        {navItems.slice(0, 5).map(({ to, label, icon: Icon }) => (
+        {navItemsConfig.slice(0, 5).map(({ to, key, defaultLabel, icon: Icon }) => (
           <NavLink
-            key={label}
+            key={key}
             to={to}
             className={({ isActive }) => (isActive ? "bottom-nav-item active" : "bottom-nav-item")}
           >
             <Icon size={20} />
-            <span>{label}</span>
+            <span>{t(key) || defaultLabel}</span>
           </NavLink>
         ))}
       </nav>
