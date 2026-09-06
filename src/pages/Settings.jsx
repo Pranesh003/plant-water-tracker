@@ -141,12 +141,12 @@ export default function Settings() {
       {/* Page Header */}
       <header className="dashboard-top-header">
         <div>
-          <span className="eyebrow-tag">PREFERENCES</span>
+          <span className="eyebrow-tag">{t("preferences_tag")}</span>
           <h1 style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "4px 0" }}>
-            <span>Account & Care Settings</span>
+            <span>{t("settings_title")}</span>
             <img src="/settings_icon.png" alt="Settings Gear Icon" style={{ width: 32, height: 32, objectFit: "contain" }} />
           </h1>
-          <p>Maintain your profile records, plant care defaults, temperature units, and security.</p>
+          <p>{t("settings_subtitle")}</p>
         </div>
       </header>
 
@@ -189,15 +189,15 @@ export default function Settings() {
         {/* Section 1: Personal Profile */}
         <section style={{ background: "#ffffff", borderRadius: 20, padding: 24, border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.03)" }}>
           <h3 style={{ margin: "0 0 16px", fontSize: "1.05rem", fontWeight: 850, color: "#0f172a", display: "flex", alignItems: "center", gap: 10 }}>
-            <UserCog size={20} color="#16a34a" /> Personal Profile
+            <UserCog size={20} color="#16a34a" /> {t("profile_section")}
           </h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
             <div>
-              <label htmlFor="settings-name" style={{ display: "block", fontSize: "0.84rem", fontWeight: 700, color: "#475569", marginBottom: 6 }}>Display Name</label>
+              <label htmlFor="settings-name" style={{ display: "block", fontSize: "0.84rem", fontWeight: 700, color: "#475569", marginBottom: 6 }}>{t("display_name")}</label>
               <input id="settings-name" value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Your Name" style={{ width: "100%", height: 46, padding: "0 14px", borderRadius: 12, border: "1px solid #cbd5e1", fontSize: "0.92rem", fontWeight: 600 }} />
             </div>
             <div>
-              <label htmlFor="settings-email" style={{ display: "block", fontSize: "0.84rem", fontWeight: 700, color: "#475569", marginBottom: 6 }}>Email Address</label>
+              <label htmlFor="settings-email" style={{ display: "block", fontSize: "0.84rem", fontWeight: 700, color: "#475569", marginBottom: 6 }}>{t("email_address")}</label>
               <input id="settings-email" type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="your@email.com" style={{ width: "100%", height: 46, padding: "0 14px", borderRadius: 12, border: "1px solid #cbd5e1", fontSize: "0.92rem", fontWeight: 600 }} />
             </div>
           </div>
@@ -206,11 +206,11 @@ export default function Settings() {
         {/* Section 2: Plant Care Defaults & Units */}
         <section style={{ background: "#ffffff", borderRadius: 20, padding: 24, border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.03)" }}>
           <h3 style={{ margin: "0 0 16px", fontSize: "1.05rem", fontWeight: 850, color: "#0f172a", display: "flex", alignItems: "center", gap: 10 }}>
-            <Leaf size={20} color="#16a34a" /> Plant Care Defaults & Units
+            <Leaf size={20} color="#16a34a" /> {t("defaults_section")}
           </h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
             <div>
-              <label htmlFor="default-location" style={{ display: "block", fontSize: "0.84rem", fontWeight: 700, color: "#475569", marginBottom: 6 }}>Default Location</label>
+              <label htmlFor="default-location" style={{ display: "block", fontSize: "0.84rem", fontWeight: 700, color: "#475569", marginBottom: 6 }}>{t("default_location")}</label>
               <select id="default-location" value={form.defaultLocation} onChange={(e) => update("defaultLocation", e.target.value)} style={{ width: "100%", height: 46, padding: "0 14px", borderRadius: 12, border: "1px solid #cbd5e1", fontSize: "0.92rem", fontWeight: 600, background: "#ffffff" }}>
                 <option>Living Room</option>
                 <option>Bedroom</option>
@@ -221,7 +221,7 @@ export default function Settings() {
               </select>
             </div>
             <div>
-              <label htmlFor="default-frequency" style={{ display: "block", fontSize: "0.84rem", fontWeight: 700, color: "#475569", marginBottom: 6 }}>Default Watering Cycle</label>
+              <label htmlFor="default-frequency" style={{ display: "block", fontSize: "0.84rem", fontWeight: 700, color: "#475569", marginBottom: 6 }}>{t("default_cycle")}</label>
               <select id="default-frequency" value={form.defaultFrequency} onChange={(e) => update("defaultFrequency", e.target.value)} style={{ width: "100%", height: 46, padding: "0 14px", borderRadius: 12, border: "1px solid #cbd5e1", fontSize: "0.92rem", fontWeight: 600, background: "#ffffff" }}>
                 <option value="3">Every 3 days</option>
                 <option value="7">Every 7 days</option>
@@ -230,11 +230,11 @@ export default function Settings() {
               </select>
             </div>
             <div>
-              <label htmlFor="pref-time" style={{ display: "block", fontSize: "0.84rem", fontWeight: 700, color: "#475569", marginBottom: 6 }}>Reminder Preferred Time</label>
+              <label htmlFor="pref-time" style={{ display: "block", fontSize: "0.84rem", fontWeight: 700, color: "#475569", marginBottom: 6 }}>{t("reminder_time")}</label>
               <input id="pref-time" type="time" value={form.preferredTime} onChange={(e) => update("preferredTime", e.target.value)} style={{ width: "100%", height: 46, padding: "0 14px", borderRadius: 12, border: "1px solid #cbd5e1", fontSize: "0.92rem", fontWeight: 600 }} />
             </div>
             <div>
-              <label htmlFor="temp-unit" style={{ display: "block", fontSize: "0.84rem", fontWeight: 700, color: "#475569", marginBottom: 6 }}>Temperature Unit (°C / °F)</label>
+              <label htmlFor="temp-unit" style={{ display: "block", fontSize: "0.84rem", fontWeight: 700, color: "#475569", marginBottom: 6 }}>{t("temp_unit_field")}</label>
               <select id="temp-unit" value={form.tempUnit} onChange={(e) => handleTempUnitChange(e.target.value)} style={{ width: "100%", height: 46, padding: "0 14px", borderRadius: 12, border: "1px solid #cbd5e1", fontSize: "0.92rem", fontWeight: 600, background: "#ffffff" }}>
                 <option value="°C">Celsius (°C)</option>
                 <option value="°F">Fahrenheit (°F)</option>
@@ -248,45 +248,45 @@ export default function Settings() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
             <div>
               <span style={{ fontSize: "0.76rem", background: "rgba(116, 198, 157, 0.25)", color: "#74c69d", padding: "4px 12px", borderRadius: 12, fontWeight: 800, border: "1px solid rgba(116, 198, 157, 0.4)", textTransform: "uppercase" }}>
-                ⚡ REAL-TIME AI ENGINE
+                ⚡ {t("ai_engine_tag")}
               </span>
               <h3 style={{ margin: "8px 0 2px", fontSize: "1.15rem", fontWeight: 850, color: "#ffffff", display: "flex", alignItems: "center", gap: 8 }}>
-                <Sparkles size={20} color="#74c69d" /> Google Gemini 3.5 Flash Token & Quota Monitor
+                <Sparkles size={20} color="#74c69d" /> {t("ai_quota_title")}
               </h3>
               <p style={{ margin: 0, fontSize: "0.86rem", color: "#d8f3dc", opacity: 0.9 }}>
-                Monitor your live API status, daily free tier scan quota, and token usage per plant diagnosis.
+                {t("ai_quota_subtitle")}
               </p>
             </div>
 
             <span style={{ padding: "6px 14px", borderRadius: 12, background: "rgba(82, 183, 136, 0.2)", color: "#52b788", fontWeight: 800, fontSize: "0.82rem", border: "1px solid rgba(82, 183, 136, 0.35)", display: "flex", alignItems: "center", gap: 6 }}>
-              🟢 Live Cloud Connected
+              🟢 {t("ai_cloud_connected")}
             </span>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: 16 }}>
             <div style={{ background: "rgba(255, 255, 255, 0.08)", padding: 14, borderRadius: 14, border: "1px solid rgba(255, 255, 255, 0.12)" }}>
-              <span style={{ fontSize: "0.76rem", color: "#b7e4c7", fontWeight: 700, display: "block" }}>FREE DAILY SCANS</span>
+              <span style={{ fontSize: "0.76rem", color: "#b7e4c7", fontWeight: 700, display: "block" }}>{t("ai_free_scans")}</span>
               <strong style={{ fontSize: "1.25rem", color: "#ffffff", fontWeight: 900, marginTop: 2, display: "block" }}>
                 1,500 <small style={{ fontSize: "0.78rem", color: "#95d5b2" }}>Scans / Day</small>
               </strong>
             </div>
 
             <div style={{ background: "rgba(255, 255, 255, 0.08)", padding: 14, borderRadius: 14, border: "1px solid rgba(255, 255, 255, 0.12)" }}>
-              <span style={{ fontSize: "0.76rem", color: "#b7e4c7", fontWeight: 700, display: "block" }}>DAILY TOKEN LIMIT</span>
+              <span style={{ fontSize: "0.76rem", color: "#b7e4c7", fontWeight: 700, display: "block" }}>{t("ai_token_limit")}</span>
               <strong style={{ fontSize: "1.25rem", color: "#38bdf8", fontWeight: 900, marginTop: 2, display: "block" }}>
                 900,000 <small style={{ fontSize: "0.78rem", color: "#7dd3fc" }}>Tokens / Day</small>
               </strong>
             </div>
 
             <div style={{ background: "rgba(255, 255, 255, 0.08)", padding: 14, borderRadius: 14, border: "1px solid rgba(255, 255, 255, 0.12)" }}>
-              <span style={{ fontSize: "0.76rem", color: "#b7e4c7", fontWeight: 700, display: "block" }}>AVG SCAN COST</span>
+              <span style={{ fontSize: "0.76rem", color: "#b7e4c7", fontWeight: 700, display: "block" }}>{t("ai_avg_cost")}</span>
               <strong style={{ fontSize: "1.25rem", color: "#facc15", fontWeight: 900, marginTop: 2, display: "block" }}>
                 ~450 <small style={{ fontSize: "0.78rem", color: "#fde047" }}>Tokens / Scan</small>
               </strong>
             </div>
 
             <div style={{ background: "rgba(255, 255, 255, 0.08)", padding: 14, borderRadius: 14, border: "1px solid rgba(255, 255, 255, 0.12)" }}>
-              <span style={{ fontSize: "0.76rem", color: "#b7e4c7", fontWeight: 700, display: "block" }}>RATE LIMIT (SPEED)</span>
+              <span style={{ fontSize: "0.76rem", color: "#b7e4c7", fontWeight: 700, display: "block" }}>{t("ai_rate_limit")}</span>
               <strong style={{ fontSize: "1.25rem", color: "#4ade80", fontWeight: 900, marginTop: 2, display: "block" }}>
                 15 <small style={{ fontSize: "0.78rem", color: "#86efac" }}>Scans / Min</small>
               </strong>
@@ -313,31 +313,31 @@ export default function Settings() {
         {/* Section 3: Notifications & Desktop Push Alerts */}
         <section style={{ background: "#ffffff", borderRadius: 20, padding: 24, border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.03)" }}>
           <h3 style={{ margin: "0 0 16px", fontSize: "1.05rem", fontWeight: 850, color: "#0f172a", display: "flex", alignItems: "center", gap: 10 }}>
-            <Bell size={20} color="#d97706" /> Notification & Push Alerts
+            <Bell size={20} color="#d97706" /> {t("notifications_section")}
           </h3>
           <div style={{ marginBottom: 16 }}>
             {browserNotificationPermission !== "granted" ? (
               <button type="button" className="ghost-btn" onClick={requestNotificationPermission} style={{ padding: "8px 16px", borderRadius: 12, fontSize: "0.86rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 8 }}>
-                <Bell size={16} /> Enable Browser Desktop Alerts
+                <Bell size={16} /> {t("enable_desktop_alerts")}
               </button>
             ) : (
               <span style={{ fontSize: "0.82rem", fontWeight: 700, padding: "4px 12px", borderRadius: 20, background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0" }}>
-                ✓ Desktop Alerts Active
+                ✓ {t("desktop_alerts_active")}
               </span>
             )}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", fontSize: "0.9rem", color: "#0f172a", fontWeight: 600 }}>
               <input type="checkbox" checked={form.wateringAlerts} onChange={(e) => update("wateringAlerts", e.target.checked)} style={{ width: 18, height: 18, accentColor: "#16a34a" }} />
-              Same-day watering notifications
+              {t("same_day_alerts")}
             </label>
             <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", fontSize: "0.9rem", color: "#0f172a", fontWeight: 600 }}>
               <input type="checkbox" checked={form.overdueAlerts} onChange={(e) => update("overdueAlerts", e.target.checked)} style={{ width: 18, height: 18, accentColor: "#16a34a" }} />
-              Overdue plant warnings
+              {t("overdue_alerts")}
             </label>
             <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", fontSize: "0.9rem", color: "#0f172a", fontWeight: 600 }}>
               <input type="checkbox" checked={form.activityNotifications} onChange={(e) => update("activityNotifications", e.target.checked)} style={{ width: 18, height: 18, accentColor: "#16a34a" }} />
-              Care history activity log alerts
+              {t("history_alerts")}
             </label>
           </div>
         </section>
@@ -345,17 +345,17 @@ export default function Settings() {
         {/* Section 4: Data & Record Maintenance */}
         <section style={{ background: "#ffffff", borderRadius: 20, padding: 24, border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.03)" }}>
           <h3 style={{ margin: "0 0 10px", fontSize: "1.05rem", fontWeight: 850, color: "#0f172a", display: "flex", alignItems: "center", gap: 10 }}>
-            <Download size={20} color="#0284c7" /> Data & Record Maintenance
+            <Download size={20} color="#0284c7" /> {t("data_maintenance")}
           </h3>
           <p style={{ margin: "0 0 16px", color: "#64748b", fontSize: "0.88rem" }}>
-            Manage your plant history records ({plants.length} active plants, {history.length} care logs recorded).
+            {t("data_maint_sub")} ({plants.length} active plants, {history.length} care logs)
           </p>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <button type="button" className="ghost-btn" onClick={exportCSVRecords} style={{ padding: "8px 16px", borderRadius: 12, fontSize: "0.86rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 8 }}>
-              <Download size={16} /> Export Records (CSV)
+              <Download size={16} /> {t("export_csv")}
             </button>
             <button type="button" className="ghost-btn danger" onClick={clearLocalCache} style={{ padding: "8px 16px", borderRadius: 12, fontSize: "0.86rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 8, color: "#dc2626", borderColor: "#fecaca" }}>
-              <RefreshCw size={16} /> Clear Local Cache
+              <RefreshCw size={16} /> {t("clear_cache")}
             </button>
           </div>
         </section>
@@ -363,13 +363,13 @@ export default function Settings() {
         {/* Section 5: Security & Password */}
         <section style={{ background: "#ffffff", borderRadius: 20, padding: 24, border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.03)" }}>
           <h3 style={{ margin: "0 0 10px", fontSize: "1.05rem", fontWeight: 850, color: "#0f172a", display: "flex", alignItems: "center", gap: 10 }}>
-            <LockKeyhole size={20} color="#dc2626" /> Security & Password
+            <LockKeyhole size={20} color="#dc2626" /> {t("security_section")}
           </h3>
           <p style={{ margin: "0 0 16px", color: "#64748b", fontSize: "0.88rem" }}>
-            Manage your security credentials and update your account password on the dedicated security page.
+            {t("security_sub")}
           </p>
           <button type="button" className="ghost-btn" onClick={() => navigate("/change-password")} style={{ padding: "8px 18px", borderRadius: 12, fontSize: "0.86rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 8 }}>
-            <KeyRound size={16} /> Change Password & Security →
+            <KeyRound size={16} /> {t("change_password_btn")}
           </button>
         </section>
       </div>
@@ -377,7 +377,7 @@ export default function Settings() {
       {/* Save Button Bar */}
       <div style={{ marginTop: 24, display: "flex", justifyContent: "flex-end" }}>
         <button className="primary-btn" onClick={saveProfileSettings} style={{ padding: "12px 28px", borderRadius: 14, fontSize: "0.94rem", fontWeight: 800, display: "inline-flex", alignItems: "center", gap: 8 }}>
-          <Save size={18} /> Save All Settings
+          <Save size={18} /> {t("save_all_settings")}
         </button>
       </div>
     </div>
