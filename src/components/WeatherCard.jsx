@@ -3,15 +3,17 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "../services/api.js";
 import { tnDistrictsAndCities } from "../data/tnDistricts.js";
 import { readStorage } from "../utils/storageUtils.js";
+import { useTranslation } from "../utils/i18n.js";
 
 export default function WeatherCard({ baseWaterMl = 400, onWeatherChange }) {
+  const { t } = useTranslation();
   const [weather, setWeather] = useState(null);
   const [error, setError] = useState(null);
   const settings = readStorage("plantCareUserSettings", { tempUnit: "°C" });
   const tempUnit = settings.tempUnit || "°C";
 
   const formatTemperature = (celsiusTemp) => {
-    if (celsiusTemp == null) return "Not available";
+    if (celsiusTemp == null) return "N/A";
     if (tempUnit === "°F") {
       const fahrenheit = Math.round((Number(celsiusTemp) * 9) / 5 + 32);
       return `${fahrenheit} °F`;
@@ -97,10 +99,10 @@ export default function WeatherCard({ baseWaterMl = 400, onWeatherChange }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
         <div>
           <span style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.08em", color: "#15803d", textTransform: "uppercase", background: "#f0fdf4", padding: "4px 10px", borderRadius: 20, border: "1px solid #bbf7d0" }}>
-            TODAY'S WEATHER
+            {t("weather_section_tag")}
           </span>
           <h2 style={{ margin: "6px 0 0", fontSize: "1.35rem", fontWeight: 800, color: "#0f172a", display: "flex", alignItems: "center", gap: 8 }}>
-            <CloudSun size={24} color="#16a34a" /> Live Local Weather
+            <CloudSun size={24} color="#16a34a" /> {t("weather_title")}
           </h2>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
@@ -123,7 +125,7 @@ export default function WeatherCard({ baseWaterMl = 400, onWeatherChange }) {
               transition: "transform 0.2s, boxShadow 0.2s"
             }}
           >
-            <MapPin size={16} /> Use Live Location
+            <MapPin size={16} /> {t("weather_use_live")}
           </button>
           <button
             type="button"
@@ -142,7 +144,7 @@ export default function WeatherCard({ baseWaterMl = 400, onWeatherChange }) {
               cursor: "pointer"
             }}
           >
-            <RefreshCcw size={15} /> Refresh
+            <RefreshCcw size={15} /> {t("weather_refresh")}
           </button>
         </div>
       </div>
@@ -151,10 +153,10 @@ export default function WeatherCard({ baseWaterMl = 400, onWeatherChange }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 16 }}>
         <div ref={dropdownRef} style={{ position: "relative" }}>
           <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: "0.85rem", fontWeight: 700, color: "#334155" }}>
-            City / District
+            {t("weather_city_label")}
             <input
               type="text"
-              placeholder="Type city or select district..."
+              placeholder="Type city..."
               value={inputs.city}
               onFocus={() => setShowDropdown(true)}
               onChange={(event) => {
@@ -224,7 +226,7 @@ export default function WeatherCard({ baseWaterMl = 400, onWeatherChange }) {
 
         <div>
           <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: "0.85rem", fontWeight: 700, color: "#334155" }}>
-            Base Water (mL)
+            {t("weather_base_water")}
             <input
               type="number"
               value={inputs.baseWaterMl}
@@ -272,7 +274,7 @@ export default function WeatherCard({ baseWaterMl = 400, onWeatherChange }) {
             }}
             style={{ width: 16, height: 16, accentColor: "#16a34a", cursor: "pointer" }}
           />
-          🌧️ Outdoor plant (automatically adjusts water calculations for local rainfall)
+          🌧️ {t("weather_outdoor_check")}
         </label>
       </div>
 
@@ -293,7 +295,7 @@ export default function WeatherCard({ baseWaterMl = 400, onWeatherChange }) {
             {/* Temperature */}
             <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
               <span style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.05em", color: "#64748b", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 4 }}>
-                <Thermometer size={14} color="#ea580c" /> TEMPERATURE
+                <Thermometer size={14} color="#ea580c" /> {t("weather_temp")}
               </span>
               <strong style={{ fontSize: "1.35rem", fontWeight: 800, color: "#0f172a" }}>
                 {formatTemperature(weather.temperature)}
@@ -303,7 +305,7 @@ export default function WeatherCard({ baseWaterMl = 400, onWeatherChange }) {
             {/* Humidity */}
             <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
               <span style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.05em", color: "#64748b", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 4 }}>
-                <Droplets size={14} color="#0284c7" /> HUMIDITY
+                <Droplets size={14} color="#0284c7" /> {t("weather_humidity")}
               </span>
               <strong style={{ fontSize: "1.35rem", fontWeight: 800, color: "#0f172a" }}>
                 {weather.humidity != null ? `${weather.humidity}%` : "N/A"}
@@ -313,7 +315,7 @@ export default function WeatherCard({ baseWaterMl = 400, onWeatherChange }) {
             {/* Rain Chance */}
             <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
               <span style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.05em", color: "#64748b", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 4 }}>
-                <CloudRain size={14} color="#2563eb" /> RAIN CHANCE
+                <CloudRain size={14} color="#2563eb" /> {t("weather_rain")}
               </span>
               <strong style={{ fontSize: "1.35rem", fontWeight: 800, color: "#2563eb" }}>
                 {weather.rainProbability != null ? `${weather.rainProbability}%` : "N/A"}
@@ -323,7 +325,7 @@ export default function WeatherCard({ baseWaterMl = 400, onWeatherChange }) {
             {/* Wind */}
             <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
               <span style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.05em", color: "#64748b", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 4 }}>
-                <Wind size={14} color="#0284c7" /> WIND SPEED
+                <Wind size={14} color="#0284c7" /> {t("weather_wind")}
               </span>
               <strong style={{ fontSize: "1.35rem", fontWeight: 800, color: "#0f172a" }}>
                 {weather.windSpeed != null ? `${weather.windSpeed} km/h` : "N/A"}
@@ -333,7 +335,7 @@ export default function WeatherCard({ baseWaterMl = 400, onWeatherChange }) {
             {/* Condition */}
             <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
               <span style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.05em", color: "#64748b", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 4 }}>
-                <Sun size={14} color="#d97706" /> CONDITION
+                <Sun size={14} color="#d97706" /> {t("weather_condition")}
               </span>
               <strong style={{ fontSize: "1.2rem", fontWeight: 800, color: "#0f172a", textTransform: "capitalize" }}>
                 {weather.condition || "N/A"}
@@ -343,7 +345,7 @@ export default function WeatherCard({ baseWaterMl = 400, onWeatherChange }) {
             {/* Recommended Water (Highlighted Green Card) */}
             <div style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)", border: "1.5px solid #bbf7d0", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
               <span style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.05em", color: "#15803d", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 4 }}>
-                <Droplets size={14} color="#16a34a" /> RECOMMENDED WATER
+                <Droplets size={14} color="#16a34a" /> {t("weather_recommended")}
               </span>
               <strong style={{ fontSize: "1.4rem", fontWeight: 900, color: "#15803d" }}>
                 {weather.watering?.recommendedWaterMl != null ? `${weather.watering.recommendedWaterMl} mL` : "N/A"}
@@ -357,7 +359,7 @@ export default function WeatherCard({ baseWaterMl = 400, onWeatherChange }) {
               <Compass size={14} color="#16a34a" />
               {usingDeviceLocation ? "📍 Live GPS Location" : "🏙️ Selected City"}: <strong style={{ color: "#0f172a" }}>{weather.location}</strong> · Source: Open-Meteo
             </span>
-            <span>Last updated: {new Date(weather.updatedAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+            <span>{t("weather_last_updated")} {new Date(weather.updatedAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
           </div>
         </>
       )}

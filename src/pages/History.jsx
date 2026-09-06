@@ -6,11 +6,13 @@ import HistoryItem from "../components/HistoryItem.jsx";
 import Pagination from "../components/Pagination.jsx";
 import LocationFilter from "../components/LocationFilter.jsx";
 import { filterHistory } from "../utils/analyticsUtils.js";
+import { useTranslation } from "../utils/i18n.js";
 
 const PAGE_SIZE = 8;
 
 export default function History() {
   const { plants, history } = usePlantCare();
+  const { t } = useTranslation();
   const [plantId, setPlantId] = useState("All Plants");
   const [type, setType] = useState("All Activities");
   const [range, setRange] = useState("All");
@@ -46,12 +48,12 @@ export default function History() {
       {/* Page Header */}
       <header className="dashboard-top-header">
         <div>
-          <span className="eyebrow-tag">CARE TIMELINE</span>
+          <span className="eyebrow-tag">{t("history_tag")}</span>
           <h1 style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "4px 0" }}>
-            <span>Plant Care History</span>
+            <span>{t("history_title")}</span>
             <img src="/history_icon.png" alt="History Icon" style={{ width: 32, height: 32, objectFit: "contain" }} />
           </h1>
-          <p>Full chronological audit log of all plant watering, notes, photos, and care streaks.</p>
+          <p>{t("history_subtitle")}</p>
         </div>
       </header>
 
@@ -62,9 +64,9 @@ export default function History() {
             <HistoryIcon size={20} />
           </div>
           <div className="metric-info">
-            <span className="metric-label">Total Logs</span>
+            <span className="metric-label">{t("hist_total_logs")}</span>
             <strong className="metric-value">{totalLogs}</strong>
-            <span className="metric-subtext">Care activities recorded</span>
+            <span className="metric-subtext">{t("hist_care_recorded")}</span>
           </div>
         </div>
 
@@ -73,9 +75,9 @@ export default function History() {
             <Droplets size={20} />
           </div>
           <div className="metric-info">
-            <span className="metric-label">Watering Events</span>
+            <span className="metric-label">{t("hist_watering_events")}</span>
             <strong className="metric-value">{wateringCount}</strong>
-            <span className="metric-subtext">Hydration logs</span>
+            <span className="metric-subtext">{t("hist_hydration_logs")}</span>
           </div>
         </div>
 
@@ -84,9 +86,9 @@ export default function History() {
             <MessageSquare size={20} />
           </div>
           <div className="metric-info">
-            <span className="metric-label">Notes & Photos</span>
+            <span className="metric-label">{t("hist_notes_photos")}</span>
             <strong className="metric-value">{notesCount}</strong>
-            <span className="metric-subtext">Journal entries</span>
+            <span className="metric-subtext">{t("hist_journal_entries")}</span>
           </div>
         </div>
 
@@ -95,23 +97,29 @@ export default function History() {
             <Flame size={20} />
           </div>
           <div className="metric-info">
-            <span className="metric-label">Streak Milestones</span>
+            <span className="metric-label">{t("hist_streak_milestones")}</span>
             <strong className="metric-value">{streakMilestones}</strong>
-            <span className="metric-subtext">Growth streak streaks</span>
+            <span className="metric-subtext">{t("hist_growth_streaks")}</span>
           </div>
         </div>
       </section>
 
       {/* Filter Tabs */}
       <section className="plant-filter-tabs-pills">
-        {["All Activities", "Watering", "🧠 AI Doctor", "Notes", "Streak"].map((item) => (
+        {[
+          { key: "All Activities", label: t("tab_all_activities") },
+          { key: "Watering", label: t("tab_watering") },
+          { key: "🧠 AI Doctor", label: `🧠 ${t("tab_ai_doctor")}` },
+          { key: "Notes", label: t("tab_notes") },
+          { key: "Streak", label: t("tab_streak") }
+        ].map((item) => (
           <button
-            key={item}
+            key={item.key}
             type="button"
-            className={type === item ? "tab-pill active" : "tab-pill"}
-            onClick={() => setType(item)}
+            className={type === item.key ? "tab-pill active" : "tab-pill"}
+            onClick={() => setType(item.key)}
           >
-            {item}
+            {item.label}
           </button>
         ))}
       </section>
@@ -122,14 +130,14 @@ export default function History() {
           <Search size={18} className="search-icon" />
           <input
             type="text"
-            placeholder="Search care logs by plant name or text..."
+            placeholder={t("search_history_placeholder")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
 
         <select value={plantId} onChange={(e) => setPlantId(e.target.value)}>
-          <option>All Plants</option>
+          <option>{t("filter_all_plants")}</option>
           {plants.map((plant) => (
             <option value={plant.id} key={plant.id}>
               {plant.name}
@@ -138,7 +146,7 @@ export default function History() {
         </select>
 
         <select value={range} onChange={(e) => setRange(e.target.value)}>
-          <option value="All">All dates</option>
+          <option value="All">{t("filter_all_dates")}</option>
           <option value="7">Last 7 days</option>
           <option value="30">Last 30 days</option>
           <option value="90">Last 90 days</option>
@@ -156,7 +164,7 @@ export default function History() {
           <Pagination page={page} totalItems={filtered.length} pageSize={PAGE_SIZE} onPageChange={setPage} />
         </>
       ) : (
-        <EmptyState title="No care history found" message="Water a plant or add notes to build your garden history!" action="My Plants" to="/my-plants" />
+        <EmptyState title="No care history found" message="Water a plant or add notes to build your garden history!" action={t("nav_my_plants")} to="/my-plants" />
       )}
     </div>
   );

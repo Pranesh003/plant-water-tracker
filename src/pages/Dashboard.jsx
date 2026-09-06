@@ -8,6 +8,7 @@ import StatusFilter from "../components/StatusFilter.jsx";
 import WeatherCard from "../components/WeatherCard.jsx";
 import { api } from "../services/api.js";
 import { filterPlants } from "../utils/analyticsUtils.js";
+import { useTranslation } from "../utils/i18n.js";
 import { getPlantIconUrl } from "../utils/plantIconUtils.js";
 import { readStorage, writeStorage } from "../utils/storageUtils.js";
 import { calculateNextWateringDate, calculateWateringStatus, daysBetween, formatDate, formatTimeAgo, generatePlantNotifications, isPlantWaterable, todayISO } from "../utils/wateringUtils.js";
@@ -16,6 +17,7 @@ const SEEN_NOTIFICATIONS_KEY = "plantCareSeenNotifications";
 
 export default function Dashboard() {
   const { plants, user, history, loading, error, refresh, waterPlant, deletePlant } = usePlantCare();
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [currentHour, setCurrentHour] = useState(() => new Date().getHours());
@@ -47,7 +49,7 @@ export default function Dashboard() {
   }, { Safe: 0, "Water Soon": 0, Overdue: 0 });
 
   const bestStreak = Math.max(0, ...plants.map((p) => p.bestStreak || 0));
-  const greeting = currentHour < 12 ? "Good morning" : currentHour < 17 ? "Good afternoon" : currentHour < 21 ? "Good evening" : "Good night";
+  const greeting = currentHour < 12 ? t("dash_greeting_morning") : currentHour < 17 ? t("dash_greeting_afternoon") : t("dash_greeting_evening");
 
   useEffect(() => {
     const timer = window.setInterval(() => setCurrentHour(new Date().getHours()), 60_000);
@@ -130,12 +132,12 @@ export default function Dashboard() {
       {/* Top Care Header Bar */}
       <header className="dashboard-top-header">
         <div className="header-greeting-wrap">
-          <span className="eyebrow-tag">TODAY'S CARE PLAN</span>
+          <span className="eyebrow-tag">{t("dash_care_plan")}</span>
           <h1 style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "4px 0" }}>
             <span>{greeting}, {user?.name || "Plant Care Admin"}</span>
             <img src="/sprout_icon.png" alt="Sprout Icon" style={{ width: 32, height: 32, objectFit: "contain" }} />
           </h1>
-          <p>Let's take care of your plants today.</p>
+          <p>{t("dash_subtitle")}</p>
         </div>
 
         <div className="header-actions-right">
@@ -189,15 +191,15 @@ export default function Dashboard() {
             {showUserMenu && (
               <div className="user-dropdown-card">
                 <button className="dropdown-item" onClick={() => { setShowUserMenu(false); navigate("/settings"); }}>
-                  Account Settings
+                  {t("nav_settings")}
                 </button>
                 {api.getRole() === "admin" && (
                   <button className="dropdown-item" onClick={() => { setShowUserMenu(false); navigate("/admin"); }}>
-                    Admin Panel
+                    {t("nav_admin")}
                   </button>
                 )}
                 <button className="dropdown-item danger" onClick={logout}>
-                  Logout
+                  {t("btn_signout")}
                 </button>
               </div>
             )}
@@ -205,7 +207,7 @@ export default function Dashboard() {
 
           {/* Add Plant Primary Button */}
           <button className="add-plant-btn-top" onClick={() => navigate("/add-plant")}>
-            <Plus size={16} /> Add Plant
+            <Plus size={16} /> {t("btn_add_plant")}
           </button>
         </div>
       </header>
@@ -217,9 +219,9 @@ export default function Dashboard() {
             <Leaf size={20} />
           </div>
           <div className="metric-info">
-            <span className="metric-label">Total Plants</span>
+            <span className="metric-label">{t("stat_total_plants")}</span>
             <strong className="metric-value">{plants.length}</strong>
-            <span className="metric-link">View all plants →</span>
+            <span className="metric-link">{t("stat_view_all_plants")} →</span>
           </div>
         </div>
 
@@ -228,9 +230,9 @@ export default function Dashboard() {
             <Sprout size={20} />
           </div>
           <div className="metric-info">
-            <span className="metric-label">Need Watering</span>
+            <span className="metric-label">{t("stat_need_watering")}</span>
             <strong className="metric-value">{counts["Water Soon"]}</strong>
-            <span className="metric-subtext">Needs watering</span>
+            <span className="metric-subtext">{t("stat_needs_watering")}</span>
           </div>
         </div>
 
@@ -239,9 +241,9 @@ export default function Dashboard() {
             <AlertTriangle size={20} />
           </div>
           <div className="metric-info">
-            <span className="metric-label">Overdue</span>
+            <span className="metric-label">{t("stat_overdue")}</span>
             <strong className="metric-value">{counts.Overdue}</strong>
-            <span className="metric-subtext red-text">Review overdue</span>
+            <span className="metric-subtext red-text">{t("stat_review_overdue")}</span>
           </div>
         </div>
 
@@ -250,9 +252,9 @@ export default function Dashboard() {
             <Flame size={20} />
           </div>
           <div className="metric-info">
-            <span className="metric-label">Best Streak</span>
-            <strong className="metric-value">{bestStreak} days</strong>
-            <span className="metric-subtext">Top streak plants</span>
+            <span className="metric-label">{t("stat_best_streak")}</span>
+            <strong className="metric-value">{bestStreak} {t("unit_days")}</strong>
+            <span className="metric-subtext">{t("stat_top_streak_plants")}</span>
           </div>
         </div>
       </section>
@@ -272,19 +274,19 @@ export default function Dashboard() {
               <Search size={18} className="search-icon" />
               <input
                 type="text"
-                placeholder="Search for a plant..."
+                placeholder={t("search_plant_placeholder")}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
             </div>
             <LocationFilter value={location} onChange={setLocation} />
-            <StatusFilter value={status} onChange={setStatus} allLabel="All Status" />
+            <StatusFilter value={status} onChange={setStatus} allLabel={t("filter_all_status")} />
           </section>
 
           {/* MY PLANTS Covered Large White Box */}
           <section className="my-plants-panel-card">
             <div className="panel-head-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h2>MY PLANTS</h2>
+              <h2>{t("section_my_plants")}</h2>
               <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
                 {filtered.length > 3 && (
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -308,12 +310,12 @@ export default function Dashboard() {
                     </button>
                   </div>
                 )}
-                <Link to="/my-plants" className="view-all-link">View all</Link>
+                <Link to="/my-plants" className="view-all-link">{t("btn_view_all")}</Link>
               </div>
             </div>
 
             {filtered.length === 0 ? (
-              <EmptyState title="No plants found" message="Try searching or adding a new plant." action="Add Plant" to="/add-plant" />
+              <EmptyState title="No plants found" message="Try searching or adding a new plant." action={t("btn_add_plant")} to="/add-plant" />
             ) : (
               <>
                 <div className="dash-plant-cards-row">
@@ -356,13 +358,13 @@ export default function Dashboard() {
                               }}
                             >
                               {isPlantWaterable(plant.lastWatered, plant.frequency) ? <Droplets size={14} /> : <Check size={14} />}
-                              {isPlantWaterable(plant.lastWatered, plant.frequency) ? "Water Plant" : "Watered"}
+                              {isPlantWaterable(plant.lastWatered, plant.frequency) ? t("btn_water") : t("btn_watered")}
                             </button>
                             <button onClick={() => { navigate(`/plant/${plant.id}`); setActiveMenuId(null); }}>
-                              <Eye size={14} /> View Details
+                              <Eye size={14} /> {t("btn_view_details")}
                             </button>
                             <button className="danger" onClick={() => { deletePlant(plant.id); setActiveMenuId(null); }}>
-                              <Trash2 size={14} /> Delete
+                              <Trash2 size={14} /> {t("btn_delete")}
                             </button>
                           </div>
                         )}
@@ -390,10 +392,10 @@ export default function Dashboard() {
                                   const freq = Number(plant.frequency || 7);
                                   const daysElapsed = daysBetween(plant.lastWatered, todayISO());
                                   const remaining = freq - daysElapsed;
-                                  if (remaining < 0) return `Overdue by ${Math.abs(remaining)} day${Math.abs(remaining) === 1 ? "" : "s"}`;
-                                  if (remaining === 0) return "Due Today";
-                                  if (remaining === 1) return "In 1 day";
-                                  return `In ${remaining} days`;
+                                  if (remaining < 0) return `${t("status_overdue")} (${Math.abs(remaining)} ${t("unit_days")})`;
+                                  if (remaining === 0) return t("due_today");
+                                  if (remaining === 1) return `1 ${t("unit_days")}`;
+                                  return `${remaining} ${t("unit_days")}`;
                                 })()}
                               </span>
                             </div>
@@ -430,8 +432,8 @@ export default function Dashboard() {
           {/* Upcoming Watering Card */}
           <section className="right-panel-card upcoming-card">
             <div className="panel-head">
-              <h3>UPCOMING WATERING</h3>
-              <Link to="/my-plants" className="view-all-link">View all</Link>
+              <h3>{t("section_upcoming_watering")}</h3>
+              <Link to="/my-plants" className="view-all-link">{t("btn_view_all")}</Link>
             </div>
 
             <div className="upcoming-list">
@@ -440,7 +442,7 @@ export default function Dashboard() {
                   const isOverdue = plant.pStatus === "Overdue";
                   const isSoon = plant.pStatus === "Water Soon";
                   const dueLabel = isOverdue
-                    ? "Overdue"
+                    ? t("status_overdue")
                     : isSoon
                     ? "Tomorrow, 8:00 AM"
                     : plant.lastWatered
@@ -467,15 +469,15 @@ export default function Dashboard() {
             </div>
 
             <button className="water-now-btn" onClick={handleWaterNext} disabled={duePlants.length === 0} style={{ opacity: duePlants.length === 0 ? 0.65 : 1, cursor: duePlants.length === 0 ? "not-allowed" : "pointer" }}>
-              <Droplets size={16} /> {duePlants.length > 0 ? "Water Next Due Plant" : "All Plants Watered"}
+              <Droplets size={16} /> {duePlants.length > 0 ? t("btn_water_next_due") : t("btn_watered")}
             </button>
           </section>
 
           {/* Recent Activity Card */}
           <section className="right-panel-card activity-card">
             <div className="panel-head">
-              <h3>RECENT ACTIVITY</h3>
-              <Link to="/history" className="view-all-link">View all</Link>
+              <h3>{t("section_recent_activity")}</h3>
+              <Link to="/history" className="view-all-link">{t("btn_view_all")}</Link>
             </div>
 
             <div className="activity-feed">

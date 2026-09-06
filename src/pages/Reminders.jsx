@@ -4,8 +4,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { usePlantCare } from "../App.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import PlantStatusBadge from "../components/PlantStatusBadge.jsx";
-import { calculateNextWateringDate, calculateWateringStatus, daysBetween, formatDate, isPlantWaterable, todayISO } from "../utils/wateringUtils.js";
+import { useTranslation } from "../utils/i18n.js";
 import { getPlantIconUrl } from "../utils/plantIconUtils.js";
+import { calculateNextWateringDate, calculateWateringStatus, daysBetween, formatDate, isPlantWaterable, todayISO } from "../utils/wateringUtils.js";
 
 const formatLocation = (locStr) => {
   if (!locStr) return "Indoor";
@@ -17,6 +18,7 @@ const formatLocation = (locStr) => {
 
 export default function Reminders() {
   const { plants, history, waterPlant, refresh, user } = usePlantCare();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [filterTab, setFilterTab] = useState("all");
   const [query, setQuery] = useState("");
@@ -80,15 +82,15 @@ export default function Reminders() {
       {/* Page Header */}
       <header className="dashboard-top-header">
         <div>
-          <span className="eyebrow-tag">CARE SCHEDULE</span>
+          <span className="eyebrow-tag">{t("reminders_tag")}</span>
           <h1 style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "4px 0" }}>
-            <span>Watering Reminders</span>
+            <span>{t("reminders_title")}</span>
             <img src="/alarm_clock_icon.png" alt="Reminders Icon" style={{ width: 32, height: 32, objectFit: "contain" }} />
           </h1>
-          <p>Stay on top of upcoming and overdue watering schedules for all your plants.</p>
+          <p>{t("reminders_subtitle")}</p>
         </div>
         <button className="add-plant-btn-top" onClick={() => navigate("/add-plant")}>
-          + Add Plant
+          + {t("btn_add_plant")}
         </button>
       </header>
 
@@ -99,9 +101,9 @@ export default function Reminders() {
             <Clock size={20} />
           </div>
           <div className="metric-info">
-            <span className="metric-label">Today's Reminders</span>
+            <span className="metric-label">{t("rem_todays_reminders")}</span>
             <strong className="metric-value">{todayCount}</strong>
-            <span className="metric-subtext">Needs watering today</span>
+            <span className="metric-subtext">{t("stat_needs_watering")}</span>
           </div>
         </div>
 
@@ -110,9 +112,9 @@ export default function Reminders() {
             <AlertTriangle size={20} />
           </div>
           <div className="metric-info">
-            <span className="metric-label">Overdue Warnings</span>
+            <span className="metric-label">{t("rem_overdue_warnings")}</span>
             <strong className="metric-value">{overdueCount}</strong>
-            <span className="metric-subtext red-text">Needs immediate water</span>
+            <span className="metric-subtext red-text">{t("rem_needs_immediate")}</span>
           </div>
         </div>
 
@@ -121,9 +123,9 @@ export default function Reminders() {
             <Calendar size={20} />
           </div>
           <div className="metric-info">
-            <span className="metric-label">Upcoming Care</span>
+            <span className="metric-label">{t("rem_upcoming_care")}</span>
             <strong className="metric-value">{upcomingCount}</strong>
-            <span className="metric-subtext">Scheduled next 7 days</span>
+            <span className="metric-subtext">{t("rem_scheduled_7days")}</span>
           </div>
         </div>
 
@@ -132,9 +134,9 @@ export default function Reminders() {
             <CheckCircle2 size={20} />
           </div>
           <div className="metric-info">
-            <span className="metric-label">Watered Today</span>
+            <span className="metric-label">{t("rem_watered_today")}</span>
             <strong className="metric-value">{completedCount}</strong>
-            <span className="metric-subtext">Plants hydrated today</span>
+            <span className="metric-subtext">{t("rem_plants_hydrated")}</span>
           </div>
         </div>
       </section>
@@ -146,35 +148,35 @@ export default function Reminders() {
           className={filterTab === "all" ? "tab-pill active" : "tab-pill"}
           onClick={() => setFilterTab("all")}
         >
-          All Reminders ({reminderItems.length})
+          {t("tab_all_reminders")} ({reminderItems.length})
         </button>
         <button
           type="button"
           className={filterTab === "today" ? "tab-pill active" : "tab-pill"}
           onClick={() => setFilterTab("today")}
         >
-          Today / Soon ({todayCount + overdueCount})
+          {t("tab_today_soon")} ({todayCount + overdueCount})
         </button>
         <button
           type="button"
           className={filterTab === "overdue" ? "tab-pill active" : "tab-pill"}
           onClick={() => setFilterTab("overdue")}
         >
-          Overdue ({overdueCount})
+          {t("tab_overdue")} ({overdueCount})
         </button>
         <button
           type="button"
           className={filterTab === "upcoming" ? "tab-pill active" : "tab-pill"}
           onClick={() => setFilterTab("upcoming")}
         >
-          Upcoming ({upcomingCount})
+          {t("tab_upcoming")} ({upcomingCount})
         </button>
         <button
           type="button"
           className={filterTab === "completed" ? "tab-pill active" : "tab-pill"}
           onClick={() => setFilterTab("completed")}
         >
-          Watered Today ({completedCount})
+          {t("tab_watered_today")} ({completedCount})
         </button>
       </section>
 
@@ -184,7 +186,7 @@ export default function Reminders() {
           <Search size={18} className="search-icon" />
           <input
             type="text"
-            placeholder="Search reminders by plant name or location..."
+            placeholder={t("search_reminders_placeholder")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -251,10 +253,10 @@ export default function Reminders() {
                           const freq = Number(plant.frequency || 7);
                           const daysElapsed = daysBetween(plant.lastWatered, todayISO());
                           const remaining = freq - daysElapsed;
-                          if (remaining < 0) return `Overdue by ${Math.abs(remaining)} day${Math.abs(remaining) === 1 ? "" : "s"}`;
-                          if (remaining === 0) return "Due Today";
-                          if (remaining === 1) return "In 1 day";
-                          return `In ${remaining} days`;
+                          if (remaining < 0) return `${t("status_overdue")} (${Math.abs(remaining)} ${t("unit_days")})`;
+                          if (remaining === 0) return t("due_today");
+                          if (remaining === 1) return `1 ${t("unit_days")}`;
+                          return `${remaining} ${t("unit_days")}`;
                         })()}
                       </span>
 
@@ -298,7 +300,7 @@ export default function Reminders() {
                 {/* Right: Quick Action Buttons */}
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <Link className="ghost-btn" to={`/plant/${plant.id}`} style={{ padding: "8px 16px", borderRadius: 12, fontSize: "0.86rem", fontWeight: 700 }}>
-                    View Details
+                    {t("btn_view_details")}
                   </Link>
 
                   <button
@@ -310,11 +312,11 @@ export default function Reminders() {
                   >
                     {isDone ? (
                       <>
-                        <Check size={16} /> Watered
+                        <Check size={16} /> {t("btn_watered")}
                       </>
                     ) : (
                       <>
-                        <Droplets size={16} /> Water Now
+                        <Droplets size={16} /> {t("btn_water_now")}
                       </>
                     )}
                   </button>
@@ -324,7 +326,7 @@ export default function Reminders() {
           })}
         </section>
       ) : (
-        <EmptyState title="No reminders found" message="All your plants are healthy and hydrated!" action="Add Plant" to="/add-plant" />
+        <EmptyState title="No reminders found" message="All your plants are healthy and hydrated!" action={t("btn_add_plant")} to="/add-plant" />
       )}
     </div>
   );

@@ -5,6 +5,7 @@ import { usePlantCare } from "../App.jsx";
 import { findPlantMatch } from "../data/plantDatabase.js";
 import { getPlantIconUrl } from "../utils/plantIconUtils.js";
 import { readStorage } from "../utils/storageUtils.js";
+import { useTranslation } from "../utils/i18n.js";
 import { calculateNextWateringDate, calculateWateringStatus, daysBetween, formatDate, isPlantWaterable, todayISO } from "../utils/wateringUtils.js";
 import PlantStatusBadge from "./PlantStatusBadge.jsx";
 import StreakBadge from "./StreakBadge.jsx";
@@ -81,6 +82,7 @@ const displayValue = (value, fallback = "Not set") => value || fallback;
 
 export default function PlantCard({ plant, preview = false, onDelete, weather }) {
   const { waterPlant, history } = usePlantCare();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [flipped, setFlipped] = useState(false);
   const [isWatering, setIsWatering] = useState(false);
@@ -186,10 +188,10 @@ export default function PlantCard({ plant, preview = false, onDelete, weather })
                   const freq = Number(plant.frequency || 7);
                   const daysElapsed = daysBetween(plant.lastWatered, todayISO());
                   const remaining = freq - daysElapsed;
-                  if (remaining < 0) return `Overdue by ${Math.abs(remaining)} day${Math.abs(remaining) === 1 ? "" : "s"}`;
-                  if (remaining === 0) return "Due Today";
-                  if (remaining === 1) return "In 1 day";
-                  return `In ${remaining} days`;
+                  if (remaining < 0) return `${t("status_overdue")} (${Math.abs(remaining)} ${t("unit_days")})`;
+                  if (remaining === 0) return t("due_today");
+                  if (remaining === 1) return `1 ${t("unit_days")}`;
+                  return `${remaining} ${t("unit_days")}`;
                 })()}
               </span>
 
@@ -232,7 +234,7 @@ export default function PlantCard({ plant, preview = false, onDelete, weather })
             {/* Streak & Last Watered Row */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.8rem", color: "#64748b", background: "#fdf8f6", padding: "8px 12px", borderRadius: 12, border: "1px solid #fce8e6" }}>
               <span style={{ display: "flex", alignItems: "center", gap: 5, fontWeight: 700, color: "#c2410c" }}>
-                <Flame size={14} color="#ea580c" /> {streak} Day Streak
+                <Flame size={14} color="#ea580c" /> {streak} {t("unit_days")}
               </span>
               <span>
                 Last: <strong>{hasWateringHistory ? formatDate(plant.lastWatered) : "Not yet"}</strong>
@@ -245,21 +247,21 @@ export default function PlantCard({ plant, preview = false, onDelete, weather })
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                   <button type="button" className={`primary-btn ${(!isWaterable || watered || wateredToday) ? "success-btn" : ""}`} onClick={handleWaterPlant} disabled={isButtonDisabled} style={{ minHeight: 40, fontSize: "0.84rem", borderRadius: 12 }}>
                     {(!isWaterable || watered || wateredToday) ? <Check size={15} /> : <Droplets size={15} />}
-                    {isWatering ? "Watering..." : (!isWaterable || watered || wateredToday) ? "Watered" : "Water Now"}
+                    {isWatering ? "Watering..." : (!isWaterable || watered || wateredToday) ? t("btn_watered") : t("btn_water_now")}
                   </button>
                   
                   <button type="button" className="full-view-btn" onClick={(event) => { stopCardFlip(event); navigate(`/plant/${plant.id}`); }} style={{ minHeight: 40, fontSize: "0.84rem", borderRadius: 12 }}>
-                    <Eye size={15} /> View Details
+                    <Eye size={15} /> {t("btn_view_details")}
                   </button>
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 40px", gap: 8 }}>
                   <Link className="ghost-btn" to={`/edit-plant/${plant.id}`} onClick={stopCardFlip} style={{ minHeight: 38, fontSize: "0.8rem", borderRadius: 12, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                    <Edit size={14} /> Edit Plant
+                    <Edit size={14} /> {t("btn_edit")}
                   </Link>
                   
                   <Link className="ghost-btn" to={`/plant/${plant.id}`} onClick={stopCardFlip} style={{ minHeight: 38, fontSize: "0.8rem", borderRadius: 12, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                    <MessageSquare size={14} /> Note / Photo
+                    <MessageSquare size={14} /> {t("btn_note_photo")}
                   </Link>
 
                   {onDelete && (
@@ -291,7 +293,7 @@ export default function PlantCard({ plant, preview = false, onDelete, weather })
             <span><MapPin size={16} /><strong>Location</strong> {displayValue(plant.location)}</span>
             <span><Droplets size={16} /><strong>Humidity</strong> {displayHumidity}</span>
             <span><CalendarDays size={16} /><strong>Next watering</strong> {hasWateringHistory ? formatDate(nextWateringDate) : "After first watering"}</span>
-            <span><Flame size={16} /><strong>Streak</strong> {streak} days</span>
+            <span><Flame size={16} /><strong>Streak</strong> {streak} {t("unit_days")}</span>
           </div>
           <button type="button" className="back-flip-btn" onClick={(event) => { stopCardFlip(event); setFlipped(false); }} aria-label="Return to plant overview"><Undo2 size={16} /> Back</button>
         </div>
