@@ -12,6 +12,10 @@ public class User {
     private String resetToken;
     private Long resetTokenExpiry;
 
+    private String emailChangeNewEmail;
+    private String emailChangeCode;
+    private Long emailChangeCodeExpiry;
+
     public User() {}
 
     public User(String id, String name, String email, String role, String createdDate, String status) {
@@ -46,4 +50,13 @@ public class User {
 
     public Long getResetTokenExpiry() { return resetTokenExpiry; }
     public void setResetTokenExpiry(Long resetTokenExpiry) { this.resetTokenExpiry = resetTokenExpiry; }
+
+    public String getEmailChangeNewEmail() { return emailChangeNewEmail; }
+    public void setEmailChangeNewEmail(String emailChangeNewEmail) { this.emailChangeNewEmail = emailChangeNewEmail; }
+
+    public String getEmailChangeCode() { return emailChangeCode; }
+    public void setEmailChangeCode(String emailChangeCode) { this.emailChangeCode = emailChangeCode; }
+
+    public Long getEmailChangeCodeExpiry() { return emailChangeCodeExpiry; }
+    public void setEmailChangeCodeExpiry(Long emailChangeCodeExpiry) { this.emailChangeCodeExpiry = emailChangeCodeExpiry; }
 }

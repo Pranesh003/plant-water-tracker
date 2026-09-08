@@ -1,4 +1,4 @@
-import { Bell, Download, Globe, KeyRound, Leaf, LockKeyhole, RefreshCw, Save, Settings as SettingsIcon, Sparkles, User, UserCog } from "lucide-react";
+import { Bell, Download, Globe, KeyRound, Leaf, LockKeyhole, Mail, RefreshCw, Save, Settings as SettingsIcon, ShieldCheck, Sparkles, User, UserCog, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePlantCare } from "../App.jsx";
@@ -31,6 +31,15 @@ export default function Settings() {
   const [browserNotificationPermission, setBrowserNotificationPermission] = useState(
     typeof window !== "undefined" && "Notification" in window ? Notification.permission : "default"
   );
+
+  // Email Change OTP Modal State
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailModalStep, setEmailModalStep] = useState(1); // 1 = Request, 2 = Verify OTP
+  const [pendingNewEmail, setPendingNewEmail] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modalError, setModalError] = useState("");
+  const [modalInfo, setModalInfo] = useState("");
 
   useEffect(() => {
     Promise.all([api.getUser(), Promise.resolve(readStorage(SETTINGS_KEY, defaultSettings))]).then(([userData, settings]) => {
@@ -97,6 +106,66 @@ export default function Settings() {
     }
   };
 
+  const saveNonEmailSettings = async () => {
+    const cleanKey = form.geminiApiKey ? form.geminiApiKey.trim() : "";
+    if (typeof window !== "undefined") {
+      if (cleanKey) {
+        localStorage.setItem("geminiApiKey", cleanKey);
+      } else {
+        localStorage.removeItem("geminiApiKey");
+      }
+    }
+    const settings = {
+      theme: form.theme,
+      defaultLocation: form.defaultLocation,
+      defaultFrequency: form.defaultFrequency,
+      preferredTime: form.preferredTime,
+      tempUnit: form.tempUnit,
+      wateringAlerts: form.wateringAlerts,
+      overdueAlerts: form.overdueAlerts,
+      activityNotifications: form.activityNotifications,
+      geminiApiKey: cleanKey
+    };
+    writeStorage(SETTINGS_KEY, settings);
+    applyTheme(form.theme);
+  };
+
+  const handleRequestEmailCode = async () => {
+    setModalLoading(true);
+    setModalError("");
+    setModalInfo("");
+    try {
+      const res = await api.requestEmailChange(pendingNewEmail);
+      setModalInfo(res.message || `Verification code sent to ${pendingNewEmail}`);
+      setEmailModalStep(2);
+    } catch (err) {
+      setModalError(err.message || "Failed to send verification code.");
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleVerifyEmailCode = async () => {
+    setModalLoading(true);
+    setModalError("");
+    setModalInfo("");
+    try {
+      const res = await api.verifyEmailChange(pendingNewEmail, verificationCode);
+      if (res.user) {
+        setProfile(res.user);
+        setForm((prev) => ({ ...prev, email: res.user.email }));
+      }
+      await saveNonEmailSettings();
+      setShowEmailModal(false);
+      await refresh();
+      notify("Email address updated and settings saved successfully!");
+    } catch (err) {
+      setModalError(err.message || "Verification failed.");
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
   const saveProfileSettings = async (event) => {
     if (event) event.preventDefault();
     setError("");
@@ -104,29 +173,21 @@ export default function Settings() {
     if (!form.name.trim() || !form.email.trim()) return setError("Name and email are required.");
     if (!/\S+@\S+\.\S+/.test(form.email)) return setError("Please enter a valid email address.");
 
+    const isEmailChanged = form.email.trim().toLowerCase() !== (profile?.email || "").trim().toLowerCase();
+
+    if (isEmailChanged) {
+      setPendingNewEmail(form.email.trim().toLowerCase());
+      setVerificationCode("");
+      setModalError("");
+      setModalInfo("");
+      setEmailModalStep(1);
+      setShowEmailModal(true);
+      return;
+    }
+
     try {
-      await api.updateUser(profile.id, { ...profile, name: form.name.trim(), email: form.email.trim() });
-      const cleanKey = form.geminiApiKey ? form.geminiApiKey.trim() : "";
-      if (typeof window !== "undefined") {
-        if (cleanKey) {
-          localStorage.setItem("geminiApiKey", cleanKey);
-        } else {
-          localStorage.removeItem("geminiApiKey");
-        }
-      }
-      const settings = {
-        theme: form.theme,
-        defaultLocation: form.defaultLocation,
-        defaultFrequency: form.defaultFrequency,
-        preferredTime: form.preferredTime,
-        tempUnit: form.tempUnit,
-        wateringAlerts: form.wateringAlerts,
-        overdueAlerts: form.overdueAlerts,
-        activityNotifications: form.activityNotifications,
-        geminiApiKey: cleanKey
-      };
-      writeStorage(SETTINGS_KEY, settings);
-      applyTheme(form.theme);
+      await api.updateUser(profile.id, { ...profile, name: form.name.trim() });
+      await saveNonEmailSettings();
       await refresh();
       notify("Settings saved successfully!");
     } catch (err) {
@@ -374,12 +435,64 @@ export default function Settings() {
         </section>
       </div>
 
-      {/* Save Button Bar */}
-      <div style={{ marginTop: 24, display: "flex", justifyContent: "flex-end" }}>
-        <button className="primary-btn" onClick={saveProfileSettings} style={{ padding: "12px 28px", borderRadius: 14, fontSize: "0.94rem", fontWeight: 800, display: "inline-flex", alignItems: "center", gap: 8 }}>
-          <Save size={18} /> {t("save_all_settings")}
-        </button>
-      </div>
+      {/* Email Change Security Verification Modal */}
+      {showEmailModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.65)", backdropFilter: "blur(4px)", display: "grid", placeItems: "center", zIndex: 9999, padding: 16 }}>
+          <div style={{ background: "#ffffff", width: "100%", maxWidth: 480, borderRadius: 24, padding: 28, boxShadow: "0 20px 50px rgba(0,0,0,0.25)", border: "1px solid #e2e8f0" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: 850, color: "#0f172a", display: "flex", alignItems: "center", gap: 10 }}>
+                <ShieldCheck size={24} color="#16a34a" /> {t("email_change_modal_title")}
+              </h3>
+              <button type="button" onClick={() => setShowEmailModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b" }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ background: "#fffbe6", padding: 14, borderRadius: 14, border: "1px solid #ffe58f", color: "#b45309", fontSize: "0.85rem", fontWeight: 600, marginBottom: 18, lineHeight: 1.5 }}>
+              🛡️ {t("email_change_sec_notice")}
+            </div>
+
+            {modalError && <p style={{ color: "#dc2626", background: "#fef2f2", padding: "10px 14px", borderRadius: 12, border: "1px solid #fecaca", fontSize: "0.86rem", fontWeight: 700, marginBottom: 14 }}>{modalError}</p>}
+            {modalInfo && <p style={{ color: "#16a34a", background: "#f0fdf4", padding: "10px 14px", borderRadius: 12, border: "1px solid #bbf7d0", fontSize: "0.86rem", fontWeight: 700, marginBottom: 14 }}>{modalInfo}</p>}
+
+            <div style={{ marginBottom: 18, padding: 12, background: "#f8faf7", borderRadius: 14, border: "1px solid #e2e8f0" }}>
+              <span style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "#64748b" }}>New Target Email:</span>
+              <strong style={{ fontSize: "1rem", color: "#16a34a" }}>{pendingNewEmail}</strong>
+            </div>
+
+            {emailModalStep === 1 ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <button type="button" className="primary-btn" onClick={handleRequestEmailCode} disabled={modalLoading} style={{ padding: "12px 20px", borderRadius: 14, fontWeight: 800, fontSize: "0.92rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  {modalLoading ? <RefreshCw size={18} className="spin" /> : <Mail size={18} />} {t("email_change_step1_btn")}
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <label style={{ display: "block", fontSize: "0.86rem", fontWeight: 750, color: "#0f172a" }}>
+                  {t("email_change_enter_code")}
+                  <input
+                    type="text"
+                    maxLength={6}
+                    placeholder={t("email_change_code_placeholder")}
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value)}
+                    style={{ width: "100%", height: 48, padding: "0 14px", marginTop: 8, borderRadius: 12, border: "1px solid #cbd5e1", fontSize: "1.15rem", fontWeight: 850, letterSpacing: "0.2em", textAlign: "center", boxSizing: "border-box" }}
+                  />
+                </label>
+
+                <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                  <button type="button" className="ghost-btn" onClick={handleRequestEmailCode} disabled={modalLoading} style={{ flex: 1, padding: "10px", borderRadius: 12, fontSize: "0.84rem", fontWeight: 700 }}>
+                    Resend Code
+                  </button>
+                  <button type="button" className="primary-btn" onClick={handleVerifyEmailCode} disabled={modalLoading || !verificationCode.trim()} style={{ flex: 2, padding: "10px", borderRadius: 12, fontSize: "0.9rem", fontWeight: 800 }}>
+                    {modalLoading ? "Verifying..." : t("email_change_verify_btn")}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

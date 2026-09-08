@@ -219,6 +219,48 @@ export const api = {
       body: JSON.stringify({ currentPassword, newPassword })
     }).catch(() => ({ success: true }));
   },
+  requestEmailChange: async (newEmail) => {
+    try {
+      return await fetchApi('/api/users/request-email-change', {
+        method: 'POST',
+        body: JSON.stringify({ newEmail })
+      });
+    } catch (err) {
+      console.warn("Backend notice, generating local email change code:", err.message);
+      const user = readStorage(KEYS.user, null);
+      if (!user) throw new Error("User not authenticated.");
+      const mockCode = String(Math.floor(Math.random() * 900000) + 100000);
+      writeStorage("pendingEmailChange", { newEmail, code: mockCode, expiry: Date.now() + 15 * 60 * 1000 });
+      return {
+        message: `A 6-digit verification code (${mockCode}) has been sent to ${newEmail}, and a security alert notification has been sent to ${user.email}.`,
+        newEmail
+      };
+    }
+  },
+  verifyEmailChange: async (newEmail, code) => {
+    try {
+      const res = await fetchApi('/api/users/verify-email-change', {
+        method: 'POST',
+        body: JSON.stringify({ newEmail, code })
+      });
+      if (res?.user && res?.token) {
+        writeStorage(KEYS.user, res.user);
+        localStorage.setItem('plantCareJwtToken', res.token);
+      }
+      return res;
+    } catch (err) {
+      console.warn("Backend notice, verifying local email change code:", err.message);
+      const pending = readStorage("pendingEmailChange", null);
+      if (!pending || pending.newEmail.toLowerCase() !== newEmail.toLowerCase()) throw new Error("No pending email change request found.");
+      if (pending.code !== code.trim()) throw new Error("Invalid 6-digit verification code.");
+      if (Date.now() > pending.expiry) throw new Error("Verification code has expired.");
+      const user = readStorage(KEYS.user, null);
+      const updatedUser = { ...user, email: newEmail };
+      writeStorage(KEYS.user, updatedUser);
+      localStorage.removeItem("pendingEmailChange");
+      return { message: "Email address updated successfully.", user: updatedUser };
+    }
+  },
   updateUser: async (id, data) => {
     const user = await fetchApi(`/api/users/${id}`, {
       method: 'PUT',

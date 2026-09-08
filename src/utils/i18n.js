@@ -195,6 +195,12 @@ export const TRANSLATIONS = {
     security_sub: "Manage your security credentials and update your account password on the dedicated security page.",
     change_password_btn: "Change Password & Security →",
     save_all_settings: "Save All Settings",
+    email_change_modal_title: "Verify Email Address Change",
+    email_change_sec_notice: "Security Alert: A 6-digit verification code is sent to your new email address, and a security alert notification is sent to your current email address.",
+    email_change_step1_btn: "Send Verification Code ✉️",
+    email_change_enter_code: "Enter 6-Digit Verification Code",
+    email_change_verify_btn: "Verify & Update Email",
+    email_change_code_placeholder: "e.g. 123456",
 
     // Admin Settings Page
     admin_title: "System Administration Settings",
@@ -388,6 +394,12 @@ export const TRANSLATIONS = {
     security_sub: "உங்கள் பாதுகாப்பு சான்றுகளை நிர்வகிக்கவும் மற்றும் கடவுச்சொல்லைப் புதுப்பிக்கவும்.",
     change_password_btn: "கடவுச்சொல் & பாதுகாப்பை மாற்று →",
     save_all_settings: "அனைத்து அமைப்புகளையும் சேமிக்கவும்",
+    email_change_modal_title: "மின்னஞ்சல் முகவரி மாற்றத்தைச் சரிபார்க்கவும்",
+    email_change_sec_notice: "பாதுகாப்பு எச்சரிக்கை: உங்கள் புதிய மின்னஞ்சலுக்கு 6 இலக்க சரிபார்ப்புக் குறியீடும், தற்போதைய மின்னஞ்சலுக்குப் பாதுகாப்பு விழிப்பூட்டலும் அனுப்பப்படும்.",
+    email_change_step1_btn: "சரிபார்ப்புக் குறியீட்டை அனுப்பு ✉️",
+    email_change_enter_code: "6 இலக்க சரிபார்ப்புக் குறியீட்டை உள்ளிடவும்",
+    email_change_verify_btn: "சரிபார்த்து மின்னஞ்சலைப் புதுப்பிக்கவும்",
+    email_change_code_placeholder: "எ.கா. 123456",
 
     // Admin Settings Page
     admin_title: "முறைமை நிர்வாக அமைப்புகள்",
@@ -581,6 +593,12 @@ export const TRANSLATIONS = {
     security_sub: "अपनी सुरक्षा साख प्रबंधित करें और अपना खाता पासवर्ड अपडेट करें।",
     change_password_btn: "पासवर्ड एवं सुरक्षा बदलें →",
     save_all_settings: "सभी सेटिंग्स सहेजें",
+    email_change_modal_title: "ईमेल पता परिवर्तन सत्यापित करें",
+    email_change_sec_notice: "सुरक्षा चेतावनी: 6-अंकों का सत्यापन कोड आपके नए ईमेल पर और एक सुरक्षा अलर्ट आपके वर्तमान ईमेल पर भेजा गया है।",
+    email_change_step1_btn: "सत्यापन कोड भेजें ✉️",
+    email_change_enter_code: "6-अंकों का सत्यापन कोड दर्ज करें",
+    email_change_verify_btn: "सत्यापित करें एवं ईमेल अपडेट करें",
+    email_change_code_placeholder: "जैसे 123456",
 
     // Admin Settings Page
     admin_title: "सिस्टम प्रशासन सेटिंग्स",
@@ -774,6 +792,12 @@ export const TRANSLATIONS = {
     security_sub: "ನಿಮ್ಮ ಭದ್ರತಾ ವಿವರಗಳನ್ನು ನಿರ್ವಹಿಸಿ ಮತ್ತು ಪಾಸ್‌ವರ್ಡ್ ನವೀಕರಿಸಿ.",
     change_password_btn: "ಪಾಸ್‌ವರ್ಡ್ & ಭದ್ರತೆ ಬದಲಾಯಿಸಿ →",
     save_all_settings: "ಎಲ್ಲಾ ಸಂಯೋಜನೆಗಳನ್ನು ಉಳಿಸಿ",
+    email_change_modal_title: "ಇಮೇಲ್ ವಿಳಾಸ ಬದಲಾವಣೆಯನ್ನು ಪರಿಶೀಲಿಸಿ",
+    email_change_sec_notice: "ಭದ್ರತಾ ಎಚ್ಚರಿಕೆ: ನಿಮ್ಮ ಹೊಸ ಇಮೇಲ್‌ಗೆ 6 ಅಂಕೆಯ ಪರಿಶೀಲನಾ ಕೋಡ್ ಮತ್ತು ಪ್ರಸ್ತುತ ಇಮೇಲ್‌ಗೆ ಭದ್ರತಾ ಸೂಚನೆ ಕಳುಹಿಸಲಾಗುತ್ತದೆ.",
+    email_change_step1_btn: "ಪರಿಶೀಲನಾ ಕೋಡ್ ಕಳುಹಿಸಿ ✉️",
+    email_change_enter_code: "6 ಅಂಕೆಯ ಪರಿಶೀಲನಾ ಕೋಡ್ ನಮೂದಿಸಿ",
+    email_change_verify_btn: "ಪರಿಶೀಲಿಸಿ ಮತ್ತು ಇಮೇಲ್ ನವೀಕರಿಸಿ",
+    email_change_code_placeholder: "ಉದಾ. 123456",
 
     // Admin Settings Page
     admin_title: "ಸಿಸ್ಟಮ್ ಆಡಳಿತ ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
@@ -967,6 +991,12 @@ export const TRANSLATIONS = {
     security_sub: "మీ భద్రతా వివరాలను నిర్వహించండి మరియు మీ పాస్‌వర్డ్‌ను అప్‌డేట్ చేయండి.",
     change_password_btn: "పాస్‌వర్డ్ & భద్రత మార్చండి →",
     save_all_settings: "అన్ని సెట్టింగ్‌లను సేవ్ చేయండి",
+    email_change_modal_title: "ఈమెయిల్ చిరునామా మార్పును నిరూపించండి",
+    email_change_sec_notice: "భద్రతా హెచ్చరిక: మీ కొత్త ఈమెయిల్‌కు 6 అంకెల వెరిఫికేషన్ కోడ్ మరియు ప్రస్తుత ఈమెయిల్‌కు సెక్యూరిటీ నోటీసు పంపబడుతుంది.",
+    email_change_step1_btn: "వెరిఫಿಕేಷన్ కోడ్ పంపండి ✉️",
+    email_change_enter_code: "6 అంకెల వెరిఫికేషన్ కోడ్ నమోదు చేయండి",
+    email_change_verify_btn: "పరిశీలించి ఈమెయిల్‌ను అప్‌డేట్ చేయండి",
+    email_change_code_placeholder: "ఉదా. 123456",
 
     // Admin Settings Page
     admin_title: "సిస్టమ్ అడ్మినిస్ట్రేషన్ సెట్టింగ్‌లు",
@@ -1160,6 +1190,12 @@ export const TRANSLATIONS = {
     security_sub: "നിങ്ങളുടെ സുരക്ഷാ വിവരങ്ങൾ നിയന്ത്രിക്കുകയും പാസ്‌വേഡ് പുതുക്കുകയും ചെയ്യുക.",
     change_password_btn: "പാസ്‌വേഡും സുരക്ഷയും മാറ്റുക →",
     save_all_settings: "എല്ലാ ക്രമീകരണങ്ങളും സേവ് ചെയ്യുക",
+    email_change_modal_title: "ഈമെയിൽ വിലാസ മാറ്റം പരിശോധിക്കുക",
+    email_change_sec_notice: "സുരക്ഷാ മുന്നറിയിപ്പ്: നിങ്ങളുടെ പുതിയ ഈമെയിലിലേക്ക് 6 അക്ക സ്ഥിരീകരണ കോഡും നിലവിലെ ഈമെയിലിലേക്ക് സുരക്ഷാ വിവരവും അയയ്‌ക്കും.",
+    email_change_step1_btn: "സ്ഥിരീകരണ കോഡ് അയക്കുക ✉️",
+    email_change_enter_code: "6 അക്ക സ്ഥിരീകരണ കോഡ് നൽകുക",
+    email_change_verify_btn: "പരിശോധിച്ച് ഈമെയിൽ പുതുക്കുക",
+    email_change_code_placeholder: "ഉദാ. 123456",
 
     // Admin Settings Page
     admin_title: "സിസ്റ്റം അഡ്മിനിസ്ട്രേഷൻ ക്രമീകരണങ്ങൾ",
