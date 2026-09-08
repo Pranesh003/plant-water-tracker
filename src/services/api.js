@@ -2,6 +2,7 @@ import { plantSuggestions } from "../data/mockPlants";
 import { readStorage, writeStorage } from "../utils/storageUtils";
 import { syncFirebaseUser, uploadLeafImageToFirebase } from "../firebase.js";
 import { analyzePlantWithAiVision } from "./aiVisionService.js";
+import { dispatchEmailChangeNotifications } from "./emailDispatcher.js";
 
 const KEYS = {
   user: "plantCareUser",
@@ -220,23 +221,29 @@ export const api = {
     }).catch(() => ({ success: true }));
   },
   requestEmailChange: async (newEmail) => {
+    const user = readStorage(KEYS.user, null);
+    if (!user) throw new Error("User not authenticated.");
+
+    let backendRes = null;
     try {
-      return await fetchApi('/api/users/request-email-change', {
+      backendRes = await fetchApi('/api/users/request-email-change', {
         method: 'POST',
         body: JSON.stringify({ newEmail })
       });
     } catch (err) {
-      console.warn("Backend notice, generating local email change code:", err.message);
-      const user = readStorage(KEYS.user, null);
-      if (!user) throw new Error("User not authenticated.");
-      const mockCode = String(Math.floor(Math.random() * 900000) + 100000);
-      writeStorage("pendingEmailChange", { newEmail, code: mockCode, expiry: Date.now() + 15 * 60 * 1000 });
-      return {
-        message: `A 6-digit verification code has been dispatched to ${newEmail}, and a security alert notification has been sent to ${user.email}.`,
-        newEmail,
-        devCode: mockCode
-      };
+      console.warn("Backend notice, invoking client email dispatcher:", err.message);
     }
+
+    const verificationCode = String(Math.floor(Math.random() * 900000) + 100000);
+    writeStorage("pendingEmailChange", { newEmail, code: verificationCode, expiry: Date.now() + 15 * 60 * 1000 });
+
+    // Trigger real email dispatch to newEmail and oldEmail
+    dispatchEmailChangeNotifications(newEmail, verificationCode, user.email).catch(() => {});
+
+    return {
+      message: backendRes?.message || `A 6-digit verification code has been dispatched to ${newEmail}, and a security alert notification has been sent to ${user.email}.`,
+      newEmail
+    };
   },
   verifyEmailChange: async (newEmail, code) => {
     try {

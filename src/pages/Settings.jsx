@@ -41,7 +41,6 @@ export default function Settings() {
   const [emailLoading, setEmailLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [emailInfo, setEmailInfo] = useState("");
-  const [devCode, setDevCode] = useState("");
 
   useEffect(() => {
     Promise.all([api.getUser(), Promise.resolve(readStorage(SETTINGS_KEY, defaultSettings))]).then(([userData, settings]) => {
@@ -147,12 +146,10 @@ export default function Settings() {
     setEmailLoading(true);
     setEmailError("");
     setEmailInfo("");
-    setDevCode("");
 
     try {
       const res = await api.requestEmailChange(targetEmail);
       setEmailInfo(res.message || `Verification code sent to ${targetEmail}`);
-      if (res.devCode) setDevCode(res.devCode);
       setEmailStep(2);
     } catch (err) {
       setEmailError(err.message || "Failed to request verification code.");
@@ -196,7 +193,6 @@ export default function Settings() {
     setVerificationCode("");
     setEmailError("");
     setEmailInfo("");
-    setDevCode("");
   };
 
   const saveProfileSettings = async (event) => {
@@ -537,19 +533,6 @@ export default function Settings() {
               <p style={{ color: "#15803d", background: "#f0fdf4", padding: "12px 16px", borderRadius: 14, border: "1px solid #bbf7d0", fontSize: "0.88rem", fontWeight: 700, marginBottom: 16 }}>
                 ℹ️ {emailInfo}
               </p>
-            )}
-
-            {/* Dev / Demo Mode Code Banner */}
-            {devCode && (
-              <div style={{ background: "#eff6ff", border: "1px dashed #3b82f6", padding: 14, borderRadius: 14, color: "#1e40af", fontSize: "0.88rem", fontWeight: 700, marginBottom: 18, display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: "1.2rem" }}>💡</span>
-                <div>
-                  <span>{t("dev_code_notice") || "Local/Demo Mode Verification Code:"}</span>
-                  <strong style={{ fontSize: "1.1rem", color: "#1d4ed8", marginLeft: 8, letterSpacing: "0.15em", background: "#ffffff", padding: "2px 10px", borderRadius: 8, border: "1px solid #bfdbfe" }}>
-                    {devCode}
-                  </strong>
-                </div>
-              </div>
             )}
 
             {/* STEP 1: Enter New Email */}
