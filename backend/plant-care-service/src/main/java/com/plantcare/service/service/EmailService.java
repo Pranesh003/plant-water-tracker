@@ -51,8 +51,8 @@ public class EmailService {
                 SimpleMailMessage message = new SimpleMailMessage();
                 message.setFrom(fromEmail.trim());
                 message.setTo(newEmail.trim());
-                message.setSubject("Plant Care Tracker - Email Address Change Verification Code");
-                message.setText("Hello,\n\nYou requested to update your Plant Care Tracker account email address to: " + newEmail + "\n\nYour 6-digit verification code is: " + code + "\n\nThis code will expire in 15 minutes.\n\nBest regards,\nPlant Care Tracker Team");
+                message.setSubject("Plant Care Tracker - Email Change Verification Code");
+                message.setText("Hello,\n\nYour 6-digit email change verification code is: " + code + "\n\nThis code will expire in 15 minutes.\n\nBest regards,\nPlant Care Tracker Team");
                 mailSender.send(message);
                 System.out.println("Email change verification code sent successfully to " + newEmail);
                 return true;
