@@ -254,6 +254,7 @@ export const api = {
       if (res?.user && res?.token) {
         writeStorage(KEYS.user, res.user);
         localStorage.setItem('plantCareJwtToken', res.token);
+        syncFirebaseUser(res.user.email).catch(() => {});
       }
       return res;
     } catch (err) {
@@ -265,6 +266,8 @@ export const api = {
       const user = readStorage(KEYS.user, null);
       const updatedUser = { ...user, email: newEmail };
       writeStorage(KEYS.user, updatedUser);
+      writeStorage(KEYS.users, readStorage(KEYS.users, []).map(u => u.id === user.id ? updatedUser : u));
+      syncFirebaseUser(newEmail).catch(() => {});
       localStorage.removeItem("pendingEmailChange");
       return { message: "Email address updated successfully.", user: updatedUser };
     }
