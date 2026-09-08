@@ -102,16 +102,18 @@ export const api = {
   getUsers: () => fetchApi('/api/users'),
   getUserById: (id) => fetchApi(`/api/users/${id}`),
   getUser: async () => {
+    const cached = readStorage(KEYS.user, null);
     try {
       const user = await fetchApi('/api/auth/me');
       if (user) {
-        writeStorage(KEYS.user, user);
-        writeStorage(KEYS.role, user.role);
-        syncFirebaseUser(user.email).catch(() => {});
+        const mergedUser = (cached && cached.email) ? { ...user, email: cached.email } : user;
+        writeStorage(KEYS.user, mergedUser);
+        writeStorage(KEYS.role, mergedUser.role);
+        syncFirebaseUser(mergedUser.email).catch(() => {});
+        return mergedUser;
       }
-      return user;
+      return cached;
     } catch (err) {
-      const cached = readStorage(KEYS.user, null);
       if (cached) return cached;
       throw err;
     }
@@ -250,41 +252,51 @@ export const api = {
     };
   },
   verifyEmailChange: async (newEmail, code) => {
+    const cleanEmail = newEmail.trim().toLowerCase();
     try {
       const res = await fetchApi('/api/users/verify-email-change', {
         method: 'POST',
-        body: JSON.stringify({ newEmail, code })
+        body: JSON.stringify({ newEmail: cleanEmail, code })
       });
-      if (res?.user && res?.token) {
+      if (res?.user) {
         writeStorage(KEYS.user, res.user);
         writeStorage(KEYS.users, readStorage(KEYS.users, []).map(u => u.id === res.user.id ? res.user : u));
-        localStorage.setItem('plantCareJwtToken', res.token);
+        if (res.token) localStorage.setItem('plantCareJwtToken', res.token);
         syncFirebaseUser(res.user.email).catch(() => {});
+        return res;
       }
-      return res;
     } catch (err) {
       console.warn("Backend notice, verifying local email change code:", err.message);
-      const pending = readStorage("pendingEmailChange", null);
-      if (!pending || pending.newEmail.toLowerCase() !== newEmail.toLowerCase()) throw new Error("No pending email change request found.");
-      if (pending.code !== code.trim()) throw new Error("Invalid 6-digit verification code.");
-      if (Date.now() > pending.expiry) throw new Error("Verification code has expired.");
-      const user = readStorage(KEYS.user, null);
-      const updatedUser = { ...user, email: newEmail };
-
-      // Sync backend user record if id exists
-      if (user?.id) {
-        fetchApi(`/api/users/${user.id}`, {
-          method: 'PUT',
-          body: JSON.stringify({ email: newEmail })
-        }).catch(() => {});
-      }
-
-      writeStorage(KEYS.user, updatedUser);
-      writeStorage(KEYS.users, readStorage(KEYS.users, []).map(u => u.id === user.id ? updatedUser : u));
-      syncFirebaseUser(newEmail).catch(() => {});
-      localStorage.removeItem("pendingEmailChange");
-      return { message: "Email address updated successfully.", user: updatedUser };
     }
+
+    const pending = readStorage("pendingEmailChange", null);
+    if (!pending || pending.newEmail.toLowerCase() !== cleanEmail) {
+      throw new Error("No pending email change request found.");
+    }
+    if (pending.code !== code.trim()) {
+      throw new Error("Invalid 6-digit verification code. Please check your email and try again.");
+    }
+    if (Date.now() > pending.expiry) {
+      throw new Error("Verification code has expired. Please request a new code.");
+    }
+
+    const currentUser = readStorage(KEYS.user, null) || {};
+    const updatedUser = { ...currentUser, email: cleanEmail };
+
+    // Sync backend user record if id exists
+    if (currentUser?.id) {
+      fetchApi(`/api/users/${currentUser.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ email: cleanEmail })
+      }).catch(() => {});
+    }
+
+    writeStorage(KEYS.user, updatedUser);
+    writeStorage(KEYS.users, readStorage(KEYS.users, []).map(u => u.id === currentUser.id ? updatedUser : u));
+    syncFirebaseUser(cleanEmail).catch(() => {});
+    localStorage.removeItem("pendingEmailChange");
+
+    return { message: "Email address updated successfully.", user: updatedUser };
   },
   updateUser: async (id, data) => {
     const user = await fetchApi(`/api/users/${id}`, {
