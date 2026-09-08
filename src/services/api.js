@@ -232,8 +232,9 @@ export const api = {
       const mockCode = String(Math.floor(Math.random() * 900000) + 100000);
       writeStorage("pendingEmailChange", { newEmail, code: mockCode, expiry: Date.now() + 15 * 60 * 1000 });
       return {
-        message: `A 6-digit verification code (${mockCode}) has been sent to ${newEmail}, and a security alert notification has been sent to ${user.email}.`,
-        newEmail
+        message: `A 6-digit verification code has been dispatched to ${newEmail}, and a security alert notification has been sent to ${user.email}.`,
+        newEmail,
+        devCode: mockCode
       };
     }
   },

@@ -139,11 +139,16 @@ public class UserController {
         userRepository.save(user);
 
         // Send 6-digit OTP code to new email, and security alert notification to old email
-        emailService.sendEmailChangeVerificationCode(cleanNewEmail, verificationCode);
-        emailService.sendEmailChangeSecurityAlert(user.getEmail(), cleanNewEmail);
+        boolean codeSent = emailService.sendEmailChangeVerificationCode(cleanNewEmail, verificationCode);
+        boolean alertSent = emailService.sendEmailChangeSecurityAlert(user.getEmail(), cleanNewEmail);
 
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "A 6-digit verification code has been sent to " + cleanNewEmail + ", and a security alert notification has been sent to your current email.");
+        Map<String, Object> response = new HashMap<>();
+        if (codeSent) {
+            response.put("message", "A 6-digit verification code has been sent to " + cleanNewEmail + ", and a security alert notification has been sent to your current email.");
+        } else {
+            response.put("message", "Verification code generated! (SMTP server not configured on backend. Code: " + verificationCode + ")");
+            response.put("devCode", verificationCode);
+        }
         response.put("newEmail", cleanNewEmail);
         return ResponseEntity.ok(response);
     }
