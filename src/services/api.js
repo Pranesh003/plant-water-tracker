@@ -122,11 +122,11 @@ export const api = {
   isLoggedIn: () => readStorage(KEYS.loggedIn, false) && !!getToken(),
   isTutorialComplete: () => readStorage(KEYS.tutorial, false),
   signIn: async ({ email, remember, role, password }) => {
-    const detectedRole = role || (email && email.toLowerCase().includes("admin") ? "admin" : "user");
+    const cleanEmail = email ? email.trim().toLowerCase() : "";
     try {
       const res = await fetchApi('/api/auth/signin', {
         method: 'POST',
-        body: JSON.stringify({ email, remember, role: detectedRole })
+        body: JSON.stringify({ email: cleanEmail, remember, password })
       });
       const { token, user } = res;
       const currentUser = readStorage(KEYS.user, null);
@@ -137,26 +137,28 @@ export const api = {
       }
       writeStorage(KEYS.user, user);
       writeStorage(KEYS.loggedIn, true);
-      writeStorage(KEYS.role, user.role);
+      writeStorage(KEYS.role, user.role || "user");
       localStorage.setItem('plantCareJwtToken', token);
       syncFirebaseUser(user.email, password || "PlantCare2026!").catch(() => {});
       return user;
     } catch (err) {
-      console.warn("Backend auth notice, using resilient local session:", err.message);
+      console.warn("Backend auth notice, checking local user records:", err.message);
       const users = readStorage(KEYS.users, []);
-      let user = users.find(u => u.email?.toLowerCase() === email?.toLowerCase());
-      if (!user) {
-        user = {
-          id: `usr_${Date.now()}`,
-          name: email ? email.split("@")[0] : "Plant Doctor",
-          email: email || "user@example.com",
-          role: detectedRole,
-          avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"
-        };
-        writeStorage(KEYS.users, [...users, user]);
-      }
       const currentUser = readStorage(KEYS.user, null);
-      if (!currentUser || currentUser.id !== user.id) {
+      
+      let user = users.find(u => u.email?.toLowerCase() === cleanEmail || u.name?.toLowerCase() === cleanEmail);
+      
+      if (!user && currentUser && (currentUser.email?.toLowerCase() === cleanEmail || currentUser.name?.toLowerCase() === cleanEmail)) {
+        user = currentUser;
+        writeStorage(KEYS.users, [...users.filter(u => u.id !== user.id), user]);
+      }
+
+      if (!user) {
+        throw new Error("Account not found. Please sign up first.");
+      }
+
+      const activeUser = currentUser;
+      if (!activeUser || activeUser.id !== user.id) {
         localStorage.removeItem(KEYS.plants);
         localStorage.removeItem(KEYS.history);
         localStorage.removeItem("plantCareAiDoctorLogs");
@@ -164,40 +166,45 @@ export const api = {
       const token = `local_token_${Date.now()}`;
       writeStorage(KEYS.user, user);
       writeStorage(KEYS.loggedIn, true);
-      writeStorage(KEYS.role, user.role);
+      writeStorage(KEYS.role, user.role || "user");
       localStorage.setItem('plantCareJwtToken', token);
       syncFirebaseUser(user.email, password || "PlantCare2026!").catch(() => {});
       return user;
     }
   },
   signUp: async ({ name, email, password }) => {
-    const detectedRole = (email && email.toLowerCase().includes("admin")) ? "admin" : "user";
+    const cleanEmail = email ? email.trim().toLowerCase() : "";
+    const cleanName = name ? name.trim() : "";
+    const defaultRole = "user";
     try {
       const res = await fetchApi('/api/auth/signup', {
         method: 'POST',
-        body: JSON.stringify({ name, email })
+        body: JSON.stringify({ name: cleanName, email: cleanEmail, role: defaultRole })
       });
       const { token, user } = res;
+      const registeredUser = { ...user, role: user.role || defaultRole };
       localStorage.removeItem(KEYS.plants);
       localStorage.removeItem(KEYS.history);
       localStorage.removeItem("plantCareAiDoctorLogs");
-      writeStorage(KEYS.user, user);
+      writeStorage(KEYS.user, registeredUser);
       writeStorage(KEYS.loggedIn, true);
-      writeStorage(KEYS.role, user.role);
+      writeStorage(KEYS.role, registeredUser.role);
+      const users = readStorage(KEYS.users, []);
+      writeStorage(KEYS.users, [...users.filter(u => u.email?.toLowerCase() !== cleanEmail), registeredUser]);
       localStorage.setItem('plantCareJwtToken', token);
-      syncFirebaseUser(user.email, password || "PlantCare2026!").catch(() => {});
-      return user;
+      syncFirebaseUser(registeredUser.email, password || "PlantCare2026!").catch(() => {});
+      return registeredUser;
     } catch (err) {
       console.warn("Backend signup notice, creating resilient local session:", err.message);
       const user = {
         id: `usr_${Date.now()}`,
-        name: name || (email ? email.split("@")[0] : "Plant Doctor"),
-        email: email || "user@example.com",
-        role: detectedRole,
+        name: cleanName || (cleanEmail ? cleanEmail.split("@")[0] : "Plant Parent"),
+        email: cleanEmail || "user@example.com",
+        role: defaultRole,
         avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"
       };
       const users = readStorage(KEYS.users, []);
-      writeStorage(KEYS.users, [...users.filter(u => u.email !== user.email), user]);
+      writeStorage(KEYS.users, [...users.filter(u => u.email?.toLowerCase() !== cleanEmail), user]);
       localStorage.removeItem(KEYS.plants);
       localStorage.removeItem(KEYS.history);
       localStorage.removeItem("plantCareAiDoctorLogs");
