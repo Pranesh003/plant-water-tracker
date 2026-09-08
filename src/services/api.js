@@ -122,6 +122,12 @@ export const api = {
         body: JSON.stringify({ email, remember, role: detectedRole })
       });
       const { token, user } = res;
+      const currentUser = readStorage(KEYS.user, null);
+      if (!currentUser || currentUser.id !== user.id) {
+        localStorage.removeItem(KEYS.plants);
+        localStorage.removeItem(KEYS.history);
+        localStorage.removeItem("plantCareAiDoctorLogs");
+      }
       writeStorage(KEYS.user, user);
       writeStorage(KEYS.loggedIn, true);
       writeStorage(KEYS.role, user.role);
@@ -142,6 +148,12 @@ export const api = {
         };
         writeStorage(KEYS.users, [...users, user]);
       }
+      const currentUser = readStorage(KEYS.user, null);
+      if (!currentUser || currentUser.id !== user.id) {
+        localStorage.removeItem(KEYS.plants);
+        localStorage.removeItem(KEYS.history);
+        localStorage.removeItem("plantCareAiDoctorLogs");
+      }
       const token = `local_token_${Date.now()}`;
       writeStorage(KEYS.user, user);
       writeStorage(KEYS.loggedIn, true);
@@ -159,6 +171,9 @@ export const api = {
         body: JSON.stringify({ name, email })
       });
       const { token, user } = res;
+      localStorage.removeItem(KEYS.plants);
+      localStorage.removeItem(KEYS.history);
+      localStorage.removeItem("plantCareAiDoctorLogs");
       writeStorage(KEYS.user, user);
       writeStorage(KEYS.loggedIn, true);
       writeStorage(KEYS.role, user.role);
@@ -176,6 +191,9 @@ export const api = {
       };
       const users = readStorage(KEYS.users, []);
       writeStorage(KEYS.users, [...users.filter(u => u.email !== user.email), user]);
+      localStorage.removeItem(KEYS.plants);
+      localStorage.removeItem(KEYS.history);
+      localStorage.removeItem("plantCareAiDoctorLogs");
       const token = `local_token_${Date.now()}`;
       writeStorage(KEYS.user, user);
       writeStorage(KEYS.loggedIn, true);
@@ -218,6 +236,9 @@ export const api = {
     writeStorage(KEYS.user, null);
     writeStorage(KEYS.role, "user");
     localStorage.removeItem('plantCareJwtToken');
+    localStorage.removeItem(KEYS.plants);
+    localStorage.removeItem(KEYS.history);
+    localStorage.removeItem("plantCareAiDoctorLogs");
     return Promise.resolve(true);
   },
   completeTutorial: () => {
@@ -349,12 +370,14 @@ export const api = {
     return log;
   },
   getAiDoctorLogs: (plantId) => {
+    const userPlants = readStorage(KEYS.plants, []);
+    const userPlantIds = new Set((userPlants || []).map(p => p.id));
     const allAiLogs = readStorage("plantCareAiDoctorLogs", []);
     const historyLogs = readStorage(KEYS.history, []).filter(h => h.type === "ai_doctor");
     const combined = [...allAiLogs, ...historyLogs];
     const uniqueMap = new Map();
     combined.forEach(item => {
-      if (item && item.id && (!plantId || item.plantId === plantId)) {
+      if (item && item.id && (!plantId || item.plantId === plantId) && (item.plantId && userPlantIds.has(item.plantId))) {
         uniqueMap.set(item.id, item);
       }
     });
@@ -364,16 +387,30 @@ export const api = {
     try {
       const history = await fetchApi('/api/history');
       if (Array.isArray(history)) {
+        const userPlants = readStorage(KEYS.plants, []);
+        const userPlantIds = new Set((userPlants || []).map(p => p.id));
+        
         const cached = readStorage(KEYS.history, []);
-        const aiDoctorLogs = (cached || []).filter(h => h.type === "ai_doctor");
-        const merged = [...history, ...aiDoctorLogs];
+        const aiDoctorLogs = (cached || []).filter(h => 
+          h && h.type === "ai_doctor" && h.plantId && userPlantIds.has(h.plantId)
+        );
+
+        const historyMap = new Map();
+        history.forEach(item => { if (item && item.id) historyMap.set(item.id, item); });
+        aiDoctorLogs.forEach(item => { if (item && item.id && !historyMap.has(item.id)) historyMap.set(item.id, item); });
+
+        const merged = Array.from(historyMap.values());
         writeStorage(KEYS.history, merged);
         return merged;
       }
       return history;
     } catch (err) {
       const cached = readStorage(KEYS.history, []);
-      if (cached) return cached;
+      const userPlants = readStorage(KEYS.plants, []);
+      const userPlantIds = new Set((userPlants || []).map(p => p.id));
+      if (cached) {
+        return cached.filter(h => h && h.plantId && userPlantIds.has(h.plantId));
+      }
       return [];
     }
   },
