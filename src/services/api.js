@@ -21,10 +21,11 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "https://plant-care-service
 
 const fetchApi = async (path, options = {}, retries = 2) => {
   const token = getToken();
+  const isLocalToken = token && token.startsWith('local_token_');
   const isFormData = options.body instanceof FormData;
   const headers = {
     ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    ...(token && !isLocalToken ? { 'Authorization': `Bearer ${token}` } : {}),
     ...options.headers
   };
   
@@ -32,13 +33,16 @@ const fetchApi = async (path, options = {}, retries = 2) => {
     try {
       const response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
       if (response.status === 401 && !path.startsWith('/api/auth/')) {
-        localStorage.removeItem('plantCareJwtToken');
-        writeStorage(KEYS.loggedIn, false);
-        writeStorage(KEYS.user, null);
-        if (window.location.pathname !== '/signin') {
-          window.location.href = '/signin';
+        const currentUser = readStorage(KEYS.user, null);
+        if (!isLocalToken && !currentUser) {
+          localStorage.removeItem('plantCareJwtToken');
+          writeStorage(KEYS.loggedIn, false);
+          writeStorage(KEYS.user, null);
+          if (window.location.pathname !== '/signin') {
+            window.location.href = '/signin';
+          }
+          throw new Error("Session expired. Please log in again.");
         }
-        throw new Error("Session expired. Please log in again.");
       }
       if (!response.ok) {
         const errorText = await response.text();
@@ -55,7 +59,7 @@ const fetchApi = async (path, options = {}, retries = 2) => {
     } catch (err) {
       if (err.message?.includes("Session expired")) throw err;
       if (i < retries) {
-        await new Promise((res) => setTimeout(res, 600 * (i + 1)));
+        await new Promise((res) => setTimeout(res, 400 * (i + 1)));
       } else {
         throw err;
       }
