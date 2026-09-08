@@ -172,11 +172,16 @@ export default function Settings() {
 
     try {
       const res = await api.verifyEmailChange(targetEmail, verificationCode.trim());
-      if (res.user) {
-        setProfile(res.user);
-        setForm((prev) => ({ ...prev, email: res.user.email }));
-      }
+      const updatedUser = res?.user || { ...(profile || {}), email: targetEmail };
+      setProfile(updatedUser);
+      setForm((prev) => ({ ...prev, email: updatedUser.email }));
+      writeStorage(api.keys.user, updatedUser);
+
       await refresh();
+
+      setProfile(updatedUser);
+      setForm((prev) => ({ ...prev, email: updatedUser.email }));
+
       setEmailStep(3);
       setEmailInfo(`Email address successfully updated to ${targetEmail}!`);
       notify(`Email updated to ${targetEmail}`);

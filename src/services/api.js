@@ -257,6 +257,7 @@ export const api = {
       });
       if (res?.user && res?.token) {
         writeStorage(KEYS.user, res.user);
+        writeStorage(KEYS.users, readStorage(KEYS.users, []).map(u => u.id === res.user.id ? res.user : u));
         localStorage.setItem('plantCareJwtToken', res.token);
         syncFirebaseUser(res.user.email).catch(() => {});
       }
@@ -269,6 +270,15 @@ export const api = {
       if (Date.now() > pending.expiry) throw new Error("Verification code has expired.");
       const user = readStorage(KEYS.user, null);
       const updatedUser = { ...user, email: newEmail };
+
+      // Sync backend user record if id exists
+      if (user?.id) {
+        fetchApi(`/api/users/${user.id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ email: newEmail })
+        }).catch(() => {});
+      }
+
       writeStorage(KEYS.user, updatedUser);
       writeStorage(KEYS.users, readStorage(KEYS.users, []).map(u => u.id === user.id ? updatedUser : u));
       syncFirebaseUser(newEmail).catch(() => {});
