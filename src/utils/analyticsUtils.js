@@ -37,6 +37,93 @@ export const calculateWateringConsistency = (plant, history) => {
   return Math.min(100, Math.round(statusScore + Math.min(plant.currentStreak, 20) / 5));
 };
 
+export const computeSpeciesByLocation = (plants = []) => {
+  if (!plants.length) return [];
+  const map = new Map();
+  plants.forEach((plant) => {
+    const loc = plant.locationCity || plant.location || "Indoor Garden";
+    if (!map.has(loc)) {
+      map.set(loc, { city: loc, totalPlants: 0, speciesMap: new Map() });
+    }
+    const entry = map.get(loc);
+    entry.totalPlants += 1;
+    const speciesName = plant.species || plant.name || "Houseplant";
+    entry.speciesMap.set(speciesName, (entry.speciesMap.get(speciesName) || 0) + 1);
+  });
+
+  return Array.from(map.values()).map((entry) => {
+    let topSpecies = "Houseplant";
+    let maxCount = 0;
+    entry.speciesMap.forEach((count, sp) => {
+      if (count > maxCount) {
+        maxCount = count;
+        topSpecies = sp;
+      }
+    });
+    return {
+      city: entry.city,
+      totalPlants: entry.totalPlants,
+      topSpecies
+    };
+  });
+};
+
+export const computeRoomStreakRetention = (plants = []) => {
+  if (!plants.length) return [];
+  const map = new Map();
+  plants.forEach((plant) => {
+    const room = plant.location || plant.room || "Living Room";
+    if (!map.has(room)) {
+      map.set(room, { roomLocation: room, total: 0, safeCount: 0, streakSum: 0 });
+    }
+    const entry = map.get(room);
+    entry.total += 1;
+    const status = calculateWateringStatus(plant.lastWatered, plant.frequency);
+    if (status === "Safe") entry.safeCount += 1;
+    entry.streakSum += Number(plant.currentStreak || 0);
+  });
+
+  return Array.from(map.values()).map((entry) => {
+    const retention = entry.total ? Math.round((entry.safeCount / entry.total) * 100) : 0;
+    const avgStreak = entry.total ? (entry.streakSum / entry.total).toFixed(1) : "0.0";
+    return {
+      roomLocation: entry.roomLocation,
+      retentionRate: `${retention}%`,
+      avgStreakDays: `${avgStreak} days`
+    };
+  });
+};
+
+export const computeRegionalClimateGuidance = (plants = []) => {
+  if (!plants.length) return [];
+  const map = new Map();
+  plants.forEach((plant) => {
+    const loc = plant.locationCity || plant.location || "Local Garden";
+    if (!map.has(loc)) {
+      map.set(loc, { region: loc, total: 0, overdue: 0, directSun: 0 });
+    }
+    const entry = map.get(loc);
+    entry.total += 1;
+    const status = calculateWateringStatus(plant.lastWatered, plant.frequency);
+    if (status === "Overdue") entry.overdue += 1;
+    if ((plant.sunlight || "").toLowerCase().includes("direct")) entry.directSun += 1;
+  });
+
+  return Array.from(map.values()).map((entry) => {
+    const overduePercent = entry.total ? Math.round((entry.overdue / entry.total) * 100) : 0;
+    const hasHighSun = entry.directSun > 0;
+    let insight = "Stable humidity preserves soil moisture. Standard 7-day schedule optimal.";
+    if (overduePercent > 30 || hasHighSun) {
+      insight = "Higher ambient transpiration accelerates dry soil by 2.4x. Extra 150 mL recommended.";
+    }
+    return {
+      region: entry.region,
+      overdueIncreasePercent: overduePercent > 0 ? `+${overduePercent}% Overdue Spike` : "Optimal Soil Moisture",
+      insight
+    };
+  });
+};
+
 export const calculateAnalytics = (plants, history) => {
   const statuses = plants.reduce((acc, plant) => {
     acc[calculateWateringStatus(plant.lastWatered, plant.frequency)] += 1;

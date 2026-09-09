@@ -5,7 +5,7 @@ import { usePlantCare } from "../App.jsx";
 import AnalyticsCard from "../components/AnalyticsCard.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import Pagination from "../components/Pagination.jsx";
-import { calculateAnalytics } from "../utils/analyticsUtils.js";
+import { calculateAnalytics, computeRegionalClimateGuidance, computeRoomStreakRetention, computeSpeciesByLocation } from "../utils/analyticsUtils.js";
 import { useTranslation } from "../utils/i18n.js";
 import { getPlantIconUrl } from "../utils/plantIconUtils.js";
 
@@ -44,6 +44,27 @@ export default function Analytics() {
   const leaderboard = [...plants].sort((a, b) => b.currentStreak - a.currentStreak);
   const [leaderboardPage, setLeaderboardPage] = useState(1);
   const paginatedLeaderboard = useMemo(() => leaderboard.slice((leaderboardPage - 1) * PAGE_SIZE, leaderboardPage * PAGE_SIZE), [leaderboard, leaderboardPage]);
+
+  const realTimeTopSpecies = useMemo(() => {
+    if (personalReport?.mostPopularSpeciesByCity?.length) {
+      return personalReport.mostPopularSpeciesByCity;
+    }
+    return computeSpeciesByLocation(plants);
+  }, [plants, personalReport]);
+
+  const realTimeRoomRetention = useMemo(() => {
+    if (personalReport?.averageStreakRetentionByLocation?.length) {
+      return personalReport.averageStreakRetentionByLocation;
+    }
+    return computeRoomStreakRetention(plants);
+  }, [plants, personalReport]);
+
+  const realTimeClimateGuidance = useMemo(() => {
+    if (personalReport?.overdueHeatwaveTrends?.length) {
+      return personalReport.overdueHeatwaveTrends;
+    }
+    return computeRegionalClimateGuidance(plants);
+  }, [plants, personalReport]);
 
   useEffect(() => {
     const url = user?.id
@@ -138,17 +159,19 @@ export default function Analytics() {
             <Globe size={20} color="#16a34a" /> {t("ana_top_species_location")}
           </h3>
           <div className="custom-scroll" style={{ display: "flex", flexDirection: "column", gap: 12, maxHeight: 290, overflowY: "auto" }}>
-            {personalReport?.mostPopularSpeciesByCity?.map((item, idx) => (
-              <div key={idx} style={{ padding: "12px 14px", background: "#f8faf7", borderRadius: 14, border: "1px solid #e2e8f0" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <strong style={{ color: "#0f172a", fontSize: "0.94rem" }}>📍 {formatLocation(item.city)}</strong>
-                  <span style={{ fontSize: "0.78rem", fontWeight: 700, background: "#f0fdf4", color: "#16a34a", padding: "2px 8px", borderRadius: 12, border: "1px solid #bbf7d0" }}>
-                    {item.totalPlants} plant{item.totalPlants === 1 ? "" : "s"}
-                  </span>
+            {realTimeTopSpecies.length ? (
+              realTimeTopSpecies.map((item, idx) => (
+                <div key={idx} style={{ padding: "12px 14px", background: "#f8faf7", borderRadius: 14, border: "1px solid #e2e8f0" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <strong style={{ color: "#0f172a", fontSize: "0.94rem" }}>📍 {formatLocation(item.city)}</strong>
+                    <span style={{ fontSize: "0.78rem", fontWeight: 700, background: "#f0fdf4", color: "#16a34a", padding: "2px 8px", borderRadius: 12, border: "1px solid #bbf7d0" }}>
+                      {item.totalPlants} plant{item.totalPlants === 1 ? "" : "s"}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: "0.86rem", color: "#16a34a", fontWeight: 700, display: "block", marginTop: 4 }}>🌴 {item.topSpecies}</span>
                 </div>
-                <span style={{ fontSize: "0.86rem", color: "#16a34a", fontWeight: 700, display: "block", marginTop: 4 }}>🌴 {item.topSpecies}</span>
-              </div>
-            )) || (
+              ))
+            ) : (
               <div style={{ padding: 14, background: "#f8faf7", borderRadius: 14, border: "1px solid #e2e8f0" }}>
                 <strong style={{ color: "#0f172a" }}>📍 My Garden Locations</strong>
                 <span style={{ display: "block", color: "#16a34a", fontWeight: 700, marginTop: 4 }}>🌴 Areca Palm / Monstera</span>
@@ -163,15 +186,17 @@ export default function Analytics() {
             <Flame size={20} color="#ea580c" /> {t("ana_room_streak_retention")}
           </h3>
           <div className="custom-scroll" style={{ display: "flex", flexDirection: "column", gap: 12, maxHeight: 290, overflowY: "auto" }}>
-            {personalReport?.averageStreakRetentionByLocation?.map((item, idx) => (
-              <div key={idx} style={{ padding: "12px 14px", background: "#fff7ed", borderRadius: 14, border: "1px solid #ffedd5" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <strong style={{ color: "#c2410c", fontSize: "0.94rem" }}>🏡 {formatLocation(item.roomLocation)}</strong>
-                  <span style={{ fontSize: "0.78rem", fontWeight: 800, color: "#ea580c" }}>{item.retentionRate}</span>
+            {realTimeRoomRetention.length ? (
+              realTimeRoomRetention.map((item, idx) => (
+                <div key={idx} style={{ padding: "12px 14px", background: "#fff7ed", borderRadius: 14, border: "1px solid #ffedd5" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <strong style={{ color: "#c2410c", fontSize: "0.94rem" }}>🏡 {formatLocation(item.roomLocation)}</strong>
+                    <span style={{ fontSize: "0.78rem", fontWeight: 800, color: "#ea580c" }}>{item.retentionRate}</span>
+                  </div>
+                  <span style={{ fontSize: "0.84rem", color: "#475569", fontWeight: 600, display: "block", marginTop: 4 }}>{t("ana_avg_streak")} <strong>{item.avgStreakDays}</strong></span>
                 </div>
-                <span style={{ fontSize: "0.84rem", color: "#475569", fontWeight: 600, display: "block", marginTop: 4 }}>{t("ana_avg_streak")} <strong>{item.avgStreakDays}</strong></span>
-              </div>
-            )) || (
+              ))
+            ) : (
               <div style={{ padding: 14, background: "#fff7ed", borderRadius: 14, border: "1px solid #ffedd5" }}>
                 <strong style={{ color: "#c2410c" }}>🏡 Living Room</strong>
                 <span style={{ display: "block", color: "#475569", marginTop: 4 }}>{t("ana_avg_streak")} 8.5 {t("unit_days")}</span>
@@ -186,13 +211,21 @@ export default function Analytics() {
             <ThermometerSun size={20} color="#d97706" /> {t("ana_regional_climate_guidance")}
           </h3>
           <div className="custom-scroll" style={{ display: "flex", flexDirection: "column", gap: 12, maxHeight: 290, overflowY: "auto" }}>
-            {personalReport?.overdueHeatwaveTrends?.map((item, idx) => (
-              <div key={idx} style={{ padding: "12px 14px", background: "#fffbe6", borderRadius: 14, border: "1px solid #ffe58f" }}>
-                <strong style={{ color: "#b45309", fontSize: "0.92rem", display: "block" }}>🌡️ {sanitizeRegionText(item.region)}</strong>
-                <span style={{ fontSize: "0.82rem", color: "#dc2626", fontWeight: 800, display: "inline-block", marginTop: 2 }}>{item.overdueIncreasePercent}</span>
-                <p style={{ margin: "4px 0 0", fontSize: "0.8rem", color: "#475569", lineHeight: 1.4 }}>{item.insight}</p>
+            {realTimeClimateGuidance.length ? (
+              realTimeClimateGuidance.map((item, idx) => (
+                <div key={idx} style={{ padding: "12px 14px", background: "#fffbe6", borderRadius: 14, border: "1px solid #ffe58f" }}>
+                  <strong style={{ color: "#b45309", fontSize: "0.92rem", display: "block" }}>🌡️ {sanitizeRegionText(item.region)}</strong>
+                  <span style={{ fontSize: "0.82rem", color: "#dc2626", fontWeight: 800, display: "inline-block", marginTop: 2 }}>{item.overdueIncreasePercent}</span>
+                  <p style={{ margin: "4px 0 0", fontSize: "0.8rem", color: "#475569", lineHeight: 1.4 }}>{item.insight}</p>
+                </div>
+              ))
+            ) : (
+              <div style={{ padding: 14, background: "#fffbe6", borderRadius: 14, border: "1px solid #ffe58f" }}>
+                <strong style={{ color: "#b45309" }}>🌡️ General Climate</strong>
+                <span style={{ display: "block", color: "#dc2626", fontWeight: 800, marginTop: 2 }}>Optimal Soil Moisture</span>
+                <p style={{ margin: "4px 0 0", fontSize: "0.8rem", color: "#475569" }}>Standard 7-day schedule optimal.</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
