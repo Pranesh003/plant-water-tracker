@@ -4,742 +4,203 @@
 [![Live Hosting](https://img.shields.io/badge/Live-plant--watering--tracker--2026.web.app-16a34a.svg)](https://plant-watering-tracker-2026.web.app)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-green.svg)](https://spring.io/projects/spring-boot)
 [![React](https://img.shields.io/badge/React-18.x-blue.svg)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-5.x-646CFF.svg)](https://vitejs.dev/)
-[![Firebase](https://img.shields.io/badge/Firebase-Auth%20%26%20Storage-FFCA28.svg)](https://firebase.google.com/)
-[![Google Cloud](https://img.shields.io/badge/GCP-Firestore%20%26%20Cloud%20Run-4285F4.svg)](https://cloud.google.com/)
+[![Vite](https://img.shields.io/badge/Vite-8.x-646CFF.svg)](https://vitejs.dev/)
+[![GCP](https://img.shields.io/badge/GCP-Cloud%20Run%20%26%20BigQuery-4285F4.svg)](https://cloud.google.com/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**Plant Care Tracker** is an enterprise-grade, full-stack smart plant care and automated watering management platform. Designed for plant enthusiasts, home gardeners, urban farmers, and agricultural administrators, the application simplifies plant maintenance through intelligent scheduling, streak retention metrics, real-time weather-adjusted hydration insights, automated species cataloging, downloadable PDF audit reports, multi-tenant administrative controls, live camera photo capture, and Gemini Multimodal Vision AI leaf diagnosis.
+**Plant Care Tracker** is an enterprise-grade, full-stack smart plant care and automated watering management platform. Built on Google Cloud Platform (GCP), Spring Boot 3, and React 18, the application simplifies plant maintenance through automated scheduling, streak retention metrics, real-time weather-adjusted hydration insights, automated species cataloging, downloadable PDF audit reports, administrative controls, live camera photo capture, BigQuery data warehousing, and Google Vertex AI / Gemini Multimodal Vision leaf disease diagnostics.
 
-🌐 **Live Application Deployment**: [https://plant-watering-tracker-2026.web.app](https://plant-watering-tracker-2026.web.app)
-
----
-
-## 📋 Table of Contents
-
-- [🌿 Plant Care Tracker (Plant Water Tracker)](#-plant-care-tracker-plant-water-tracker)
-  - [📋 Table of Contents](#-table-of-contents)
-  - [🚀 Executive Summary \& Vision](#-executive-summary--vision)
-  - [✨ Core Platform Features](#-core-platform-features)
-    - [👤 End-User Functionality](#-end-user-functionality)
-    - [🛡️ Administrative Supervisory Functionality](#️-administrative-supervisory-functionality)
-  - [🏗️ System Architecture](#️-system-architecture)
-  - [🔄 Process Flowcharts \& Sequence Diagrams](#-process-flowcharts--sequence-diagrams)
-    - [1. User Authentication \& Session Authorization Flow](#1-user-authentication--session-authorization-flow)
-    - [2. Plant Registration \& GCP Cloud Storage Image Upload Pipeline](#2-plant-registration--gcp-cloud-storage-image-upload-pipeline)
-    - [3. Automated Watering Schedule \& Streak Calculation Engine](#3-automated-watering-schedule--streak-calculation-engine)
-    - [4. Species Search \& Botanical Metadata Aggregation (Trefle API)](#4-species-search--botanical-metadata-aggregation-trefle-api)
-    - [5. Smart Weather-Adjusted Hydration Recommendation Engine](#5-smart-weather-adjusted-hydration-recommendation-engine)
-    - [6. Administrative Role-Based Access Control (RBAC) Workflow](#6-administrative-role-based-access-control-rbac-workflow)
-    - [7. Care Audit Log \& PDF Report Export Process](#7-care-audit-log--pdf-report-export-process)
-  - [💻 Technology Stack Breakdown](#-technology-stack-breakdown)
-  - [📂 Comprehensive Project Directory Structure](#-comprehensive-project-directory-structure)
-  - [🗄️ Database Schemas \& Firestore Document Models](#️-database-schemas--firestore-document-models)
-  - [📡 REST API Endpoints Specification](#-rest-api-endpoints-specification)
-  - [⚙️ Local Setup \& Installation Guide](#️-local-setup--installation-guide)
-  - [☁️ Cloud Deployment Guide](#️-cloud-deployment-guide)
-  - [🛡️ Security, Authentication \& Access Control](#️-security-authentication--access-control)
-  - [🔧 Troubleshooting \& Frequently Asked Questions](#-troubleshooting--frequently-asked-questions)
-  - [📄 License \& Author](#-license--author)
+🌐 **Live Application Deployment**: [https://plant-watering-tracker-2026.web.app](https://plant-watering-tracker-2026.web.app)  
+⚙️ **Production Backend API**: [https://plant-care-service-358974981913.asia-south1.run.app](https://plant-care-service-358974981913.asia-south1.run.app)
 
 ---
 
-## 🚀 Executive Summary & Vision
+## 📚 Complete System Architecture Documentation
 
-Plant care requires consistency, precise moisture management, and awareness of environmental conditions. Over-watering or under-watering is the leading cause of houseplant mortality. **Plant Care Tracker** bridges the gap between manual care and automated intelligence by offering:
+For complete technical specifications, architectural diagrams, API schemas, and deployment pipelines, consult the dedicated documentation modules:
 
-1. **Precision Hydration Schedules**: Calculates next watering deadlines based on species moisture requirements, pot sizing, and ambient environment.
-2. **AI Plant Health Doctor & Diagnostic Engine**: Multimodal image analysis powered by **Google Gemini 1.5 Flash Vision AI** to diagnose leaf diseases, chlorosis, pest infestations, nutrient burn, and soil pH requirements.
-3. **Live Camera Snapshot Capture (`CameraCaptureModal`)**: Take live photos directly using your mobile or laptop camera when registering plants or running instant AI Doctor leaf scans.
-4. **Universal AI Doctor Full Review Modal (`AiDoctorReportModal`)**: 1-click dialog to inspect full visual disease symptoms, leaf photos, care metrics (water mL, sunlight, soil pH, temp), step-by-step organic treatment plans, and real-time token quota meters.
-5. **Firebase Cloud Storage Bucket**: Automatically uploads and stores high-resolution leaf photos and plant images directly in Firebase Storage (`plant-watering-tracker-2026.appspot.com`).
-6. **Real-time Gemini Token & Daily Quota Meter**: Live tracking of token consumption per scan and daily remaining API quota counter.
-7. **Environmental Adaptation**: Connects with live weather providers (OpenWeather API and Open-Meteo) to dynamically compute temperature, humidity, and rainfall factors that adjust recommended watering volumes.
-8. **Enterprise Cloud BigQuery Analytics**: Real-time streaming pipeline into **Google Cloud BigQuery** for running SQL data warehouse analytics, overdue risk distributions, and regional care insights.
+| Specification Module | Description & Link |
+| :--- | :--- |
+| **☁️ GCP Cloud Architecture** | **[`GCP_ARCHITECTURE.md`](./GCP_ARCHITECTURE.md)** — Multi-tier architecture detailing all 14 GCP Cloud Services (Cloud Run, BigQuery, Vertex AI, Secret Manager, Cloud Storage, Cloud Build, Artifact Registry, Cloud Scheduler, Cloud Logging, Cloud Monitoring, Cloud IAM, Firebase CDN). |
+| **☕ Backend Microservices** | **[`BACKEND_SERVICES.md`](./BACKEND_SERVICES.md)** — Java 17 / Spring Boot 3 architecture covering 11 REST Controllers, 6 Core Services, 4 Repositories, DTOs, and JWT security filters. |
+| **🗄️ Database & BigQuery Schemas** | **[`DATABASE_SCHEMA.md`](./DATABASE_SCHEMA.md)** — Field-by-field document schemas for Firestore collections (`users`, `plants`, `history`, `notes`), BigQuery table specs (`plant_care_logs_sync`), and ER Diagrams. |
+| **📡 REST API Specification** | **[`API_DOCUMENTATION.md`](./API_DOCUMENTATION.md)** — Complete OpenAPI 3.0 reference, request/response JSON payloads, status codes, and cURL commands for all 20 API endpoints. |
+| **🎨 Frontend Architecture** | **[`FRONTEND_ARCHITECTURE.md`](./FRONTEND_ARCHITECTURE.md)** — React 18 SPA architecture, component routing, React Context API (`AppProvider`), LocalStorage caching, and Vanilla CSS design tokens. |
+| **🧠 AI Multimodal Vision** | **[`AI_VISION_ARCHITECTURE.md`](./AI_VISION_ARCHITECTURE.md)** — Vertex AI / Gemini 1.5 Flash vision diagnostic engine, HTML5 canvas image optimization, and fallback heuristic rules. |
+| **🔒 Security & Compliance** | **[`SECURITY_AND_COMPLIANCE.md`](./SECURITY_AND_COMPLIANCE.md)** — OAuth 2.0 / JWT HS256 stateless tokens, Role-Based Access Control (`USER` vs `ADMIN`), multi-step email OTP verification, Secret Manager isolation, and TLS 1.3 / AES-256 encryption. |
+| **🚀 DevOps & Operations** | **[`DEVOPS_AND_DEPLOYMENT.md`](./DEVOPS_AND_DEPLOYMENT.md)** — Cloud Build CI/CD pipeline, Artifact Registry image repository commands, Firebase CDN deployment scripts, Cloud Logging, and automated health check commands. |
+
+---
+
+## 🏛️ System Architecture Diagram
+
+```mermaid
+flowchart TD
+    subgraph ClientLayer ["Client & Edge Layer (Firebase CDN)"]
+        ReactApp["React 18 + Vite Single Page App<br/>(Firebase Hosting CDN)"]
+        UserBrowser["User Browser / Mobile Device"]
+        UserBrowser -->|HTTPS / TLS 1.3| ReactApp
+    end
+
+    subgraph ComputeLayer ["Serverless Compute Layer (GCP Cloud Run)"]
+        CloudRun["Google Cloud Run<br/>Spring Boot 3 Java Microservice<br/>(Region: asia-south1)"]
+        ReactApp -->|REST API / JSON| CloudRun
+    end
+
+    subgraph SecurityLayer ["Security & Config Layer"]
+        SecretManager["GCP Secret Manager<br/>(OpenWeather, Trefle, JWT Keys)"]
+        CloudRun -->|IAM Secret Accessor| SecretManager
+    end
+
+    subgraph DatabaseLayer ["Data & Storage Layer"]
+        Firestore[("Google Firestore NoSQL<br/>(Users, Plants, History, Notes)")]
+        GCS[("Google Cloud Storage (GCS)<br/>Plant Photo Bucket")]
+        CloudRun <-->|Firestore SDK| Firestore
+        CloudRun -->|GCS Storage API| GCS
+    end
+
+    subgraph AnalyticsLayer ["Enterprise Analytics & BI Layer"]
+        BigQuerySync["Firebase BigQuery Sync Extension v2"]
+        BigQuery[("Google BigQuery Warehouse<br/>Dataset: plant_analytics_db<br/>Table: plant_care_logs_sync")]
+        LookerStudio["Google Looker Studio<br/>BI Analytics Dashboard"]
+        
+        Firestore -->|Live Event Stream| BigQuerySync
+        BigQuerySync -->|Streaming Ingestion| BigQuery
+        BigQuery -->|SQL Data Queries| LookerStudio
+        CloudRun -->|REST /api/analytics| BigQuery
+    end
+
+    subgraph ExternalServices ["AI & External Services"]
+        VertexAI["Google Vertex AI / Gemini 1.5 Flash Vision<br/>(Multimodal Disease Diagnosis)"]
+        OpenMeteo["Open-Meteo Weather API<br/>(Live Climate Data)"]
+        
+        CloudRun -->|Multimodal Vision API| VertexAI
+        CloudRun -->|HTTP GET| OpenMeteo
+    end
+```
 
 ---
 
 ## ✨ Core Platform Features
 
 ### 👤 End-User Functionality
+1. **Interactive Dashboard (`Dashboard.jsx`)**: Displays total garden plants, hydration count, active streak counter, all-time record streak, and watering consistency percentage.
+2. **My Plants Grid & Filtering (`MyPlants.jsx`)**: Filter plants by room location (`Living Room`, `Office`, `Garden`, `Balcony`) or care status (`Safe`, `Water Soon`, `Overdue`).
+3. **Smart Reminders & Batch Watering (`Reminders.jsx`)**: 1-click batch watering for overdue plants with real-time streak updates.
+4. **Plant Health Doctor & Multimodal Diagnostics (`PlantDetails.jsx`)**: Upload leaf photos to analyze diseases (powdery mildew, leaf spot, root rot), obtain health severity ratings (Low, Moderate, Critical), and receive step-by-step organic remedies powered by **Google Vertex AI / Gemini Vision**.
+5. **Real-time Garden Analytics (`Analytics.jsx`)**:
+   * **My Top Species by Location**: Groups plant species distribution per city.
+   * **My Room Streak Retention**: Calculates streak retention percentage and average streak days per room.
+   * **Regional Climate Guidance**: Transpiration guidance based on live regional weather.
+6. **Care History Timeline (`History.jsx`)**: Audit log for watering events, streak milestones, timeline notes, and AI diagnostic reports.
+7. **Profile & Security Settings (`Settings.jsx`)**: Multi-step 6-digit OTP verification for email changes, password updates, theme toggle, and multi-language engine (`i18n.js`).
 
-- **🤖 AI Plant Doctor & Leaf Diagnostic Scanner (Google Gemini 1.5 Flash Vision)**:
-  - Snap live camera photos or upload leaf files to instantly diagnose leaf diseases, pest infestations, root rot, or nutrient burn.
-  - Generates disease severity ratings (`Healthy`, `Mild Concern`, `Action Required`), confidence scores, and step-by-step organic treatment instructions.
-  - Automatically logs AI health audit results directly into the plant's Care History, Notes, and Backend Cloud Run database.
-
-- **📸 Live Hardware Camera Capture Modal (`CameraCaptureModal.jsx`)**:
-  - Embedded camera preview modal supporting device camera switching (front/back cameras).
-  - Snapshot capture button for instant photo uploads while filling plant forms or conducting AI vision scans.
-
-- **👁️ Full Review Modal & History Report Inspector (`AiDoctorReportModal.jsx`)**:
-  - Interactive report viewer for all historical AI Doctor scans across plant detail pages and global timeline history.
-  - Normalizes scan data (`extractAiReport`) to present complete visual symptoms, care parameters (Water mL, Sunlight, Soil pH, Temp), organic treatment steps, and token stats.
-
-- **⚡ Real-Time Gemini Token & Quota Meter**:
-  - Displays token count consumed for each vision scan and remaining daily quota limit (e.g. `1,485 / 1,500 scans remaining`).
-
-- **📸 Snap-to-Identify AI Plant Species Generator**:
-  - Automatically recognizes unknown plant species from images and pre-fills form fields (Common Name, Scientific Species, Category, Watering Frequency in days, and Water Volume in ml).
-
-- **🔔 Real-Time Notification Center & Schedule Sync**:
-  - Automated background scheduler checking daily care deadlines every morning.
-  - Interactive top navigation Notification Center with real-time badges, unread indicators, sound effects, and schedule sync.
-
-- **Interactive Dashboard**:
-  - Live summary metrics (Total Plants, Watered Today, Pending Reminders, Active Streak).
-  - Upcoming care timeline for the next 7 days.
-  - Live weather forecast card with real-time temperature, humidity, wind speed, and location auto-detection.
-  - Interactive quick-water buttons to record hydration events in one click.
-
-- **Plant Collection Management**:
-  - Create, view, update, and delete individual plant profiles.
-  - Custom fields: Name, Scientific Species, Category (Indoor, Outdoor, Succulent, Herb, Flowering, Fern, Fiddle Leaf, etc.), Watering Frequency (days), Water Volume (ml), Location, Sunlight Requirements, and Acquisition Date.
-  - Automatic upload to **Firebase Cloud Storage** buckets with fallback optimization.
-
-- **Smart Hydration & Streak Engine**:
-  - Timezone-aware date and streak calculations using `timezoneUtils.js` to evaluate plant local time across global cities (e.g., Coimbatore, London, NYC, Tokyo).
-  - Auto-calculates `nextWateringDate` based on `lastWateredDate` + `wateringFrequency`.
-  - Calculates care streaks (`currentStreak` and `longestStreak`) based on watering logs.
-  - Visual status badges: `Overdue` (red), `Due Today` (amber), `Healthy` (green).
-
-- **Care History & Logging**:
-  - Detailed historical timeline of every watering event, fertilization, pruning, and repotting.
-  - Dedicated `🧠 AI Doctor` filter tab and keyword search.
+### 🛡️ Administrative Supervisory Functionality (`AdminDashboard.jsx`)
+1. **User Account Administration**: Inspect registered user accounts, assigned roles (`USER`, `ADMIN`), and account statuses (`Active`, `Suspended`).
+2. **Account Status Control**: 1-click administrative toggle to suspend or activate accounts.
 
 ---
 
-### 🛡️ Administrative Supervisory Functionality
+## 🛠️ Technology Stack
 
-- **Executive Admin Dashboard & BigQuery Analytics**:
-  - Platform-wide statistics: Total Registered Users, Total Active Plants, Overall Platform Streak, System Health Indicators.
-  - Streaming pipeline into **Google Cloud BigQuery** for running SQL data warehouse analytics on platform overdue trends and species distributions.
-- **User Directory & Management**:
-  - View all user profiles, toggle user roles (`ROLE_USER` vs. `ROLE_ADMIN`), activate/deactivate user access, and inspect individual user plant collections.
-- **Global Plant Supervision**:
-  - View all plants registered across the platform with user ownership details.
-- **System Configuration & Custom Gemini API Key Management**:
-  - Admin settings for configuring custom Gemini Vision API keys, Secret Manager integration, and platform maintenance toggles.
-
----
-
-## 🏗️ System Architecture
-
-The project follows a decoupled **Client-Server Microservices Architecture** with cloud-native integrations on Google Cloud Platform and Firebase.
-
-```mermaid
-graph TB
-    subgraph Client ["Client Layer (Frontend SPA - React 18 + Vite)"]
-        A["React 18 SPA"] -->|HTTP / REST API| B["Google Cloud Run API Service"]
-        A -->|Direct SDK Auth & Storage| C["Firebase Auth & Cloud Storage"]
-        A -->|Camera API| CAM["CameraCaptureModal (WebRTC)"]
-        A -->|Modal Viewer| ADM["AiDoctorReportModal (Full Review)"]
-        A -->|PDF Generator| D["PDF Audit Report Engine"]
-    end
-
-    subgraph Backend ["Backend API & Microservices"]
-        B -->|JWT Verification| E["Spring Boot Core Microservice"]
-        E --> F["Auth & User Controllers"]
-        E --> G["Plant & History Controllers"]
-        E --> V1["Gemini Vision AI Service"]
-        E --> B1["BigQuery Analytics Controller"]
-        E --> S1["Secret Manager Config Controller"]
-      end
-
-    subgraph External ["External Cloud APIs"]
-        V1 -->|Multimodal Vision API| AI["Google Gemini 1.5 Flash Vision AI"]
-        C -->|Bucket Storage| FS["Firebase Cloud Storage Bucket"]
-        E -->|REST API| L["Trefle Botanical API"]
-        E -->|REST API| M["OpenWeatherMap / Open-Meteo"]
-    end
-
-    subgraph Storage ["Data Persistence & Analytics"]
-        E -->|Firestore SDK| Q[("Google Cloud Firestore NoSQL")]
-        B1 -->|Streaming SQL| BQ[("Google Cloud BigQuery Warehouse")]
-    end
-```
+| Layer | Technology | Description |
+| :--- | :--- | :--- |
+| **Frontend Framework** | **React 18.2** | Single-Page Application (SPA) architecture |
+| **Build Tool & Bundler** | **Vite 8.2** | Ultra-fast client compilation and code splitting |
+| **Styling** | **Vanilla CSS 3** | Tailored design tokens, glassmorphism, responsive grid |
+| **Data Visualization** | **Recharts 2.12** | Interactive bar, pie, and timeline charts |
+| **Icons & UI** | **Lucide React** | Modern SVG icon library |
+| **Backend Framework** | **Spring Boot 3.2.5** | Java 17 serverless microservice container |
+| **Security & Auth** | **Spring Security + JWT** | HS256 signed stateless JWT authentication |
+| **Database** | **Google Firestore** | Native NoSQL cloud document database |
+| **Data Warehouse** | **Google BigQuery** | Enterprise analytics data warehouse (`plant_analytics_db`) |
+| **BigQuery Sync** | **Firebase BigQuery Sync v2** | Event streaming extension from Firestore to BigQuery |
+| **AI Multimodal Vision** | **Vertex AI / Gemini** | Multimodal Vision API for leaf disease diagnosis |
+| **Secret Management** | **GCP Secret Manager** | Managed API key & credential vault |
+| **Object Storage** | **Google Cloud Storage (GCS)** | Plant photo bucket storage |
+| **Containerization** | **Docker & Cloud Build** | Multi-stage Docker image build pipeline |
+| **Container Registry** | **Google Artifact Registry** | Container image storage repository |
+| **Compute Hosting** | **Google Cloud Run** | Serverless microservice host in `asia-south1` |
+| **Frontend Hosting** | **Firebase Hosting** | Global Edge CDN static web app delivery |
 
 ---
 
-## 🔄 Process Flowcharts & Sequence Diagrams
+## 📡 REST API Endpoint Summary (20 Endpoints)
 
-### 1. User Authentication & Session Authorization Flow
-
-```mermaid
-flowchart TD
-    Start(["User Opens App"]) --> CheckToken{"JWT Token in LocalStorage?"}
-    
-    CheckToken -- "Yes" --> VerifyMe["GET /api/auth/me"]
-    VerifyMe --> MeResponse{"Valid Token?"}
-    MeResponse -- "Yes" --> LoadApp["Load User Dashboard & Sync State"]
-    MeResponse -- "No" --> ClearStorage["Clear Token & Local Storage"] --> RedirectAuth["Redirect to Sign-In Page"]
-    
-    CheckToken -- "No" --> RedirectAuth
-    
-    RedirectAuth --> FormChoice{"User Action"}
-    FormChoice -- "Sign Up" --> SubmitSignUp["Submit Sign-Up Form"]
-    SubmitSignUp --> POSTSignUp["POST /api/auth/signup"]
-    POSTSignUp --> CreateSuccess{"Success?"}
-    CreateSuccess -- "Yes" --> IssueToken["Receive JWT Token + User Object"] --> SaveSession["Save Token & Sync Firebase"] --> LoadApp
-    CreateSuccess -- "No" --> ShowAuthError["Display Error Message"]
-    
-    FormChoice -- "Sign In" --> SubmitSignIn["Submit Sign-In Form"]
-    SubmitSignIn --> POSTSignIn["POST /api/auth/signin"]
-    POSTSignIn --> SigninSuccess{"Success?"}
-    SigninSuccess -- "Yes" --> IssueToken
-    SigninSuccess -- "No" --> ShowAuthError
-```
+| Module | Method | Endpoint Path | Description | Access |
+| :--- | :---: | :--- | :--- | :---: |
+| **Auth** | `POST` | `/api/auth/signup` | Register new user account | Public |
+| **Auth** | `POST` | `/api/auth/signin` | Authenticate user & issue JWT | Public |
+| **Auth** | `POST` | `/api/auth/forgot-password` | Request password reset email | Public |
+| **Users** | `GET` | `/api/users` | Retrieve registered user profile(s) | JWT Required |
+| **Users** | `POST` | `/api/users/request-email-change` | Request OTP for email change | JWT Required |
+| **Users** | `POST` | `/api/users/verify-email-change` | Verify OTP code & update user email | JWT Required |
+| **Plants** | `GET` | `/api/plants` | Get all user garden plants | Public / JWT |
+| **Plants** | `POST` | `/api/plants` | Add new plant | JWT Required |
+| **Plants** | `GET` | `/api/plants/{id}` | Get plant details by ID | Public / JWT |
+| **Plants** | `PUT` | `/api/plants/{id}` | Update plant details | JWT Required |
+| **Plants** | `DELETE` | `/api/plants/{id}` | Remove plant from garden | JWT Required |
+| **Plants** | `POST` | `/api/plants/{id}/water` | Water plant & increment streak | JWT Required |
+| **History** | `GET` | `/api/history` | Get care history activity timeline | JWT Required |
+| **Analytics** | `GET` | `/api/analytics/bigquery-report` | Fetch BigQuery analytics report | Public |
+| **Analytics** | `POST` | `/api/analytics/bigquery-sync` | Trigger BigQuery stream sync event | Public |
+| **Weather** | `GET` | `/api/weather?location={city}` | Get live weather forecast | Public |
+| **Species** | `GET` | `/api/species/search?q={query}` | Search botanical database | Public |
+| **Secrets** | `GET` | `/api/secrets/status` | Check Secret Manager status | Public |
+| **Storage** | `POST` | `/api/storage/optimize-image` | Upload & optimize leaf photo | Public |
+| **Vertex AI** | `POST` | `/api/vertex-ai/diagnose-disease` | Run AI disease diagnosis | Public |
 
 ---
 
-### 2. Plant Registration & GCP Cloud Storage Image Upload Pipeline
-
-```mermaid
-flowchart TD
-    A(["User Clicks Add Plant"]) --> B["Open Plant Form Modal"]
-    B --> C["Fill Plant Details: Name, Species, Frequency, Location, Volume"]
-    C --> D{"Upload Plant Image?"}
-    
-    D -- "Yes" --> E["Select File from Device"]
-    E --> F["Submit Form as Multipart / FormData"]
-    F --> G["POST /api/plants (Multipart)"]
-    G --> H["Spring Boot Controller Intercepts Request"]
-    H --> I["CloudStorageService Uploads File to GCP Bucket"]
-    I --> J["GCP Storage Returns Public Blob URL"]
-    J --> K["Attach Image URL to Plant Model"]
-    
-    D -- "No" --> L["Submit Form as Application / JSON"]
-    L --> M["POST /api/plants (JSON)"]
-    M --> N["Assign Default Category Plant Icon"]
-    
-    K --> O["Compute Next Watering Date"]
-    N --> O
-    O --> P["FirestorePlantRepository Saves Document in 'plants' Collection"]
-    P --> Q["Create Initial 'Created' History Log in 'history' Collection"]
-    Q --> R["Return Saved Plant Entity 201 Created"]
-    R --> S["Update UI Roster & Trigger Success Toast"]
-```
-
----
-
-### 3. Automated Watering Schedule & Streak Calculation Engine
-
-```mermaid
-flowchart TD
-    A(["User Clicks Water Now Button"]) --> B["POST /api/plants/{id}/water"]
-    B --> C["Retrieve Plant Document from Firestore"]
-    C --> D["Record Current Timestamp & Today Date"]
-    
-    D --> E["Calculate Next Water Date: Current Date + Frequency Days"]
-    E --> F["Check Last Watered Date vs Previous Expected Date"]
-    
-    F --> StreakCheck{"Watered On Time or Within 1 Day Buffer?"}
-    StreakCheck -- "Yes" --> IncrementStreak["Current Streak = Current Streak + 1"]
-    StreakCheck -- "No" --> ResetStreak["Current Streak = 1"]
-    
-    IncrementStreak --> UpdateLongest{"Current Streak > Longest Streak?"}
-    UpdateLongest -- "Yes" --> SetNewLongest["Longest Streak = Current Streak"]
-    UpdateLongest -- "No" --> KeepLongest["Keep Longest Streak Unchanged"]
-    ResetStreak --> KeepLongest
-    
-    SetNewLongest --> SavePlant["Update Plant Entity in Firestore"]
-    KeepLongest --> SavePlant
-    
-    SavePlant --> CreateHistory["Add New Record to 'history' Collection: Action='Watered'"]
-    CreateHistory --> ReturnResponse["Return Updated Plant & History Array"]
-    ReturnResponse --> UpdateUI["Update Dashboard Metrics, Streaks & Timelines"]
-```
-
----
-
-### 4. Species Search & Botanical Metadata Aggregation (Trefle API)
-
-```mermaid
-flowchart TD
-    A(["User Types in Species Search Box"]) --> B{"Query Length >= 2 chars?"}
-    B -- "No" --> C["Wait for User Input"]
-    B -- "Yes" --> D["Debounce Input 300ms"]
-    D --> E["GET /api/species/search?q={query}"]
-    
-    E --> F{"Is TREFLE_API_TOKEN Configured?"}
-    F -- "Yes" --> G["Call Trefle External REST API: /api/v1/plants/search"]
-    G --> H{"Trefle HTTP 200 OK?"}
-    H -- "Yes" --> I["Map Botanical Payload: Common Name, Scientific Name, Family, Image"]
-    H -- "No" --> J["Fallback to Built-in Java Species Catalog"]
-    
-    F -- "No" --> J
-    J --> K["Filter Local Built-in Species List by Query String"]
-    
-    I --> L["Combine & Return Top Results to Frontend"]
-    K --> L
-    L --> M["Display Autocomplete Suggestions Dropdown"]
-    M --> N["User Selects Species -> Auto-fill Form Fields"]
-```
-
----
-
-### 5. Smart Weather-Adjusted Hydration Recommendation Engine
-
-```mermaid
-flowchart TD
-    A(["User Views Weather Card / Plant Recommendation"]) --> B{"Has User Lat/Lon Coordinates?"}
-    
-    B -- "Yes" --> C["Use Latitude & Longitude"]
-    B -- "No" --> D{"Is City Name Provided?"}
-    D -- "Yes" --> E["Geocode City to Lat/Lon via Open-Meteo / Nominatim"]
-    D -- "No" --> F["Default to Chennai / Auto IP Geolocation"]
-    
-    C --> G{"Is OPENWEATHER_API_KEY Configured?"}
-    E --> G
-    F --> G
-    
-    G -- "Yes" --> H["Query OpenWeatherMap API: Current & Forecast Weather"]
-    G -- "No" --> I["Query Open-Meteo Keyless API"]
-    
-    H --> J["Extract Temperature, Relative Humidity, Wind Speed, Weather Condition Code"]
-    I --> J
-    
-    J --> K["Calculate Weather Multiplier Index"]
-    K --> L{"Temp > 32°C OR Humidity < 30%?"}
-    L -- "Yes" --> M["Hot & Dry: Increase Water Volume by 20-30%, Shorten Interval by 1 Day"]
-    L -- "No" --> N{"Temp < 18°C OR Humidity > 80%?"}
-    N -- "Yes" --> O["Cool & Humid: Decrease Water Volume by 15-20%, Extend Interval by 1 Day"]
-    N -- "No" --> P["Optimal Environment: Standard Care Schedule"]
-    
-    M --> Q["Display Hydration Advice Badge on Weather Card"]
-    O --> Q
-    P --> Q
-```
-
----
-
-### 6. Administrative Role-Based Access Control (RBAC) Workflow
-
-```mermaid
-flowchart TD
-    A(["User Authenticates"]) --> B["Extract User Object & Role Field"]
-    B --> C{"Role Check"}
-    
-    C -- "ROLE_USER" --> D["Render User Layout & Sidebar Navigation"]
-    D --> E["Access User Pages: Dashboard, My Plants, Analytics, History, Reminders, Settings"]
-    D --> F["Restricted: Accessing /admin/* redirects to 403 Forbidden"]
-    
-    C -- "ROLE_ADMIN" --> G["Render Admin Dashboard Layout & Admin Sidebar"]
-    G --> H["Access Supervisory Pages: Admin Overview, User Directory, Global Plants, Admin Settings"]
-    H --> I["Execute Admin Actions: Toggle User Roles, Activate/Deactivate Accounts, Delete User Plants"]
-    
-    I --> J["PUT /api/users/{id}/role"]
-    I --> K["DELETE /api/plants/{id}"]
-    J --> L["Verify Admin Claims in Spring Security Context"]
-    K --> L
-    L --> M{"Authorized?"}
-    M -- "Yes" --> N["Commit Change to Firestore & Audit Log"]
-    M -- "No" --> O["Return 403 Access Denied"]
-```
-
----
-
-### 7. Care Audit Log & PDF Report Export Process
-
-```mermaid
-flowchart TD
-    A(["User Clicks 'Export Care Report PDF'"]) --> B["Gather Active User State & Selected Date Range"]
-    B --> C["Fetch User Profile, All User Plants, History Logs, and Notes"]
-    C --> D["Initialize Client-Side PDFKit Engine"]
-    
-    D --> E["Generate Document Metadata & Title Banner"]
-    E --> F["Render Executive Summary Box: Total Plants, Overdue Plants, Longest Streak"]
-    F --> G["Render Plant Inventory Table: Name, Species, Location, Frequency, Next Water Date"]
-    G --> H["Render Recent Watering & Care Activity Audit Log Table"]
-    H --> I["Render Plant Care Notes & Observations Section"]
-    I --> J["Apply Custom Page Numbering, Footers & Plant Care Branded Styling"]
-    
-    J --> K["Compile PDF Document to Binary Blob Buffer"]
-    K --> L["Trigger Browser Automatic File Download: PlantCare_Report_{Date}.pdf"]
-```
-
----
-
-## 💻 Technology Stack Breakdown
-
-| Layer | Technology | Version | Purpose |
-| :--- | :--- | :--- | :--- |
-| **Frontend Framework** | React.js | `18.3.x` | Reactive UI Component Framework |
-| **Build Tooling** | Vite | `5.x` | Lightning-fast HMR bundler & development server |
-| **Routing** | React Router DOM | `6.x` | Single Page Application (SPA) client-side routing |
-| **Icons & Design** | Lucide React | Latest | Modern SVG icon library |
-| **Data Visualization** | Recharts | Latest | Interactive charts & analytics rendering |
-| **PDF Generation** | PDFKit / Blob Engine | `0.20.x` | In-browser downloadable PDF report generation |
-| **Backend Framework** | Spring Boot | `3.x` | Java enterprise microservice framework |
-| **Security & Auth** | Spring Security + JWT | `3.x` | Stateless API authentication & RBAC authorization |
-| **Database** | Google Cloud Firestore | API v1 | NoSQL cloud document store for real-time data persistence |
-| **Media Storage** | Google Cloud Storage | API v2 | Cloud object storage bucket for plant photos |
-| **Identity Service** | Firebase Auth | `12.x` | User authentication console & user credential synchronization |
-| **Botanical API** | Trefle API | v1 | External REST service for species lookup & taxonomy |
-| **Weather API** | OpenWeatherMap / Open-Meteo | v2.5 / v1 | Real-time weather forecasting & hydration adjustment |
-| **Reverse Geocoding** | Nominatim (OpenStreetMap) | v2 | City resolution from GPS latitude and longitude |
-
----
-
-## 📂 Comprehensive Project Directory Structure
-
-```directory
-plant_watering/
-├── .firebase/                        # Firebase CLI deployment cache
-├── .firebaserc                       # Firebase project target aliases
-├── .gitignore                        # Git file exclusion rules
-├── firebase.json                     # Firebase Hosting & rewrite configurations
-├── index.html                        # Application main HTML entry point
-├── package.json                      # Node.js project manifest & script declarations
-├── pnpm-lock.yaml                    # PNPM deterministic dependency lockfile
-├── vite.config.js                    # Vite bundler configuration & proxy setups
-├── README.md                         # Comprehensive documentation repository
-│
-├── backend/                          # Backend Spring Boot Microservices
-│   ├── api-gateway/                  # Spring Cloud API Gateway Service
-│   │   ├── pom.xml                   # Maven dependencies for API Gateway
-│   │   └── src/                      # Gateway routes and filtering logic
-│   └── plant-care-service/           # Primary Core Business Logic Microservice
-│       ├── Dockerfile                # Containerization setup for Cloud Run
-│       ├── pom.xml                   # Maven dependencies (Spring Boot, GCP, Firebase)
-│       ├── application.yml           # Application configuration & GCP profiles
-│       └── src/main/java/com/plantcare/service/
-│           ├── PlantCareServiceApplication.java   # Spring Boot Main Entry Class
-│           ├── config/               # Security, Firebase & Firestore Configuration
-│           │   ├── FirebaseConfig.java            # Firebase Admin SDK Initialization
-│           │   ├── FirestoreConfig.java           # GCP Firestore Client Configuration
-│           │   └── SecurityConfig.java            # Spring Security JWT & CORS setup
-│           ├── controller/           # REST API Web Controllers
-│           │   ├── AnalyticsController.java       # User & Admin analytics endpoints
-│           │   ├── AuthController.java            # Auth, Login, Sign Up, JWT refresh
-│           │   ├── HistoryController.java          # Care history & audit logs
-│           │   ├── PlantController.java            # CRUD operations for Plants & Image Upload
-│           │   ├── SpeciesController.java          # Trefle API integration & fallbacks
-│           │   ├── UserController.java             # User management & profile endpoints
-│           │   └── WeatherController.java          # OpenWeather & Open-Meteo weather intelligence
-│           ├── dto/                  # Data Transfer Objects
-│           │   ├── ForgotPasswordRequest.java     # Forgot password request payload
-│           │   ├── PlantRequest.java              # Plant creation/update payload
-│           │   └── ResetPasswordRequest.java      # Password reset payload
-│           ├── firestore/            # Firestore Repository Layer
-│           │   ├── FirestoreHistoryRepository.java # History Collection DAO
-│           │   ├── FirestoreNoteRepository.java    # Notes Collection DAO
-│           │   ├── FirestorePlantRepository.java   # Plants Collection DAO
-│           │   └── FirestoreUserRepository.java    # Users Collection DAO
-│           ├── model/                # Core Domain Entity Models
-│           │   ├── History.java                   # History audit log model
-│           │   ├── Note.java                      # Note observation model
-│           │   ├── Plant.java                     # Plant core entity model
-│           │   └── User.java                      # User entity & role authorization model
-│           └── service/              # Utility & Integration Services
-│               ├── CloudStorageService.java        # GCP Cloud Storage Bucket Handler
-│               └── EmailService.java               # SMTP Email notification service
-│
-├── server/                           # Node.js Express Proxy & Mock Server
-│   ├── index.js                      # Express server entry point
-│   └── package.json                  # Express dependencies
-│
-├── public/                           # Static Public Assets & Graphics
-│   ├── favicon.ico                   # Web Application Favicon
-│   ├── app_logo.png                  # Application Primary Logo
-│   ├── PlantCare_Project_Report.pdf  # Sample generated PDF report asset
-│   └── plant_icons/                  # Default category plant avatars
-│
-└── src/                             # React 18 Frontend Application
-    ├── App.jsx                       # Main App Component with Client Routing
-    ├── main.jsx                      # React DOM Entry Point & Context Providers
-    ├── index.css                     # Custom Design System, Glassmorphism & Animations
-    ├── firebase.js                   # Client Firebase Authentication SDK config
-    ├── components/                   # Reusable UI Components
-    │   ├── AdminSidebar.jsx          # Admin Portal Navigation Drawer
-    │   ├── AiDoctorReportModal.jsx   # Universal AI Doctor diagnosis report modal dialog
-    │   ├── CameraCaptureModal.jsx    # Hardware camera preview & live snapshot capture modal
-    │   ├── Navbar.jsx                # Top Header Navigation Bar
-    │   ├── PlantCard.jsx             # Individual Plant Profile Card with Water Button
-    │   ├── PlantForm.jsx             # Add/Edit Plant Modal Dialog
-    │   ├── PlantSearch.jsx           # Trefle Autocomplete Search Component
-    │   ├── PlantStatusBadge.jsx      # Overdue / Due Today / Healthy Badge
-    │   ├── StreakBadge.jsx           # Gamified Streak Counter Badge
-    │   ├── WeatherCard.jsx           # Live Weather & Hydration Advisory Card
-    │   └── PasswordStrength.jsx      # Password complexity meter
-    ├── context/                      # React Context Stores
-    ├── data/                         # Static Catalog Datasets
-    │   ├── mockPlants.js             # Initial fallback plant suggestions
-    │   └── tnDistricts.js            # Regional locations & district mappings
-    ├── pages/                        # View Pages & Route Destinations
-    │   ├── AddPlant.jsx              # Standalone Add Plant Page
-    │   ├── AdminDashboard.jsx        # Admin System Metrics & Overview
-    │   ├── AdminPlants.jsx           # Admin Global Plant Supervision
-    │   ├── AdminSettings.jsx         # Admin System Configurations
-    │   ├── AdminUsers.jsx            # Admin User Directory & Role Management
-    │   ├── Analytics.jsx             # Analytics Charts & Consistency Visuals
-    │   ├── AuthLoadingScreen.jsx     # Auth state synchronization splash
-    │   ├── ChangePassword.jsx        # Password Change Settings View
-    │   ├── Dashboard.jsx             # User Primary Dashboard & Timeline
-    │   ├── ForgotPassword.jsx        # Password Reset Link Request View
-    │   ├── History.jsx               # Care Audit Logs & History Timeline
-    │   ├── MyPlants.jsx              # Personal Plant Collection Roster
-    │   ├── PlantDetails.jsx          # Detailed Single Plant View & Care Log
-    │   ├── Reminders.jsx             # Care Schedule & Upcoming Reminders
-    │   ├── Settings.jsx              # User Account Preferences & Export PDF
-    │   ├── SignIn.jsx                # User Authentication Login Page
-    │   └── SignUp.jsx                # User Registration Page
-    ├── services/                     # API Communication Layer
-    │   └── api.js                    # Fetch Wrapper with JWT interceptors & retries
-    └── utils/                        # Utility & Helper Functions
-        ├── plantIconUtils.js         # Category icon resolver
-        ├── storageUtils.js           # LocalStorage wrapper
-        ├── themeUtils.js             # Dark/Light theme switcher
-        ├── timezoneUtils.js          # Timezone resolution & local plant clock calculations
-        └── wateringUtils.js          # Next water calculation, base volume & streak logic
-```
-
----
-
-## 🗄️ Database Schemas & Firestore Document Models
-
-### `users` Collection
-
-```json
-{
-  "id": "usr_982347912",
-  "name": "Jane Doe",
-  "email": "jane.doe@example.com",
-  "password": "$2a$10$e8Z... (BCrypt Hashed)",
-  "role": "user",
-  "location": "Chennai, Tamil Nadu",
-  "createdAt": "2026-01-15T08:30:00Z",
-  "updatedAt": "2026-08-30T12:00:00Z"
-}
-```
-
-### `plants` Collection
-
-```json
-{
-  "id": "plnt_550e8400",
-  "userId": "usr_982347912",
-  "name": "Monstera Deliciosa",
-  "species": "Monstera deliciosa",
-  "category": "Indoor",
-  "wateringFrequency": 7,
-  "lastWateredDate": "2026-08-25",
-  "nextWateringDate": "2026-09-01",
-  "waterVolumeMl": 500,
-  "recommendedWaterMl": 650,
-  "location": "Living Room Window",
-  "locationCity": "Coimbatore",
-  "sunlight": "Indirect Sunlight",
-  "imageUrl": "https://storage.googleapis.com/plant-care-bucket/monstera.jpg",
-  "notes": "Loves daily misting",
-  "currentStreak": 5,
-  "longestStreak": 12,
-  "createdAt": "2026-02-01T10:00:00Z"
-}
-```
-
-### `history` Collection
-
-```json
-{
-  "id": "hist_1029384",
-  "userId": "usr_982347912",
-  "plantId": "plnt_550e8400",
-  "plantName": "Monstera Deliciosa",
-  "action": "Watered",
-  "date": "2026-08-25",
-  "time": "09:15 AM",
-  "notes": "Added liquid fertilizer"
-}
-```
-
-### `notes` Collection
-
-```json
-{
-  "id": "note_8839201",
-  "userId": "usr_982347912",
-  "plantId": "plnt_550e8400",
-  "title": "New Leaf Emergence",
-  "content": "A beautiful new fenestrated leaf started unfurling today!",
-  "date": "2026-08-28"
-}
-```
-
----
-
-## 📡 REST API Endpoints Specification
-
-| Method | Endpoint | Auth | Role | Description |
-| :--- | :--- | :---: | :---: | :--- |
-| `POST` | `/api/auth/signup` | ❌ | All | Register new user account |
-| `POST` | `/api/auth/signin` | ❌ | All | Authenticate user & return JWT Token |
-| `GET` | `/api/auth/me` | ✅ | User/Admin | Retrieve current authenticated user profile |
-| `POST` | `/api/auth/forgot-password` | ❌ | All | Request password reset link |
-| `POST` | `/api/auth/reset-password` | ❌ | All | Reset password with token |
-| `GET` | `/api/plants` | ✅ | User/Admin | Get all plants for current user (or all plants if Admin) |
-| `GET` | `/api/plants/{id}` | ✅ | User/Admin | Get plant details by ID |
-| `POST` | `/api/plants` | ✅ | User/Admin | Create plant (JSON or Multipart with image file) |
-| `PUT` | `/api/plants/{id}` | ✅ | User/Admin | Update existing plant details |
-| `DELETE`| `/api/plants/{id}` | ✅ | User/Admin | Delete plant entity and associated logs |
-| `POST` | `/api/plants/{id}/water` | ✅ | User/Admin | Quick-water plant & calculate streak |
-| `POST` | `/api/vertex-ai/diagnose-health` | ✅ | User/Admin | Analyze leaf photo with Google Gemini Vision AI to diagnose plant disease |
-| `POST` | `/api/vertex-ai/identify-species` | ✅ | User/Admin | AI photo recognition to identify species and auto-fill care parameters |
-| `GET` | `/api/notifications` | ✅ | User/Admin | Fetch in-app notifications and scheduled care reminders |
-| `POST` | `/api/notifications/trigger-daily-check` | ✅ | Admin | Trigger GCP Cloud Scheduler daily watering check cron job |
-| `POST` | `/api/image-optimizer/compress` | ✅ | User/Admin | Compress and convert uploaded plant image to lightweight WebP format |
-| `GET` | `/api/history` | ✅ | User/Admin | Retrieve care history logs |
-| `GET` | `/api/species/search` | ✅ | User/Admin | Search botanical species via Trefle API |
-| `GET` | `/api/weather` | ✅ | User/Admin | Fetch real-time weather & hydration advisory |
-| `GET` | `/api/analytics/dashboard` | ✅ | User/Admin | Retrieve dashboard analytics metrics |
-| `GET` | `/api/analytics/bigquery` | ✅ | Admin | Stream & fetch Google Cloud BigQuery SQL data warehouse analytics |
-| `GET` | `/api/secrets/status` | ✅ | Admin | Check Google Cloud Secret Manager key status |
-| `GET` | `/api/users` | ✅ | Admin | List all registered platform users |
-| `GET` | `/api/users/{id}` | ✅ | Admin | Fetch user profile & plant details by User ID |
-| `PUT` | `/api/users/{id}/role` | ✅ | Admin | Change user role (`user` vs `admin`) |
-
----
-
-## ⚙️ Local Setup & Installation Guide
+## ⚙️ Local Setup & Development Guide
 
 ### Prerequisites
+* **Node.js**: `v18.x` or higher
+* **Java Development Kit (JDK)**: `OpenJDK 17` or Temurin 17
+* **Apache Maven**: `v3.9.x`
 
-Ensure you have the following installed on your developer workstation:
-- **Node.js**: `v18.0.0` or higher
-- **PNPM** or **NPM**: `v9.0.0+` / `v10.0.0+`
-- **Java Development Kit (JDK)**: `JDK 17` or `JDK 21`
-- **Apache Maven**: `v3.8+`
-- **Git**: `v2.x+`
-- **Google Cloud GCP Service Account**: Key file with Firestore & Storage admin privileges.
-
----
-
-### 1. Clone Repository
-
+### 1. Clone Repository & Install Dependencies
 ```bash
 git clone https://github.com/Pranesh003/plant-water-tracker.git
 cd plant-water-tracker
+npm install
 ```
 
----
-
-### 2. Configure Environment Variables
-
-Create `.env` file in root directory:
-
-```env
-VITE_API_URL=http://localhost:8080
-VITE_FIREBASE_API_KEY=your_firebase_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
+### 2. Run Local Frontend Development Server
+```bash
+npm run dev
+# App will start locally at http://localhost:5173
 ```
 
-Configure Environment Variables for Spring Boot (`backend/plant-care-service`):
-
-```powershell
-$env:TREFLE_API_TOKEN="your_trefle_api_token"
-$env:OPENWEATHER_API_KEY="your_openweather_api_key"
-$env:GOOGLE_APPLICATION_CREDENTIALS="C:\path\to\gcp-service-account.json"
-```
-
----
-
-### 3. Backend Spring Boot Setup & Execution
-
+### 3. Run Backend Java Microservice Locally
 ```bash
 cd backend/plant-care-service
-mvn clean install
-mvn spring-boot:run
+mvn clean spring-boot:run
+# Microservice will start at http://localhost:8080
 ```
-
-The Spring Boot application will launch on **`http://localhost:8080`**.
 
 ---
 
-### 4. Frontend Vite/React Setup & Execution
+## 🚀 Cloud Deployment Commands
 
-Open a new terminal session in the project root:
-
+### Build & Deploy Web Frontend to Firebase Edge CDN
 ```bash
-pnpm install
-pnpm dev
+npm run build
+npx firebase-tools deploy --only hosting
 ```
 
-The Vite development server will launch on **`http://localhost:5173`** (or `http://127.0.0.1:5173`).
-
----
-
-### 5. Express Proxy/Mock Server (Optional)
-
-If developing without the Spring Boot backend:
-
+### Run Full System Automated Health Audit
 ```bash
-cd server
-npm install
-npm start
+# Run 19-Endpoint Backend REST Audit
+node scratch/test_full_backend_audit.js
+
+# Run 7-Service GCP Infrastructure Health Audit
+node scratch/test_gcp_services_health.js
 ```
-
----
-
-## ☁️ Cloud Deployment Guide
-
-### Backend (Google Cloud Run)
-
-1. Build container image using Docker:
-   ```bash
-   cd backend/plant-care-service
-   gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/plant-care-service
-   ```
-2. Deploy image to Cloud Run:
-   ```bash
-   gcloud run deploy plant-care-service \
-     --image gcr.io/YOUR_PROJECT_ID/plant-care-service \
-     --platform managed \
-     --region asia-south1 \
-     --allow-unauthenticated \
-     --set-env-vars TREFLE_API_TOKEN=your_token,OPENWEATHER_API_KEY=your_key
-   ```
-
-### Frontend (Firebase Hosting)
-
-1. Build production static bundle:
-   ```bash
-   pnpm build
-   ```
-2. Deploy to Firebase:
-   ```bash
-   firebase deploy --only hosting
-   ```
-
----
-
-## 🛡️ Security, Authentication & Access Control
-
-- **Stateless JWT Tokens**: Upon successful sign-in, Spring Security issues an HTTP Bearer JWT token stored securely in `localStorage`.
-- **Firebase Authentication Sync**: User creation automatically synchronizes with Firebase Authentication Console to provide seamless OAuth and identity persistence.
-- **Role-Based Guards**: Protected endpoints and UI components check for `ROLE_ADMIN` permissions before granting access to sensitive administrative actions.
-- **CORS Protection**: Spring Security config specifies exact allowed origins to prevent unauthorized cross-domain request exploitation.
-
----
-
-## 🔧 Troubleshooting & Frequently Asked Questions
-
-**Q1: The application fails to connect to Firestore on local start.**
-* **Solution**: Ensure `$env:GOOGLE_APPLICATION_CREDENTIALS` points to a valid GCP Service Account JSON key with `Cloud Datastore User` or `Owner` permissions.
-
-**Q2: Weather forecast displays fallback data instead of local city weather.**
-* **Solution**: Verify that `OPENWEATHER_API_KEY` is set in the terminal before running Spring Boot. If unset, the service automatically uses keyless Open-Meteo fallback.
-
-**Q3: Plant species search returns built-in fallback results.**
-* **Solution**: Provide a valid `TREFLE_API_TOKEN` environment variable to enable live searching of external Trefle botanical databases.
 
 ---
 
 ## 📄 License & Author
 
-Distributed under the **MIT License**. See `LICENSE` for more information.
-
-Developed with ❤️ by **MY TEAM**.
+Developed by **Pranesh** — Built on Google Cloud Platform & Firebase Infrastructure.  
+Licensed under the **MIT License**.
