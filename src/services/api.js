@@ -3,6 +3,7 @@ import { readStorage, writeStorage } from "../utils/storageUtils";
 import { syncFirebaseUser, uploadLeafImageToFirebase } from "../firebase.js";
 import { analyzePlantWithAiVision } from "./aiVisionService.js";
 import { dispatchEmailChangeNotifications } from "./emailDispatcher.js";
+import { todayISO } from "../utils/wateringUtils.js";
 
 const KEYS = {
   user: "plantCareUser",
