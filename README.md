@@ -21,14 +21,15 @@ For complete technical specifications, architectural diagrams, API schemas, and 
 
 | Specification Module | Description & Link |
 | :--- | :--- |
-| **☁️ GCP Cloud Architecture** | **[`GCP_ARCHITECTURE.md`](./GCP_ARCHITECTURE.md)** — Multi-tier architecture detailing all 14 GCP Cloud Services (Cloud Run, BigQuery, Vertex AI, Secret Manager, Cloud Storage, Cloud Build, Artifact Registry, Cloud Scheduler, Cloud Logging, Cloud Monitoring, Cloud IAM, Firebase CDN). |
-| **☕ Backend Microservices** | **[`BACKEND_SERVICES.md`](./BACKEND_SERVICES.md)** — Java 17 / Spring Boot 3 architecture covering 11 REST Controllers, 6 Core Services, 4 Repositories, DTOs, and JWT security filters. |
-| **🗄️ Database & BigQuery Schemas** | **[`DATABASE_SCHEMA.md`](./DATABASE_SCHEMA.md)** — Field-by-field document schemas for Firestore collections (`users`, `plants`, `history`, `notes`), BigQuery table specs (`plant_care_logs_sync`), and ER Diagrams. |
-| **📡 REST API Specification** | **[`API_DOCUMENTATION.md`](./API_DOCUMENTATION.md)** — Complete OpenAPI 3.0 reference, request/response JSON payloads, status codes, and cURL commands for all 20 API endpoints. |
-| **🎨 Frontend Architecture** | **[`FRONTEND_ARCHITECTURE.md`](./FRONTEND_ARCHITECTURE.md)** — React 18 SPA architecture, component routing, React Context API (`AppProvider`), LocalStorage caching, and Vanilla CSS design tokens. |
-| **🧠 AI Multimodal Vision** | **[`AI_VISION_ARCHITECTURE.md`](./AI_VISION_ARCHITECTURE.md)** — Vertex AI / Gemini 1.5 Flash vision diagnostic engine, HTML5 canvas image optimization, and fallback heuristic rules. |
-| **🔒 Security & Compliance** | **[`SECURITY_AND_COMPLIANCE.md`](./SECURITY_AND_COMPLIANCE.md)** — OAuth 2.0 / JWT HS256 stateless tokens, Role-Based Access Control (`USER` vs `ADMIN`), multi-step email OTP verification, Secret Manager isolation, and TLS 1.3 / AES-256 encryption. |
-| **🚀 DevOps & Operations** | **[`DEVOPS_AND_DEPLOYMENT.md`](./DEVOPS_AND_DEPLOYMENT.md)** — Cloud Build CI/CD pipeline, Artifact Registry image repository commands, Firebase CDN deployment scripts, Cloud Logging, and automated health check commands. |
+| **☁️ GCP Cloud Architecture** | **[`GCP_ARCHITECTURE.md`](./docs/GCP_ARCHITECTURE.md)** — Multi-tier architecture detailing all 14 GCP Cloud Services (Cloud Run, BigQuery, Vertex AI, Secret Manager, Cloud Storage, Cloud Build, Artifact Registry, Cloud Scheduler, Cloud Logging, Cloud Monitoring, Cloud IAM, Firebase CDN). |
+| **☕ Backend Microservices** | **[`BACKEND_SERVICES.md`](./docs/BACKEND_SERVICES.md)** — Java 17 / Spring Boot 3 architecture covering 11 REST Controllers, 6 Core Services, 4 Repositories, DTOs, and JWT security filters. |
+| **🗄️ Database & BigQuery Schemas** | **[`DATABASE_SCHEMA.md`](./docs/DATABASE_SCHEMA.md)** — Field-by-field document schemas for Firestore collections (`users`, `plants`, `history`, `notes`), BigQuery table specs (`plant_care_logs_sync`), and ER Diagrams. |
+| **📡 REST API Specification** | **[`API_DOCUMENTATION.md`](./docs/API_DOCUMENTATION.md)** — Complete OpenAPI 3.0 reference, request/response JSON payloads, status codes, and cURL commands for all 20 API endpoints. |
+| **🎨 Frontend Architecture** | **[`FRONTEND_ARCHITECTURE.md`](./docs/FRONTEND_ARCHITECTURE.md)** — React 18 SPA architecture, component routing, React Context API (`AppProvider`), LocalStorage caching, and Vanilla CSS design tokens. |
+| **🧠 AI Multimodal Vision** | **[`AI_VISION_ARCHITECTURE.md`](./docs/AI_VISION_ARCHITECTURE.md)** — Vertex AI / Gemini 1.5 Flash vision diagnostic engine, HTML5 canvas image optimization, and fallback heuristic rules. |
+| **🔒 Security & Compliance** | **[`SECURITY_AND_COMPLIANCE.md`](./docs/SECURITY_AND_COMPLIANCE.md)** — OAuth 2.0 / JWT HS256 stateless tokens, Role-Based Access Control (`USER` vs `ADMIN`), multi-step email OTP verification, Secret Manager isolation, and TLS 1.3 / AES-256 encryption. |
+| **🚀 DevOps & Operations** | **[`DEVOPS_AND_DEPLOYMENT.md`](./docs/DEVOPS_AND_DEPLOYMENT.md)** — Cloud Build CI/CD pipeline, Artifact Registry image repository commands, Firebase CDN deployment scripts, Cloud Logging, and automated health check commands. |
+| **📜 Release Changelog** | **[`CHANGELOG.md`](./docs/CHANGELOG.md)** — Release notes and updates log for v3.0.0. |
 
 ---
 
