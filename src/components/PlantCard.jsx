@@ -89,10 +89,14 @@ export default function PlantCard({ plant, preview = false, onDelete, weather })
   const [watered, setWatered] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
   const targetCity = plant.locationCity || plant.location;
-  const status = calculateWateringStatus(plant.lastWatered, plant.frequency, targetCity);
   const hasWateringHistory = history.some((item) => item.plantId === plant.id && item.type === "watering");
   const wateredToday = history.some((item) => item.plantId === plant.id && item.type === "watering" && item.date === todayISO());
-  const nextWateringDate = calculateNextWateringDate(plant.lastWatered, plant.frequency);
+  const effectiveLastWatered = (watered || wateredToday || isWateredToday(plant.lastWatered, targetCity))
+    ? todayISO()
+    : plant.lastWatered;
+
+  const status = calculateWateringStatus(effectiveLastWatered, plant.frequency, targetCity);
+  const nextWateringDate = calculateNextWateringDate(effectiveLastWatered, plant.frequency);
   const plantImage = plant.photoUrl || "";
   const hasPlantImage = plantImage && !imageFailed;
   const recommendedWater = plant.recommendedWaterMl ? `${plant.recommendedWaterMl} mL` : `Every ${plant.frequency || 7} days`;
@@ -119,7 +123,7 @@ export default function PlantCard({ plant, preview = false, onDelete, weather })
     setFlipped((current) => !current);
   };
 
-  const isWaterable = isPlantWaterable(plant.lastWatered, plant.frequency);
+  const isWaterable = isPlantWaterable(effectiveLastWatered, plant.frequency, targetCity);
   const isButtonDisabled = isWatering || watered || wateredToday || !isWaterable;
 
   const handleWaterPlant = async (event) => {
@@ -237,7 +241,7 @@ export default function PlantCard({ plant, preview = false, onDelete, weather })
                 <Flame size={14} color="#ea580c" /> {streak} {t("unit_days")}
               </span>
               <span>
-                Last: <strong>{hasWateringHistory ? formatDate(plant.lastWatered) : "Not yet"}</strong>
+                Last: <strong>{(hasWateringHistory || wateredToday || watered) ? formatDate(effectiveLastWatered) : "Not yet"}</strong>
               </span>
             </div>
 

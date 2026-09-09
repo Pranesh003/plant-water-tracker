@@ -81,8 +81,18 @@ export default function App() {
         api.getHistory().catch(() => readStorage(api.keys.history, [])),
         api.getUser().catch(() => readStorage(api.keys.user, null))
       ]);
-      setPlants(plantData || []);
-      setHistory(historyData || []);
+      const validHistory = historyData || [];
+      const todayStr = todayISO();
+      const syncedPlants = (plantData || []).map((p) => {
+        const wateredTodayInHistory = validHistory.some((item) => item.plantId === p.id && item.type === "watering" && item.date === todayStr);
+        if (wateredTodayInHistory) {
+          return { ...p, lastWatered: todayStr };
+        }
+        return p;
+      });
+      setPlants(syncedPlants);
+      setHistory(validHistory);
+      writeStorage(api.keys.plants, syncedPlants);
       if (userData) {
         const cleanEmail = userData.email ? userData.email.toLowerCase() : "";
         const isKnownAdmin = cleanEmail === "admin@plantdoc.com" || cleanEmail === "admin@plants.local";
