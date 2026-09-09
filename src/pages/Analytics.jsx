@@ -46,24 +46,21 @@ export default function Analytics() {
   const paginatedLeaderboard = useMemo(() => leaderboard.slice((leaderboardPage - 1) * PAGE_SIZE, leaderboardPage * PAGE_SIZE), [leaderboard, leaderboardPage]);
 
   const realTimeTopSpecies = useMemo(() => {
-    if (personalReport?.mostPopularSpeciesByCity?.length) {
-      return personalReport.mostPopularSpeciesByCity;
-    }
-    return computeSpeciesByLocation(plants);
+    const live = computeSpeciesByLocation(plants);
+    if (live.length) return live;
+    return personalReport?.mostPopularSpeciesByCity || [];
   }, [plants, personalReport]);
 
   const realTimeRoomRetention = useMemo(() => {
-    if (personalReport?.averageStreakRetentionByLocation?.length) {
-      return personalReport.averageStreakRetentionByLocation;
-    }
-    return computeRoomStreakRetention(plants);
+    const live = computeRoomStreakRetention(plants);
+    if (live.length) return live;
+    return personalReport?.averageStreakRetentionByLocation || [];
   }, [plants, personalReport]);
 
   const realTimeClimateGuidance = useMemo(() => {
-    if (personalReport?.overdueHeatwaveTrends?.length) {
-      return personalReport.overdueHeatwaveTrends;
-    }
-    return computeRegionalClimateGuidance(plants);
+    const live = computeRegionalClimateGuidance(plants);
+    if (live.length) return live;
+    return personalReport?.overdueHeatwaveTrends || [];
   }, [plants, personalReport]);
 
   useEffect(() => {

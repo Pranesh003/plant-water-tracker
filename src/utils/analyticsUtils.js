@@ -69,22 +69,24 @@ export const computeSpeciesByLocation = (plants = []) => {
 };
 
 export const computeRoomStreakRetention = (plants = []) => {
-  if (!plants.length) return [];
+  if (!plants || !plants.length) return [];
   const map = new Map();
   plants.forEach((plant) => {
     const room = plant.location || plant.room || "Living Room";
     if (!map.has(room)) {
-      map.set(room, { roomLocation: room, total: 0, safeCount: 0, streakSum: 0 });
+      map.set(room, { roomLocation: room, total: 0, retainedCount: 0, streakSum: 0 });
     }
     const entry = map.get(room);
     entry.total += 1;
     const status = calculateWateringStatus(plant.lastWatered, plant.frequency);
-    if (status === "Safe") entry.safeCount += 1;
+    if (status !== "Overdue") {
+      entry.retainedCount += 1;
+    }
     entry.streakSum += Number(plant.currentStreak || 0);
   });
 
   return Array.from(map.values()).map((entry) => {
-    const retention = entry.total ? Math.round((entry.safeCount / entry.total) * 100) : 0;
+    const retention = entry.total ? Math.round((entry.retainedCount / entry.total) * 100) : 0;
     const avgStreak = entry.total ? (entry.streakSum / entry.total).toFixed(1) : "0.0";
     return {
       roomLocation: entry.roomLocation,
