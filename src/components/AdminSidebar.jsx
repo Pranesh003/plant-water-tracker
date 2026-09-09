@@ -94,15 +94,15 @@ export default function AdminSidebar() {
 
       {/* Fixed Bottom Navigation Bar (< 768px) */}
       <nav className="mobile-bottom-nav" aria-label="Admin Mobile Quick Nav">
-        {adminNavItems.map(({ to, label, icon: Icon }) => (
+        {adminNavItemsConfig.map(({ to, key, defaultLabel, icon: Icon }) => (
           <NavLink
-            key={label}
+            key={key}
             to={to}
             end={to === "/admin"}
             className={({ isActive }) => (isActive ? "bottom-nav-item active" : "bottom-nav-item")}
           >
             <Icon size={20} />
-            <span>{label}</span>
+            <span>{t(key) || defaultLabel}</span>
           </NavLink>
         ))}
       </nav>
