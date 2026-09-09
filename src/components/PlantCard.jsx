@@ -6,7 +6,7 @@ import { findPlantMatch } from "../data/plantDatabase.js";
 import { getPlantIconUrl } from "../utils/plantIconUtils.js";
 import { readStorage } from "../utils/storageUtils.js";
 import { useTranslation } from "../utils/i18n.js";
-import { calculateNextWateringDate, calculateWateringStatus, daysBetween, formatDate, isPlantWaterable, todayISO } from "../utils/wateringUtils.js";
+import { calculateNextWateringDate, calculateWateringStatus, daysBetween, formatDate, isPlantWaterable, isWateredToday, todayISO } from "../utils/wateringUtils.js";
 import PlantStatusBadge from "./PlantStatusBadge.jsx";
 import StreakBadge from "./StreakBadge.jsx";
 
