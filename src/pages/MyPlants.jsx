@@ -34,9 +34,12 @@ export default function MyPlants() {
   const bestStreak = useMemo(() => Math.max(0, ...plants.map((plant) => Number(plant.bestStreak || 0))), [plants]);
 
   useEffect(() => {
-    setStatus(quickFilters.find((filter) => filter.key === activeFilter)?.status || "All");
+    const matched = quickFilters.find((filter) => filter.key === activeFilter);
+    if (matched) {
+      setStatus(matched.status);
+    }
     setPage(1);
-  }, [activeFilter, quickFilters]);
+  }, [activeFilter]);
 
   const filtered = useMemo(() => {
     const quickFiltered = activeFilter === "best-streak"
@@ -44,11 +47,12 @@ export default function MyPlants() {
       : plants;
     return filterPlants(quickFiltered, { query, status, location });
   }, [plants, query, status, location, activeFilter, bestStreak]);
+
   const paginated = useMemo(() => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [filtered, page]);
 
   useEffect(() => {
     setPage(1);
-  }, [query, status, location]);
+  }, [query, location]);
 
   const applyQuickFilter = (filter) => {
     setSearchParams({ filter });
@@ -115,7 +119,15 @@ export default function MyPlants() {
           <section className="my-plants-grid">
             {paginated.map((plant) => <PlantCard key={plant.id} plant={plant} onDelete={setPendingDelete} />)}
           </section>
-          <Pagination page={page} totalItems={filtered.length} pageSize={PAGE_SIZE} onPageChange={setPage} />
+          <Pagination
+            page={page}
+            totalItems={filtered.length}
+            pageSize={PAGE_SIZE}
+            onPageChange={(nextPage) => {
+              setPage(nextPage);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
         </>
       ) : (
         <div className="my-plants-empty-card">

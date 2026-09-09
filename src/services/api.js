@@ -356,7 +356,7 @@ export const api = {
   getPlants: async () => {
     try {
       const plants = await fetchApi('/api/plants');
-      const cached = readStorage(KEYS.plants, []);
+      const cached = readStorage(KEYS.plants, mockPlants);
       const cachedMap = new Map((cached || []).map((p) => [p.id, p]));
 
       const merged = (plants || []).map((plant) => {
@@ -367,12 +367,14 @@ export const api = {
         };
       });
 
-      writeStorage(KEYS.plants, merged);
-      return merged;
+      const finalPlants = merged.length > 0 ? merged : (cached.length > 0 ? cached : mockPlants);
+      writeStorage(KEYS.plants, finalPlants);
+      return finalPlants;
     } catch (err) {
-      const cached = readStorage(KEYS.plants, []);
+      const cached = readStorage(KEYS.plants, mockPlants);
       if (cached && cached.length > 0) return cached;
-      throw err;
+      writeStorage(KEYS.plants, mockPlants);
+      return mockPlants;
     }
   },
   getAllPlants: () => fetchApi('/api/plants/all'),
