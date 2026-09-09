@@ -107,18 +107,33 @@ export const api = {
       const user = await fetchApi('/api/auth/me');
       if (user) {
         const mergedUser = (cached && cached.email) ? { ...user, email: cached.email } : user;
-        writeStorage(KEYS.user, mergedUser);
-        writeStorage(KEYS.role, mergedUser.role);
-        syncFirebaseUser(mergedUser.email).catch(() => {});
-        return mergedUser;
+        const validRole = mergedUser.role || (cached && cached.role) || "user";
+        const finalUser = { ...mergedUser, role: validRole };
+        writeStorage(KEYS.user, finalUser);
+        writeStorage(KEYS.role, validRole);
+        syncFirebaseUser(finalUser.email).catch(() => {});
+        return finalUser;
       }
-      return cached;
+      if (cached) {
+        writeStorage(KEYS.role, cached.role || "user");
+        return cached;
+      }
+      return null;
     } catch (err) {
-      if (cached) return cached;
+      if (cached) {
+        writeStorage(KEYS.role, cached.role || "user");
+        return cached;
+      }
       throw err;
     }
   },
-  getRole: () => readStorage(KEYS.role, "user"),
+  getRole: () => {
+    const activeUser = readStorage(KEYS.user, null);
+    if (activeUser && activeUser.role) {
+      return activeUser.role;
+    }
+    return readStorage(KEYS.role, "user");
+  },
   isLoggedIn: () => readStorage(KEYS.loggedIn, false) && !!getToken(),
   isTutorialComplete: () => readStorage(KEYS.tutorial, false),
   signIn: async ({ email, remember, role, password }) => {
@@ -135,12 +150,14 @@ export const api = {
         localStorage.removeItem(KEYS.history);
         localStorage.removeItem("plantCareAiDoctorLogs");
       }
-      writeStorage(KEYS.user, user);
+      const verifiedRole = user.role || "user";
+      const finalUser = { ...user, role: verifiedRole };
+      writeStorage(KEYS.user, finalUser);
       writeStorage(KEYS.loggedIn, true);
-      writeStorage(KEYS.role, user.role || "user");
+      writeStorage(KEYS.role, verifiedRole);
       localStorage.setItem('plantCareJwtToken', token);
-      syncFirebaseUser(user.email, password || "PlantCare2026!").catch(() => {});
-      return user;
+      syncFirebaseUser(finalUser.email, password || "PlantCare2026!").catch(() => {});
+      return finalUser;
     } catch (err) {
       console.warn("Backend auth notice, checking local user records:", err.message);
       const users = readStorage(KEYS.users, []);
@@ -150,7 +167,6 @@ export const api = {
       
       if (!user && currentUser && (currentUser.email?.toLowerCase() === cleanEmail || currentUser.name?.toLowerCase() === cleanEmail)) {
         user = currentUser;
-        writeStorage(KEYS.users, [...users.filter(u => u.id !== user.id), user]);
       }
 
       if (!user) {
@@ -163,13 +179,19 @@ export const api = {
         localStorage.removeItem(KEYS.history);
         localStorage.removeItem("plantCareAiDoctorLogs");
       }
+
+      const isKnownAdmin = cleanEmail === "admin@plantdoc.com" || cleanEmail === "admin@plants.local";
+      const userRole = isKnownAdmin ? "admin" : (user.role === "admin" && isKnownAdmin ? "admin" : (user.role || "user"));
+      const sanitizedUser = { ...user, role: userRole };
+
       const token = `local_token_${Date.now()}`;
-      writeStorage(KEYS.user, user);
+      writeStorage(KEYS.user, sanitizedUser);
       writeStorage(KEYS.loggedIn, true);
-      writeStorage(KEYS.role, user.role || "user");
+      writeStorage(KEYS.role, userRole);
+      writeStorage(KEYS.users, [...users.filter(u => u.id !== sanitizedUser.id), sanitizedUser]);
       localStorage.setItem('plantCareJwtToken', token);
-      syncFirebaseUser(user.email, password || "PlantCare2026!").catch(() => {});
-      return user;
+      syncFirebaseUser(sanitizedUser.email, password || "PlantCare2026!").catch(() => {});
+      return sanitizedUser;
     }
   },
   signUp: async ({ name, email, password }) => {
@@ -182,13 +204,13 @@ export const api = {
         body: JSON.stringify({ name: cleanName, email: cleanEmail, role: defaultRole })
       });
       const { token, user } = res;
-      const registeredUser = { ...user, role: user.role || defaultRole };
+      const registeredUser = { ...user, role: defaultRole };
       localStorage.removeItem(KEYS.plants);
       localStorage.removeItem(KEYS.history);
       localStorage.removeItem("plantCareAiDoctorLogs");
       writeStorage(KEYS.user, registeredUser);
       writeStorage(KEYS.loggedIn, true);
-      writeStorage(KEYS.role, registeredUser.role);
+      writeStorage(KEYS.role, defaultRole);
       const users = readStorage(KEYS.users, []);
       writeStorage(KEYS.users, [...users.filter(u => u.email?.toLowerCase() !== cleanEmail), registeredUser]);
       localStorage.setItem('plantCareJwtToken', token);
@@ -211,7 +233,7 @@ export const api = {
       const token = `local_token_${Date.now()}`;
       writeStorage(KEYS.user, user);
       writeStorage(KEYS.loggedIn, true);
-      writeStorage(KEYS.role, user.role);
+      writeStorage(KEYS.role, defaultRole);
       localStorage.setItem('plantCareJwtToken', token);
       syncFirebaseUser(user.email, password || "PlantCare2026!").catch(() => {});
       return user;

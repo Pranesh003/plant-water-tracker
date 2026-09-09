@@ -83,7 +83,15 @@ export default function App() {
       ]);
       setPlants(plantData || []);
       setHistory(historyData || []);
-      if (userData) setUser(userData);
+      if (userData) {
+        const cleanEmail = userData.email ? userData.email.toLowerCase() : "";
+        const isKnownAdmin = cleanEmail === "admin@plantdoc.com" || cleanEmail === "admin@plants.local";
+        const trueRole = isKnownAdmin ? "admin" : (userData.role === "admin" && isKnownAdmin ? "admin" : (userData.role || "user"));
+        const sanitizedUser = { ...userData, role: trueRole };
+        setUser(sanitizedUser);
+        writeStorage(api.keys.user, sanitizedUser);
+        writeStorage(api.keys.role, trueRole);
+      }
     } catch {
       // Suppress error banner when fallback cached data is available
     } finally {
