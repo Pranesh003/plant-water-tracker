@@ -3,7 +3,6 @@ import { readStorage, writeStorage } from "../utils/storageUtils";
 import { syncFirebaseUser, uploadLeafImageToFirebase } from "../firebase.js";
 import { analyzePlantWithAiVision } from "./aiVisionService.js";
 import { dispatchEmailChangeNotifications } from "./emailDispatcher.js";
-import { daysBetween, todayISO } from "../utils/wateringUtils.js";
 
 const KEYS = {
   user: "plantCareUser",
@@ -424,69 +423,66 @@ export const api = {
     try {
       await fetchApi(`/api/plants/${id}`, { method: 'DELETE' });
     } catch (err) {
-      console.warn("Backend deletePlant notice, deleting from local storage:", err.message);
+      console.warn("Backend deletePlant notice, updating local storage:", err.message);
     }
     const current = readStorage(KEYS.plants, []);
-    writeStorage(KEYS.plants, current.filter(p => p.id !== id));
+    const updated = current.filter(p => p.id !== id);
+    writeStorage(KEYS.plants, updated);
     return true;
   },
   waterPlant: async (id) => {
-    const todayStr = todayISO();
+    const today = todayISO();
     try {
-      const result = await fetchApi(`/api/plants/${id}/water`, { method: 'POST' });
-      if (result) {
+      const plant = await fetchApi(`/api/plants/${id}/water`, { method: 'POST' });
+      if (plant && plant.id) {
         const current = readStorage(KEYS.plants, []);
-        const updatedList = current.map(p => p.id === id ? { ...p, ...result } : p);
-        writeStorage(KEYS.plants, updatedList);
-        return result;
+        const updated = current.map(p => p.id === id ? { ...p, ...plant } : p);
+        writeStorage(KEYS.plants, updated);
+        return plant;
       }
     } catch (err) {
-      console.warn("Backend waterPlant notice, updating local storage session:", err.message);
+      console.warn("Backend waterPlant notice, updating local storage fallback:", err.message);
     }
 
     const current = readStorage(KEYS.plants, []);
-    const target = current.find(p => p.id === id);
-    if (target) {
-      const lastDate = target.lastWatered;
-      const freq = Number(target.frequency || 7);
-      const daysDiff = lastDate ? daysBetween(lastDate, todayStr) : freq;
-      const isStreakMaintained = daysDiff <= freq + 1;
-      const newStreak = isStreakMaintained ? Number(target.currentStreak || 0) + 1 : 1;
-      const bestStreak = Math.max(Number(target.bestStreak || 0), newStreak);
+    const existing = current.find(p => p.id === id);
+    const prevStreak = Number(existing?.currentStreak || 0);
+    const newStreak = prevStreak + 1;
+    const newBest = Math.max(Number(existing?.bestStreak || 0), newStreak);
 
-      const updated = {
-        ...target,
-        lastWatered: todayStr,
-        currentStreak: newStreak,
-        bestStreak: bestStreak
-      };
+    const updatedPlant = {
+      ...(existing || {}),
+      id,
+      lastWatered: today,
+      currentStreak: newStreak,
+      bestStreak: newBest
+    };
 
-      writeStorage(KEYS.plants, current.map(p => p.id === id ? updated : p));
-      return updated;
+    const updatedList = current.map(p => p.id === id ? updatedPlant : p);
+    if (!current.some(p => p.id === id)) {
+      updatedList.push(updatedPlant);
     }
-    throw new Error("Plant not found.");
+    writeStorage(KEYS.plants, updatedList);
+
+    const history = readStorage(KEYS.history, []);
+    const newLog = {
+      id: `h_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      plantId: id,
+      plantName: updatedPlant.name || "Plant",
+      type: "watering",
+      date: today,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      createdAt: new Date().toISOString(),
+      streak: newStreak
+    };
+    writeStorage(KEYS.history, [newLog, ...history]);
+
+    return updatedPlant;
   },
-  addNote: async (id, text) => {
-    let result;
-    try {
-      result = await fetchApi(`/api/plants/${id}/notes`, {
-        method: 'POST',
-        body: JSON.stringify({ text })
-      });
-    } catch (err) {
-      console.warn("Backend addNote notice, updating local storage session:", err.message);
-    }
-    const current = readStorage(KEYS.plants, []);
-    const target = current.find(p => p.id === id);
-    if (target) {
-      const todayStr = todayISO();
-      const newNote = { id: `note_${Date.now()}`, text, date: todayStr, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
-      const updated = { ...target, notes: [newNote, ...(target.notes || [])] };
-      writeStorage(KEYS.plants, current.map(p => p.id === id ? updated : p));
-      return result || updated;
-    }
-    return result;
-  },
+  addNote: (id, text) => fetchApi(`/api/plants/${id}/notes`, {
+    method: 'POST',
+    body: JSON.stringify({ text })
+  }),
   addAiDoctorRecord: async (plantId, reportData, leafPhotoUrl = "") => {
     const todayStr = new Date().toISOString().split("T")[0];
 
