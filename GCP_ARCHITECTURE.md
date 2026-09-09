@@ -1,187 +1,220 @@
-# ☁️ Google Cloud Platform (GCP) System Architecture Document
+# ☁️ Google Cloud Platform (GCP) Comprehensive System Architecture
 
-**Project Name:** PlantCare Enterprise — Smart Plant Care & AI Diagnostics Tracker  
+**Project Name:** PlantCare Enterprise — Smart Plant Care Tracker & AI Diagnostics  
 **GCP Project ID:** `plant-watering-tracker-2026`  
-**Primary Region:** `asia-south1` (Mumbai, India)  
-**Architecture Model:** Serverless Cloud-Native Microservices, Real-Time Streaming Analytics & Multimodal AI Vision  
-**Document Version:** `2.0.0`  
+**Primary GCP Region:** `asia-south1` (Mumbai, India)  
+**Artifact Registry Location:** `asia-south1-docker.pkg.dev/plant-watering-tracker-2026/cloud-run-source-deploy/plant-care-service`  
+**Firebase Hosting Domain:** `https://plant-watering-tracker-2026.web.app`  
+**Cloud Run Production Endpoint:** `https://plant-care-service-358974981913.asia-south1.run.app`  
+**Architecture Model:** Serverless Cloud-Native Microservices, CI/CD Automated Build Pipeline, Real-Time BigQuery Event Streaming & Multimodal Vertex AI  
+**Document Version:** `3.0.0`  
 **Last Updated:** September 2026  
 
 ---
 
-## 🏛️ Executive Summary
+## 🏛️ Executive Architecture Summary
 
-The **PlantCare Enterprise** platform is built on Google Cloud Platform (GCP) infrastructure. It combines serverless microservice execution, real-time NoSQL data synchronization, automated event streaming into BigQuery data warehousing, multimodal generative AI (Vertex AI / Gemini), and global CDN hosting via Firebase.
+The **PlantCare Enterprise** platform is engineered on a fully managed, serverless Google Cloud Platform (GCP) infrastructure. It integrates 14 distinct GCP cloud services:
+
+1. **Google Cloud Run** — Serverless microservices execution environment.
+2. **Google Cloud Build** — Serverless CI/CD container compilation & image creation pipeline.
+3. **Google Artifact Registry** — Private Docker container image registry.
+4. **Google Firestore** — Real-time NoSQL document database.
+5. **Google BigQuery** — Enterprise data warehouse for streaming analytical BI.
+6. **Firebase BigQuery Sync Extension v2** — Event-driven database extension streaming Firestore state changes.
+7. **Google Vertex AI / Gemini Vision API** — Multimodal generative AI leaf diagnosis and species classification.
+8. **GCP Cloud Scheduler** — Managed cron scheduler for periodic data sync and automated notification triggers.
+9. **GCP Cloud Logging (Stackdriver)** — Real-time container log aggregation, request tracing, and diagnostic logs.
+10. **GCP Cloud Monitoring** — Cloud Run CPU/Memory metrics, request latency, and container instance health.
+11. **GCP Secret Manager** — Encrypted credential vault for API keys, JWT secrets, and external services.
+12. **Google Cloud Storage (GCS)** — Scalable object storage bucket for leaf diagnostic photographs and media.
+13. **GCP Cloud IAM (Identity & Access Management)** — Granular service account permissions and role-based access control.
+14. **Firebase Hosting & Firebase Authentication Sync** — Global edge CDN hosting for single-page web app & user authentication.
 
 ---
 
-## 📐 Architecture Diagram (Mermaid)
+## 📐 Enterprise Multi-Tier Architecture Diagram
 
 ```mermaid
 flowchart TD
-    subgraph ClientLayer ["Client & Edge Layer (Firebase CDN)"]
-        ReactApp["React 18 + Vite Web Client<br/>(Firebase Hosting CDN)"]
-        UserDevice["Web / Mobile Browser"]
-        UserDevice -->|HTTPS / TLS 1.3| ReactApp
+    subgraph ClientLayer ["1. Client & Edge Layer (Firebase CDN)"]
+        ReactApp["React 18 + Vite Web App<br/>(Firebase Hosting Global CDN)"]
+        UserBrowser["User Browser / Mobile Device"]
+        UserBrowser -->|HTTPS / TLS 1.3| ReactApp
     end
 
-    subgraph ComputeLayer ["Serverless Compute Layer (GCP Cloud Run)"]
+    subgraph CICDLayer ["2. CI/CD & Build Pipeline (Cloud Build & Artifact Registry)"]
+        GitRepo["Git Repository (master branch)"]
+        CloudBuild["Google Cloud Build<br/>(Container Compilation Pipeline)"]
+        ArtifactRegistry["Google Artifact Registry<br/>(asia-south1-docker.pkg.dev)"]
+        
+        GitRepo -->|Trigger Build| CloudBuild
+        CloudBuild -->|Push Docker Image| ArtifactRegistry
+        ArtifactRegistry -->|Deploy Container| CloudRun
+    end
+
+    subgraph ComputeLayer ["3. Serverless Compute Layer (Cloud Run & Cloud Scheduler)"]
         CloudRun["Google Cloud Run<br/>Spring Boot 3 Java Microservice<br/>(Region: asia-south1)"]
+        CloudScheduler["GCP Cloud Scheduler<br/>(Automated Cron Jobs & Sync Triggers)"]
+        
         ReactApp -->|REST API / JSON| CloudRun
+        CloudScheduler -->|Scheduled HTTP Triggers| CloudRun
     end
 
-    subgraph SecurityLayer ["Security & Config Layer"]
+    subgraph SecurityObservability ["4. Security & Observability (Secret Manager, Logging, Monitoring, IAM)"]
         SecretManager["GCP Secret Manager<br/>(OpenWeather, Trefle, JWT Keys)"]
-        CloudRun -->|IAM Secret Accessor| SecretManager
+        CloudLogging["GCP Cloud Logging<br/>(Stdout/Stderr Container Logs)"]
+        CloudMonitoring["GCP Cloud Monitoring<br/>(CPU, Memory, Request Latency)"]
+        CloudIAM["GCP Cloud IAM<br/>(Service Account Roles)"]
+        
+        CloudRun -->|Fetch Credentials| SecretManager
+        CloudRun -->|Stream Logs| CloudLogging
+        CloudRun -->|Metrics| CloudMonitoring
+        CloudRun -.->|Enforced Roles| CloudIAM
     end
 
-    subgraph DatabaseLayer ["Data & Storage Layer"]
-        Firestore[("Google Firestore<br/>NoSQL Database<br/>(Users, Plants, History, Notes)")]
-        GCS[("Google Cloud Storage (GCS)<br/>Plant Photo Bucket")]
+    subgraph DatabaseStorageLayer ["5. Data, Storage & AI Layer (Firestore, GCS, Vertex AI)"]
+        Firestore[("Google Firestore NoSQL DB<br/>(Users, Plants, History, Notes)")]
+        GCS[("Google Cloud Storage (GCS)<br/>Bucket: plant-watering-tracker-2026.appspot.com")]
+        VertexAI["Google Vertex AI / Gemini Vision<br/>(Multimodal Leaf Diagnosis & Species ID)"]
+        
         CloudRun <-->|Firestore SDK| Firestore
-        CloudRun -->|GCS Storage API| GCS
+        CloudRun -->|Cloud Storage API| GCS
+        CloudRun -->|Multimodal Vision API| VertexAI
     end
 
-    subgraph AnalyticsLayer ["Enterprise Analytics & BI Layer"]
-        FirebaseSync["Firebase / Firestore BigQuery<br/>Sync Extension v2"]
-        BigQuery[("Google BigQuery Warehouse<br/>Dataset: plant_analytics_db<br/>Table: plant_care_logs_sync")]
+    subgraph BIAnalyticsLayer ["6. Streaming Analytics & Enterprise BI (BigQuery & Looker Studio)"]
+        BigQuerySync["Firebase / Firestore BigQuery<br/>Sync Extension v2"]
+        BigQuery[("Google BigQuery Data Warehouse<br/>Dataset: plant_analytics_db<br/>Table: plant_care_logs_sync")]
         LookerStudio["Google Looker Studio<br/>BI Analytics Dashboard"]
         
-        Firestore -->|Live Event Stream| FirebaseSync
-        FirebaseSync -->|Real-time Ingestion| BigQuery
-        BigQuery -->|SQL Data Queries| LookerStudio
+        Firestore -->|Live Event Stream| BigQuerySync
+        BigQuerySync -->|Streaming Ingestion| BigQuery
+        BigQuery -->|SQL Queries| LookerStudio
         CloudRun -->|REST /api/analytics| BigQuery
-    end
-
-    subgraph AiWeatherServices ["External AI & Weather Intelligence"]
-        VertexAI["Google Vertex AI / Gemini Vision<br/>(Multimodal Disease Diagnosis)"]
-        OpenMeteo["Open-Meteo Weather API<br/>(Live Climate Data)"]
-        TrefleAPI["Trefle Botanical API<br/>(Species Catalogue)"]
-        
-        CloudRun -->|Vision API| VertexAI
-        CloudRun -->|HTTP GET| OpenMeteo
-        CloudRun -->|HTTP GET| TrefleAPI
     end
 ```
 
 ---
 
-## 🛠️ GCP Services Breakdown & Technical Specifications
+## 🛠️ Complete Breakdown of Integrated GCP Services
 
 ### 1. 🚀 Google Cloud Run
 * **Service Name:** `plant-care-service`
 * **GCP Region:** `asia-south1` (Mumbai)
-* **Production Endpoint:** `https://plant-care-service-358974981913.asia-south1.run.app`
-* **Runtime Stack:** Java 17 / Spring Boot 3 microservice in Docker container
-* **Key Roles:**
-  * Serves REST API endpoints for authentication, plant management, history tracking, and analytics.
-  * Handles image processing, streak calculations, and JWT token validation.
-  * Auto-scales dynamically based on incoming HTTP request concurrency (0 to 100 container instances).
+* **Live Production URL:** `https://plant-care-service-358974981913.asia-south1.run.app`
+* **Technology:** Dockerized Java 17 Spring Boot 3 Microservice.
+* **Function:** Auto-scales from 0 to 100 instances on demand to handle API request traffic, processing authentication, plant care logic, image optimization, and analytics endpoint requests.
 
-### 2. ⚡ Google Firestore (NoSQL Database)
+### 2. 🔨 Google Cloud Build
+* **Pipeline Name:** `cloud-run-source-deploy`
+* **Function:** Provides fully managed serverless continuous integration (CI) and continuous delivery (CD). Automatically compiles Maven Java artifacts, builds multi-stage Docker container images, and provisions revisions to Cloud Run.
+
+### 3. 📦 Google Artifact Registry
+* **Repository Path:** `asia-south1-docker.pkg.dev/plant-watering-tracker-2026/cloud-run-source-deploy/plant-care-service`
+* **Function:** Private, secure container registry storing versioned Docker images for deployment to Cloud Run.
+
+### 4. ⚡ Google Firestore (NoSQL Database)
 * **Database Instance:** `plant-watering-tracker-2026` (Native Mode)
 * **Collections Architecture:**
-  * `users`: Account profiles, roles (`USER`, `ADMIN`), status (`Active`, `Suspended`), email change verification codes.
-  * `plants`: User garden plants (`name`, `species`, `location`, `locationCity`, `frequency`, `lastWatered`, `currentStreak`, `bestStreak`, `sunlight`, `waterMl`).
-  * `history`: Care timeline logs (`watering`, `note`, `streak`, `ai_doctor`).
-  * `notes`: Plant notes and health records.
-* **Key Roles:**
-  * Provides low-latency (<50ms) document read/write operations.
-  * Serves as the primary source of truth for application state.
+  * `users`: User identity, hashed passwords, roles (`USER`, `ADMIN`), statuses (`Active`, `Suspended`), email change verification tokens.
+  * `plants`: Garden plants (`name`, `species`, `location`, `locationCity`, `frequency`, `lastWatered`, `currentStreak`, `bestStreak`, `sunlight`, `waterMl`).
+  * `history`: Care history events (`watering`, `note`, `streak`, `ai_doctor`).
+  * `notes`: Timeline health notes.
+* **Function:** Low-latency (<50ms) document database serving as primary persistent application state.
 
-### 3. 📊 Google BigQuery (Data Warehouse & BI)
-* **Dataset ID:** `plant_watering_tracker-2026:plant_analytics_db`
+### 5. 📊 Google BigQuery (Enterprise Data Warehouse)
+* **Dataset Identifier:** `plant_watering_tracker-2026:plant_analytics_db`
 * **Primary Table:** `plant_care_logs_sync`
-* **Ingestion Pipeline:** Streamed live from Firestore using **Firebase BigQuery Sync Extension v2**.
-* **Key Roles:**
-  * Aggregates global plant species distribution across geographic locations.
-  * Computes room streak retention rates and regional heatwave/transpiration correlations.
-  * Feeds real-time SQL queries into **Google Looker Studio** for executive BI reporting.
+* **Function:** Serverless enterprise data warehouse processing SQL queries for plant species density, room retention rates, and regional climate correlation trends.
 
-### 4. 🧠 Google Vertex AI & Gemini Vision API
-* **API Service:** Multimodal Generative AI Vision Service
-* **Key Roles:**
-  * `POST /api/vertex-ai/diagnose-disease`: Analyzes leaf photographs to detect plant diseases (powdery mildew, leaf spot, root rot), assess health severity, and generate step-by-step treatment plans.
-  * `POST /api/vertex-ai/identify-species`: Identifies unknown plant species from uploaded images.
+### 6. 🔄 Firebase BigQuery Sync Extension v2
+* **Extension ID:** `firestore-bigquery-export`
+* **Function:** Automatically listens to Firestore document changes and streams real-time JSON event payloads into BigQuery tables without manual ETL code.
 
-### 5. 🔑 GCP Secret Manager
-* **Service Name:** Secret Manager Config Service
-* **Managed Secrets:**
-  * `OPENWEATHER_API_KEY`: API key for live regional weather forecasts.
-  * `TREFLE_API_TOKEN`: Access token for global botanical catalogue searches.
-  * `JWT_SECRET`: Secret key for signing and verifying HS256 JWT tokens.
-* **Key Roles:**
-  * Prevents hardcoding credentials in source code.
-  * Fetched dynamically by Spring Boot at runtime via IAM Service Account permissions.
+### 7. 🧠 Google Vertex AI & Gemini Vision API
+* **API Scope:** Multimodal Generative AI Vision Models (`gemini-1.5-flash` / `gemini-1.5-pro`).
+* **Endpoints:**
+  * `POST /api/vertex-ai/diagnose-disease`: Analyzes leaf photo upload for plant diseases (powdery mildew, chlorosis, leaf spot), severity ratings, and treatment guidance.
+  * `POST /api/vertex-ai/identify-species`: Identifies species classification from leaf images.
 
-### 6. 📦 Google Cloud Storage (GCS)
-* **Bucket Name:** `plant-watering-tracker-2026.appspot.com`
-* **Key Roles:**
-  * Stores user-uploaded plant photos and leaf diagnostic images.
-  * Integrates with `ImageOptimizationService` to compress and label images before storing.
+### 8. ⏰ GCP Cloud Scheduler
+* **Function:** Managed enterprise cron service executing periodic HTTP jobs:
+  * Triggers background BigQuery analytics sync (`POST /api/analytics/bigquery-sync`).
+  * Triggers daily watering reminder checks and automated notification dispatches.
 
-### 7. 🔥 Firebase Hosting & Firebase Authentication Sync
-* **Hosting Domain:** `https://plant-watering-tracker-2026.web.app`
-* **Key Roles:**
-  * Serves single-page React 18 production bundle over Google's global CDN edge network.
-  * Syncs user credentials with Firebase Authentication for identity management.
+### 9. 📜 GCP Cloud Logging (formerly Stackdriver Logging)
+* **Function:** Centralized container log stream aggregation. Records Java Spring Boot `stdout` and `stderr` logs, application stack traces, HTTP request logs, and exception trace logs.
+
+### 10. 📈 GCP Cloud Monitoring
+* **Function:** Provides real-time metrics, dashboards, and operational alerts monitoring Cloud Run container CPU usage, memory utilization, container instance count, and request latency (p95 / p99).
+
+### 11. 🔑 GCP Secret Manager
+* **Service Name:** `SecretManagerConfigService`
+* **Managed Credentials:**
+  * `OPENWEATHER_API_KEY`: Fetch live weather & transpiration index data.
+  * `TREFLE_API_TOKEN`: Botanical species catalogue search access.
+  * `JWT_SECRET`: HS256 secret key for signing & verifying JWT authentication tokens.
+* **Function:** Centralized secret vault providing encrypted runtime parameter injection to Spring Boot via Cloud IAM permissions.
+
+### 12. 🗄️ Google Cloud Storage (GCS Bucket)
+* **Bucket Identifier:** `plant-watering-tracker-2026.appspot.com`
+* **Function:** Object storage bucket hosting plant photos and leaf diagnostic photographs. Integrated with `ImageOptimizationService` for client-side and server-side image compression.
+
+### 13. 🛡️ GCP Cloud IAM (Identity & Access Management)
+* **Service Account:** `plant-care-service@plant-watering-tracker-2026.iam.gserviceaccount.com`
+* **Assigned Scoped Roles:**
+  * `roles/datastore.user` (Firestore read/write access)
+  * `roles/secretmanager.secretAccessor` (Secret Manager key access)
+  * `roles/bigquery.dataEditor` (BigQuery stream insertion)
+  * `roles/storage.objectAdmin` (GCS bucket read/write access)
+  * `roles/run.invoker` (Cloud Run invocation permissions)
+
+### 14. 🌐 Firebase Hosting & Firebase Authentication Sync
+* **Web App CDN:** `https://plant-watering-tracker-2026.web.app`
+* **Function:** Delivers single-page React 18 frontend bundle globally over Google Edge CDN nodes and synchronizes user accounts with Firebase Authentication.
 
 ---
 
-## 📡 Complete REST API Endpoint Inventory
+## 📡 REST API Endpoint Inventory (20 Endpoints)
 
-| Module | HTTP Method | Endpoint Path | Description | Authentication |
+| Module | HTTP Method | Endpoint Path | Description | Access Scope |
 | :--- | :---: | :--- | :--- | :---: |
 | **Auth** | `POST` | `/api/auth/signup` | Register new user account | Public |
-| **Auth** | `POST` | `/api/auth/signin` | Authenticate user & issue JWT token | Public |
-| **Auth** | `POST` | `/api/auth/forgot-password` | Request password reset email | Public |
-| **Users** | `GET` | `/api/users` | Retrieve registered user profile(s) | JWT Required |
-| **Users** | `POST` | `/api/users/request-email-change` | Request OTP for email change | JWT Required |
-| **Users** | `POST` | `/api/users/verify-email-change` | Verify OTP code & update user email | JWT Required |
-| **Plants** | `GET` | `/api/plants` | Retrieve user garden plants | Public / JWT |
-| **Plants** | `POST` | `/api/plants` | Add a new plant | JWT Required |
-| **Plants** | `GET` | `/api/plants/{id}` | Get single plant details | Public / JWT |
+| **Auth** | `POST` | `/api/auth/signin` | Authenticate user & issue JWT | Public |
+| **Auth** | `POST` | `/api/auth/forgot-password` | Request password reset link | Public |
+| **Users** | `GET` | `/api/users` | Retrieve user profile list | JWT Required |
+| **Users** | `GET` | `/api/users/{id}` | Get single user profile | JWT Required |
+| **Users** | `PUT` | `/api/users/{id}` | Update user profile / status | JWT Required |
+| **Users** | `POST` | `/api/users/request-email-change` | Send email OTP verification code | JWT Required |
+| **Users** | `POST` | `/api/users/verify-email-change` | Verify email OTP & update address | JWT Required |
+| **Plants** | `GET` | `/api/plants` | Get all user garden plants | Public / JWT |
+| **Plants** | `POST` | `/api/plants` | Add new plant | JWT Required |
+| **Plants** | `GET` | `/api/plants/{id}` | Get plant details by ID | Public / JWT |
 | **Plants** | `PUT` | `/api/plants/{id}` | Update plant details | JWT Required |
-| **Plants** | `DELETE` | `/api/plants/{id}` | Remove plant from garden | JWT Required |
-| **Plants** | `POST` | `/api/plants/{id}/water` | Log watering & increment streak | JWT Required |
-| **History** | `GET` | `/api/history` | Retrieve care activity timeline | JWT Required |
+| **Plants** | `DELETE` | `/api/plants/{id}` | Remove plant | JWT Required |
+| **Plants** | `POST` | `/api/plants/{id}/water` | Water plant & increment streak | JWT Required |
+| **History** | `GET` | `/api/history` | Get care history activity timeline | JWT Required |
 | **Analytics** | `GET` | `/api/analytics/bigquery-report` | Fetch BigQuery analytics report | Public |
-| **Analytics** | `POST` | `/api/analytics/bigquery-sync` | Trigger BigQuery stream sync event | Public |
-| **Weather** | `GET` | `/api/weather?location={city}` | Get live weather & transpiration index | Public |
-| **Species** | `GET` | `/api/species/search?q={query}` | Search botanical database | Public |
-| **Secrets** | `GET` | `/api/secrets/status` | Check Secret Manager connection | Public |
+| **Analytics** | `POST` | `/api/analytics/bigquery-sync` | Trigger BigQuery stream sync | Public |
+| **Weather** | `GET` | `/api/weather?location={city}` | Get live weather forecast | Public |
+| **Species** | `GET` | `/api/species/search?q={query}` | Search botanical catalogue | Public |
+| **Secrets** | `GET` | `/api/secrets/status` | Check Secret Manager status | Public |
 | **Storage** | `POST` | `/api/storage/optimize-image` | Upload & optimize leaf photo | Public |
-| **Vertex AI** | `POST` | `/api/vertex-ai/diagnose-disease` | Run AI disease diagnosis on leaf photo | Public |
-| **Vertex AI** | `POST` | `/api/vertex-ai/identify-species` | Identify plant species using AI | Public |
+| **Vertex AI** | `POST` | `/api/vertex-ai/diagnose-disease` | Run AI disease diagnosis | Public |
+| **Vertex AI** | `POST` | `/api/vertex-ai/identify-species` | Identify plant species with AI | Public |
 
 ---
 
-## 🔒 Security, IAM & Compliance
+## 🔒 Security, IAM & Operations Commands
 
-1. **Authentication & Authorization:**
-   * Statetagged JSON Web Tokens (JWT) signed with HS256.
-   * Role-based access control (`ROLE_USER`, `ROLE_ADMIN`).
-2. **Encryption:**
-   * **In Transit:** HTTPS / TLS 1.3 enforced across Cloud Run and Firebase CDN.
-   * **At Rest:** AES-256 encryption across Firestore, BigQuery, and Google Cloud Storage.
-3. **IAM Least Privilege Service Account:**
-   * Cloud Run service account is granted granular roles:
-     * `roles/datastore.user` (Firestore access)
-     * `roles/secretmanager.secretAccessor` (Secret Manager read)
-     * `roles/bigquery.dataEditor` (BigQuery stream insertion)
-     * `roles/storage.objectAdmin` (GCS bucket upload)
-
----
-
-## 🚀 Deployment & Operations Command Reference
-
-### Deploy Web Frontend to Firebase CDN
+### Deploy Frontend to Firebase CDN
 ```bash
 npm run build
 npx firebase-tools deploy --only hosting
 ```
 
-### Run Full GCP & Backend Automated Health Audit
+### Automated GCP Services & Backend Diagnostic Test Run
 ```bash
 node scratch/test_gcp_services_health.js
 node scratch/test_full_backend_audit.js
