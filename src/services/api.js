@@ -1,4 +1,4 @@
-import { plantSuggestions } from "../data/mockPlants";
+import { mockPlants, plantSuggestions } from "../data/mockPlants";
 import { readStorage, writeStorage } from "../utils/storageUtils";
 import { syncFirebaseUser, uploadLeafImageToFirebase } from "../firebase.js";
 import { analyzePlantWithAiVision } from "./aiVisionService.js";
@@ -364,11 +364,13 @@ export const api = {
         const cachedItem = cachedMap.get(plant.id);
         return {
           ...plant,
-          locationCity: plant.locationCity || cachedItem?.locationCity || ""
+          locationCity: plant.locationCity || cachedItem?.locationCity || "",
+          currentStreak: Math.max(Number(plant.currentStreak || 0), Number(cachedItem?.currentStreak || 0)),
+          bestStreak: Math.max(Number(plant.bestStreak || 0), Number(cachedItem?.bestStreak || 0), Number(plant.currentStreak || 0))
         };
       });
 
-      const finalPlants = merged.length > 0 ? merged : (cached.length > 0 ? cached : mockPlants);
+      const finalPlants = merged.length > 0 ? merged : (cached && cached.length > 0 ? cached : mockPlants);
       writeStorage(KEYS.plants, finalPlants);
       return finalPlants;
     } catch (err) {

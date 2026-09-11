@@ -83,16 +83,28 @@ export default function App() {
       ]);
       const validHistory = historyData || [];
       const todayStr = todayISO();
-      const syncedPlants = (plantData || []).map((p) => {
+      const cachedPlants = readStorage(api.keys.plants, []);
+      const cachedMap = new Map((cachedPlants || []).map((cp) => [cp.id, cp]));
+      const rawPlants = (plantData && plantData.length > 0) ? plantData : cachedPlants;
+      
+      const syncedPlants = (rawPlants || []).map((p) => {
+        const cachedItem = cachedMap.get(p.id);
         const wateredTodayInHistory = validHistory.some((item) => item.plantId === p.id && item.type === "watering" && item.date === todayStr);
-        if (wateredTodayInHistory) {
-          return { ...p, lastWatered: todayStr };
-        }
-        return p;
+        const currentStreak = Math.max(Number(p.currentStreak || 0), Number(cachedItem?.currentStreak || 0));
+        const bestStreak = Math.max(Number(p.bestStreak || 0), Number(cachedItem?.bestStreak || 0), currentStreak);
+        
+        return {
+          ...p,
+          lastWatered: wateredTodayInHistory ? todayStr : (p.lastWatered || cachedItem?.lastWatered),
+          currentStreak,
+          bestStreak
+        };
       });
       setPlants(syncedPlants);
       setHistory(validHistory);
-      writeStorage(api.keys.plants, syncedPlants);
+      if (syncedPlants.length > 0) {
+        writeStorage(api.keys.plants, syncedPlants);
+      }
       if (userData) {
         const cleanEmail = userData.email ? userData.email.toLowerCase() : "";
         const isKnownAdmin = cleanEmail === "admin@plantdoc.com" || cleanEmail === "admin@plants.local";
